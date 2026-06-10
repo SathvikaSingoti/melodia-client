@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
+import { usePlayerStore } from "@/store/playerStore";
 
 interface Song {
   _id: string;
@@ -13,6 +14,7 @@ interface Song {
   genre: string;
   mood: string;
   duration: number;
+  audioUrl: string;
   coverUrl: string;
   plays: number;
 }
@@ -101,6 +103,7 @@ export default function ExplorePage() {
             {songs.map((song) => (
               <div 
                 key={song._id} 
+                onClick={() => usePlayerStore.getState().play(song, songs)}
                 className="group relative bg-bg-secondary p-4 rounded-xl border border-border hover:border-primary/50 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.5)] cursor-pointer"
               >
                 <div className="relative aspect-square mb-4 overflow-hidden rounded-lg">

@@ -1,0 +1,153 @@
+import { create } from 'zustand';
+import { Howl } from 'howler';
+
+export interface Song {
+  _id: string;
+  title: string;
+  artist: string;
+  album: string;
+  genre: string;
+  mood: string;
+  duration: number;
+  audioUrl: string;
+  coverUrl: string;
+  plays: number;
+}
+
+interface PlayerState {
+  currentSong: Song | null;
+  isPlaying: boolean;
+  progress: number;
+  duration: number;
+  queue: Song[];
+  volume: number;
+  howl: Howl | null;
+  
+  // Actions
+  play: (song: Song, queue?: Song[]) => void;
+  pause: () => void;
+  resume: () => void;
+  next: () => void;
+  prev: () => void;
+  seek: (time: number) => void;
+  setVolume: (vol: number) => void;
+  updateProgress: () => void;
+}
+
+export const usePlayerStore = create<PlayerState>((set, get) => ({
+  currentSong: null,
+  isPlaying: false,
+  progress: 0,
+  duration: 0,
+  queue: [],
+  volume: 0.5,
+  howl: null,
+
+  play: (song, queue) => {
+    const { howl, volume } = get();
+    
+    // Stop and unload existing howl if any
+    if (howl) {
+      howl.stop();
+      howl.unload();
+    }
+
+    // Create new Howl instance
+    const newHowl = new Howl({
+      src: [song.audioUrl],
+      html5: true, // Force HTML5 Audio to allow streaming large files
+      volume: volume,
+      onplay: () => {
+        set({ isPlaying: true, duration: newHowl.duration() });
+      },
+      onpause: () => {
+        set({ isPlaying: false });
+      },
+      onend: () => {
+        get().next();
+      },
+      onseek: () => {
+        // Optional: handle seek completion
+      }
+    });
+
+    newHowl.play();
+
+    set({
+      currentSong: song,
+      howl: newHowl,
+      isPlaying: true,
+      progress: 0,
+      queue: queue || get().queue,
+    });
+  },
+
+  pause: () => {
+    const { howl } = get();
+    if (howl && howl.playing()) {
+      howl.pause();
+    }
+  },
+
+  resume: () => {
+    const { howl } = get();
+    if (howl && !howl.playing()) {
+      howl.play();
+    }
+  },
+
+  next: () => {
+    const { queue, currentSong, play } = get();
+    if (!currentSong || queue.length === 0) return;
+
+    const currentIndex = queue.findIndex((s) => s._id === currentSong._id);
+    if (currentIndex >= 0 && currentIndex < queue.length - 1) {
+      play(queue[currentIndex + 1], queue);
+    } else if (queue.length > 0) {
+      // Loop back to start
+      play(queue[0], queue);
+    }
+  },
+
+  prev: () => {
+    const { queue, currentSong, howl, play } = get();
+    if (!currentSong || queue.length === 0) return;
+
+    // If we're more than 3 seconds in, just restart the song
+    if (howl && howl.seek() > 3) {
+      howl.seek(0);
+      return;
+    }
+
+    const currentIndex = queue.findIndex((s) => s._id === currentSong._id);
+    if (currentIndex > 0) {
+      play(queue[currentIndex - 1], queue);
+    } else {
+      // Loop back to end
+      play(queue[queue.length - 1], queue);
+    }
+  },
+
+  seek: (time: number) => {
+    const { howl } = get();
+    if (howl) {
+      howl.seek(time);
+      set({ progress: time });
+    }
+  },
+
+  setVolume: (vol: number) => {
+    const { howl } = get();
+    if (howl) {
+      howl.volume(vol);
+    }
+    set({ volume: vol });
+  },
+
+  updateProgress: () => {
+    const { howl, isPlaying } = get();
+    if (howl && isPlaying) {
+      set({ progress: howl.seek() as number });
+    }
+  }
+}));
