@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import axios from "axios";
 import { usePlayerStore } from "@/store/playerStore";
+import { useAuth } from "@/context/AuthContext";
+import { Song } from "@/store/playerStore";
 
 export default function PlayerBar() {
   const { 
@@ -9,10 +12,43 @@ export default function PlayerBar() {
     pause, resume, next, prev, seek, volume, setVolume, updateProgress 
   } = usePlayerStore();
 
+  const { user } = useAuth();
   const [isDragging, setIsDragging] = useState(false);
   const [localProgress, setLocalProgress] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const volumeBarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (user && currentSong) {
+      checkIfLiked();
+    }
+  }, [user, currentSong]);
+
+  const checkIfLiked = async () => {
+    try {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user?._id}/liked`);
+      const liked = res.data.some((s: Song) => s._id === currentSong?._id);
+      setIsLiked(liked);
+    } catch (error) {
+      console.error("Failed to check liked status", error);
+    }
+  };
+
+  const toggleLike = async () => {
+    if (!user || !currentSong) return;
+    try {
+      if (isLiked) {
+        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/liked/${currentSong._id}`);
+        setIsLiked(false);
+      } else {
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/liked`, { songId: currentSong._id });
+        setIsLiked(true);
+      }
+    } catch (error) {
+      console.error("Failed to toggle like", error);
+    }
+  };
 
   // Sync local progress with store progress when not dragging
   useEffect(() => {
@@ -64,10 +100,21 @@ export default function PlayerBar() {
         <div className="w-14 h-14 bg-bg-tertiary rounded shadow-lg overflow-hidden flex-shrink-0">
           <img src={currentSong.coverUrl} alt="Cover" className="w-full h-full object-cover" />
         </div>
-        <div>
-          <h4 className="text-sm font-semibold text-white">{currentSong.title}</h4>
-          <p className="text-xs text-gray-400">{currentSong.artist}</p>
+        <div className="min-w-0 pr-2">
+          <h4 className="text-sm font-semibold text-white truncate" title={currentSong.title}>{currentSong.title}</h4>
+          <p className="text-xs text-gray-400 truncate" title={currentSong.artist}>{currentSong.artist}</p>
         </div>
+        <button 
+          onClick={toggleLike}
+          className="p-2 text-gray-400 hover:text-white transition-colors ml-2"
+        >
+          <svg className={`w-5 h-5 ${isLiked ? 'text-primary' : ''}`} fill="currentColor" viewBox="0 0 24 24">
+            <path d={isLiked 
+              ? "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+              : "M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"}
+            />
+          </svg>
+        </button>
       </div>
 
       {/* Controls */}

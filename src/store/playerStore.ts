@@ -32,6 +32,7 @@ interface PlayerState {
   seek: (time: number) => void;
   setVolume: (vol: number) => void;
   updateProgress: () => void;
+  addToQueue: (song: Song) => void;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -80,6 +81,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       progress: 0,
       queue: queue || get().queue,
     });
+  },
+
+  addToQueue: (song) => {
+    const { queue } = get();
+    if (!queue.find(s => s._id === song._id)) {
+      set({ queue: [...queue, song] });
+    }
   },
 
   pause: () => {

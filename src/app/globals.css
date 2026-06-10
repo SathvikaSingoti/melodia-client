@@ -9,6 +9,14 @@
   --color-border: #2A2A35;
   
   --font-sans: "Inter", "sans-serif";
+  
+  --animate-equalizer: equalizer 1s ease-in-out infinite;
+
+  @keyframes equalizer {
+    0% { height: 4px; }
+    50% { height: 16px; }
+    100% { height: 4px; }
+  }
 }
 
 @layer base {
