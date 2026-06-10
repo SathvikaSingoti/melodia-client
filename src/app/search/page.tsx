@@ -8,7 +8,16 @@ import { usePlayerStore, Song } from "@/store/playerStore";
 import { useAuth } from "@/context/AuthContext";
 import SongMenu from "@/components/SongMenu";
 
-const GENRES = ["Pop", "Hip-Hop", "R&B", "Indie", "Electronic", "Rock", "Jazz", "Classical"];
+const GENRES = [
+  { name: "Pop", emoji: "🎤" },
+  { name: "Hip-Hop", emoji: "🎧" },
+  { name: "R&B", emoji: "💜" },
+  { name: "Indie", emoji: "🌿" },
+  { name: "Electronic", emoji: "⚡" },
+  { name: "Rock", emoji: "🎸" },
+  { name: "Jazz", emoji: "🎷" },
+  { name: "Classical", emoji: "🎻" }
+];
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
@@ -16,14 +25,20 @@ export default function SearchPage() {
   const [filter, setFilter] = useState("All");
   const [loading, setLoading] = useState(false);
   const [likedSongIds, setLikedSongIds] = useState<Set<string>>(new Set());
+  
+  const [allSongs, setAllSongs] = useState<Song[]>([]);
 
   const { user } = useAuth();
   const play = usePlayerStore(state => state.play);
+  const currentSong = usePlayerStore(state => state.currentSong);
+  const isPlaying = usePlayerStore(state => state.isPlaying);
 
   useEffect(() => {
     if (user) {
       fetchLikedSongs();
     }
+    // Fetch all songs for artists empty state
+    axios.get(`${process.env.NEXT_PUBLIC_API_URL}/songs`).then(res => setAllSongs(res.data));
   }, [user]);
 
   const fetchLikedSongs = async () => {
@@ -91,6 +106,12 @@ export default function SearchPage() {
     setLoading(true);
     debouncedSearch(e.target.value);
   };
+  
+  const handleGenreClick = (genre: string) => {
+    setQuery(genre);
+    setLoading(true);
+    debouncedSearch(genre);
+  };
 
   const filteredResults = results.filter(song => {
     if (filter === "All") return true;
@@ -105,9 +126,21 @@ export default function SearchPage() {
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
+  // Derive unique artists
+  const artistsMap = new Map<string, {count: number, coverUrl: string}>();
+  allSongs.forEach(s => {
+    const current = artistsMap.get(s.artist);
+    if (current) {
+      current.count += 1;
+    } else {
+      artistsMap.set(s.artist, { count: 1, coverUrl: s.coverUrl });
+    }
+  });
+  const topArtists = Array.from(artistsMap.entries()).map(([name, data]) => ({ name, ...data })).slice(0, 6);
+
   return (
     <ProtectedRoute>
-      <div className="p-8 max-w-5xl mx-auto">
+      <div className="p-8 max-w-5xl mx-auto pb-32">
         <div className="mb-10">
           <input
             type="text"
@@ -153,7 +186,7 @@ export default function SearchPage() {
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                         <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                       </div>
-                      {usePlayerStore.getState().currentSong?._id === song._id && usePlayerStore.getState().isPlaying && (
+                      {currentSong?._id === song._id && isPlaying && (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-0.5">
                           <div className="w-1 bg-primary rounded-full animate-[equalizer_1s_ease-in-out_infinite]"></div>
                           <div className="w-1 bg-primary rounded-full animate-[equalizer_1.2s_ease-in-out_infinite_0.2s]"></div>
@@ -163,7 +196,7 @@ export default function SearchPage() {
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <h4 className={`font-medium truncate ${usePlayerStore.getState().currentSong?._id === song._id ? 'text-primary' : 'text-white'}`}>{song.title}</h4>
+                      <h4 className={`font-medium truncate ${currentSong?._id === song._id ? 'text-primary' : 'text-white'}`}>{song.title}</h4>
                       <p className="text-gray-400 text-sm truncate">{song.artist}</p>
                     </div>
 
@@ -195,30 +228,44 @@ export default function SearchPage() {
             )}
           </>
         ) : (
-          <div>
-            <h3 className="text-xl font-bold text-white mb-6">Browse all</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { name: "Pop", emoji: "🎤" },
-                { name: "Hip-Hop", emoji: "🎧" },
-                { name: "R&B", emoji: "💜" },
-                { name: "Indie", emoji: "🌿" },
-                { name: "Electronic", emoji: "⚡" },
-                { name: "Rock", emoji: "🎸" },
-                { name: "Jazz", emoji: "🎷" },
-                { name: "Classical", emoji: "🎻" }
-              ].map((genre) => (
-                <div 
-                  key={genre.name}
-                  onClick={() => { setQuery(genre.name); handleSearchChange({target: {value: genre.name}} as any); }}
-                  className="aspect-square rounded-xl p-4 flex flex-col justify-between cursor-pointer hover:scale-[1.03] transition-transform overflow-hidden relative shadow-lg glass-panel border border-border"
-                >
-                  <h4 className="text-white font-bold text-xl z-10">{genre.name}</h4>
-                  <div className="text-6xl self-end z-10 opacity-80">{genre.emoji}</div>
-                  <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-primary/20 rounded-full blur-3xl z-0"></div>
-                </div>
-              ))}
+          <div className="space-y-12">
+            <div>
+              <h3 className="text-xl font-bold text-white mb-6">Browse all</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {GENRES.map((genre) => (
+                  <div 
+                    key={genre.name}
+                    onClick={() => handleGenreClick(genre.name)}
+                    className="aspect-[2/1] rounded-xl p-4 flex items-center justify-between cursor-pointer hover:scale-[1.03] transition-transform overflow-hidden relative shadow-lg glass-panel border border-border"
+                  >
+                    <h4 className="text-white font-bold text-lg z-10">{genre.name}</h4>
+                    <div className="text-4xl z-10 opacity-90">{genre.emoji}</div>
+                    <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-primary/20 rounded-full blur-2xl z-0"></div>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {topArtists.length > 0 && (
+              <div>
+                <h3 className="text-xl font-bold text-white mb-6">Popular Artists</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                  {topArtists.map(artist => (
+                    <div 
+                      key={artist.name}
+                      onClick={() => { setQuery(artist.name); setFilter("Artist"); handleSearchChange({target: {value: artist.name}} as any); }}
+                      className="group cursor-pointer text-center"
+                    >
+                      <div className="w-full aspect-square rounded-full overflow-hidden mb-4 shadow-lg border border-border group-hover:border-primary/50 transition-colors">
+                        <img src={artist.coverUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={artist.name} />
+                      </div>
+                      <h4 className="text-white font-medium truncate">{artist.name}</h4>
+                      <p className="text-gray-400 text-xs mt-1">{artist.count} {artist.count === 1 ? 'song' : 'songs'}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -16,7 +16,7 @@ const MOODS = [
 ];
 
 export default function ExplorePage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeGenre, setActiveGenre] = useState("All");
@@ -25,12 +25,15 @@ export default function ExplorePage() {
   const [activeMood, setActiveMood] = useState<string | null>(null);
 
   const [likedSongIds, setLikedSongIds] = useState<Set<string>>(new Set());
+  
+  const recentlyPlayed = usePlayerStore(state => state.recentlyPlayed) || [];
+  const play = usePlayerStore(state => state.play);
+  const isPlaying = usePlayerStore(state => state.isPlaying);
+  const currentSong = usePlayerStore(state => state.currentSong);
 
   useEffect(() => {
-    // Generate random mood on mount
     const randomMood = MOODS[Math.floor(Math.random() * MOODS.length)];
     setMoodOfTheDay(randomMood);
-    // Auto-filter by this mood initially as per requirements
     setActiveMood(randomMood.mood);
   }, []);
 
@@ -107,16 +110,12 @@ export default function ExplorePage() {
         <header className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-3xl font-bold text-white mb-2">Explore</h2>
-            <p className="text-gray-400">Discover new music tailored to your taste.</p>
+            <p className="text-transparent bg-clip-text bg-gradient-to-r from-[#A855F7] to-[#7C3AED] font-medium">Discover new music tailored to your taste.</p>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-gray-300">Welcome, {user?.username}</span>
-            <button
-              onClick={logout}
-              className="px-4 py-2 rounded-lg bg-bg-tertiary border border-border hover:bg-bg-tertiary/80 transition-colors text-sm font-medium"
-            >
-              Log out
-            </button>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#A855F7] to-[#7C3AED] flex items-center justify-center text-white font-bold text-xl shadow-[0_0_15px_rgba(168,85,247,0.4)] border-2 border-bg-tertiary">
+              {user?.username?.[0]?.toUpperCase()}
+            </div>
           </div>
         </header>
 
@@ -128,7 +127,7 @@ export default function ExplorePage() {
               onClick={() => { setActiveGenre(genre); setActiveMood(null); }}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                 activeGenre === genre && !activeMood
-                  ? "bg-primary text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]" 
+                  ? "bg-gradient-to-r from-[#A855F7] to-[#7C3AED] text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]" 
                   : "bg-bg-tertiary text-gray-300 hover:bg-bg-tertiary/80 hover:text-white"
               }`}
             >
@@ -160,7 +159,42 @@ export default function ExplorePage() {
           </div>
         )}
 
+        {/* Recently Played */}
+        {recentlyPlayed.length > 0 && (
+          <div className="mb-10">
+            <h3 className="text-xl font-bold text-white mb-4">Recently Played</h3>
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+              {recentlyPlayed.map((song) => (
+                <div 
+                  key={song._id} 
+                  onClick={() => play(song, recentlyPlayed)}
+                  className="group relative bg-bg-secondary p-3 rounded-xl border border-border hover:border-primary/50 transition-all cursor-pointer min-w-[160px] max-w-[160px] flex-shrink-0"
+                >
+                  <div className="relative aspect-square mb-3 overflow-hidden rounded-lg">
+                    <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white hover:scale-105 transition-transform shadow-lg">
+                        <svg className="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                      </button>
+                    </div>
+                    {currentSong?._id === song._id && isPlaying && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-1">
+                        <div className="w-1 bg-primary rounded-full animate-[equalizer_1s_ease-in-out_infinite]"></div>
+                        <div className="w-1 bg-primary rounded-full animate-[equalizer_1.2s_ease-in-out_infinite_0.2s]"></div>
+                        <div className="w-1 bg-primary rounded-full animate-[equalizer_0.8s_ease-in-out_infinite_0.4s]"></div>
+                      </div>
+                    )}
+                  </div>
+                  <h4 className="font-semibold text-white text-sm truncate mb-1">{song.title}</h4>
+                  <p className="text-xs text-gray-400 truncate">{song.artist}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Songs Grid */}
+        <h3 className="text-xl font-bold text-white mb-4">Recommended</h3>
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -174,7 +208,7 @@ export default function ExplorePage() {
             {displayedSongs.map((song) => (
               <div 
                 key={song._id} 
-                onClick={() => usePlayerStore.getState().play(song, displayedSongs)}
+                onClick={() => play(song, displayedSongs)}
                 className="group relative bg-bg-secondary p-4 rounded-xl border border-border hover:border-primary/50 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.5)] cursor-pointer"
               >
                 <div className="relative aspect-square mb-4 overflow-hidden rounded-lg">
@@ -188,7 +222,7 @@ export default function ExplorePage() {
                       <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     </button>
                   </div>
-                  {usePlayerStore.getState().currentSong?._id === song._id && usePlayerStore.getState().isPlaying && (
+                  {currentSong?._id === song._id && isPlaying && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-1">
                       <div className="w-1.5 bg-primary rounded-full animate-[equalizer_1s_ease-in-out_infinite]"></div>
                       <div className="w-1.5 bg-primary rounded-full animate-[equalizer_1.2s_ease-in-out_infinite_0.2s]"></div>

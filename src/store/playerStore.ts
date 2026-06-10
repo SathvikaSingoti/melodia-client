@@ -33,6 +33,7 @@ interface PlayerState {
   setVolume: (vol: number) => void;
   updateProgress: () => void;
   addToQueue: (song: Song) => void;
+  recentlyPlayed: Song[];
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -41,6 +42,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   progress: 0,
   duration: 0,
   queue: [],
+  recentlyPlayed: [],
   volume: 0.5,
   howl: null,
 
@@ -73,6 +75,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     });
 
     newHowl.play();
+    
+    const currentRecent = get().recentlyPlayed || [];
+    const filteredRecent = currentRecent.filter(s => s._id !== song._id);
+    const newRecent = [song, ...filteredRecent].slice(0, 5);
 
     set({
       currentSong: song,
@@ -80,6 +86,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       isPlaying: true,
       progress: 0,
       queue: queue || get().queue,
+      recentlyPlayed: newRecent
     });
   },
 
