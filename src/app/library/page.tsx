@@ -8,6 +8,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePlayerStore, Song } from "@/store/playerStore";
 import SongMenu from "@/components/SongMenu";
+import TrackList from "@/components/TrackList";
+import { Search, Image as ImageIcon, X, Plus } from "lucide-react";
 
 function PlaylistMenu({ playlist, onPlay, onQueue, onDelete }: { playlist: any, onPlay: () => void, onQueue: () => void, onDelete: () => void }) {
   const [open, setOpen] = useState(false);
@@ -58,6 +60,11 @@ export default function LibraryPage() {
   
   const [showModal, setShowModal] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
+  
+  const [allSongs, setAllSongs] = useState<Song[]>([]);
+  const [modalSearch, setModalSearch] = useState("");
+  const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
+  const [coverUrl, setCoverUrl] = useState<string>("");
 
   useEffect(() => {
     if (user) {
@@ -65,6 +72,12 @@ export default function LibraryPage() {
       else fetchPlaylists();
     }
   }, [user, activeTab]);
+
+  useEffect(() => {
+    if (showModal && allSongs.length === 0) {
+      axios.get(`${process.env.NEXT_PUBLIC_API_URL}/songs`).then(res => setAllSongs(res.data));
+    }
+  }, [showModal, allSongs.length]);
 
   const fetchLikedSongs = async () => {
     setLoading(true);
@@ -107,11 +120,16 @@ export default function LibraryPage() {
     try {
       const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/playlists`, {
         userId: user?._id,
-        name: newPlaylistName
+        name: newPlaylistName,
+        songs: selectedSongs.map(s => s._id),
+        coverUrl: coverUrl
       });
       setPlaylists(prev => [...prev, res.data]);
       setShowModal(false);
       setNewPlaylistName("");
+      setSelectedSongs([]);
+      setCoverUrl("");
+      setModalSearch("");
     } catch (error) {
       console.error("Failed to create playlist", error);
     }
@@ -164,40 +182,19 @@ export default function LibraryPage() {
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : activeTab === "likes" ? (
-          /* Liked Songs Grid */
+          /* Liked Songs Track List */
           likedSongs.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-              {likedSongs.map((song) => (
-                <div 
-                  key={song._id} 
-                  onClick={() => play(song, likedSongs)}
-                  className="group relative bg-bg-secondary p-4 rounded-xl border border-border hover:border-primary/50 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.5)] cursor-pointer"
-                >
-                  <div className="relative aspect-square mb-4 overflow-hidden rounded-lg">
-                    <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button className="w-12 h-12 flex items-center justify-center rounded-full bg-white text-bg-primary hover:scale-105 transition-transform shadow-lg">
-                        <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0 pr-2">
-                      <h3 className="font-semibold text-white truncate mb-1" title={song.title}>{song.title}</h3>
-                      <p className="text-sm text-gray-400 truncate" title={song.artist}>{song.artist}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <button onClick={(e) => unlikeSong(e, song._id)} className="text-secondary hover:scale-110 transition-transform">
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                      </button>
-                      <SongMenu song={song} />
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div>
+              <div className="mb-4">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                  ♥ {likedSongs.length} LIKED SONGS
+                </span>
+              </div>
+              <TrackList 
+                songs={likedSongs} 
+                likedSongIds={new Set(likedSongs.map(s => s._id))}
+                onToggleLike={unlikeSong}
+              />
             </div>
           ) : (
             <div className="text-center py-20 text-gray-400">You haven't liked any songs yet.</div>
@@ -312,35 +309,142 @@ export default function LibraryPage() {
 
         {/* Create Playlist Modal */}
         {showModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-bg-secondary w-full max-w-md rounded-2xl p-6 border border-border shadow-2xl animate-in fade-in zoom-in duration-200">
-              <h3 className="text-xl font-bold text-white mb-4">Create new playlist</h3>
-              <form onSubmit={createPlaylist}>
-                <input
-                  type="text"
-                  required
-                  placeholder="My awesome playlist"
-                  className="w-full bg-bg-tertiary text-white rounded-lg px-4 py-3 border border-border focus:border-primary focus:outline-none mb-6"
-                  value={newPlaylistName}
-                  onChange={(e) => setNewPlaylistName(e.target.value)}
-                  autoFocus
-                />
-                <div className="flex justify-end gap-3">
-                  <button 
-                    type="button" 
-                    onClick={() => setShowModal(false)}
-                    className="px-4 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-bg-tertiary transition-colors"
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div className="bg-bg-secondary w-full max-w-[480px] rounded-2xl border border-border shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden flex flex-col max-h-[85vh]">
+              <div className="p-6 border-b border-border flex-shrink-0">
+                <h3 className="text-xl font-bold text-white mb-6">Create new playlist</h3>
+                
+                <div className="flex gap-4">
+                  <div 
+                    className="w-20 h-20 bg-bg-tertiary rounded-lg border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors relative overflow-hidden flex-shrink-0"
+                    onClick={() => document.getElementById('cover-upload')?.click()}
                   >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit"
-                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-secondary text-white font-medium hover:opacity-90 transition-opacity shadow-lg"
-                  >
-                    Create
-                  </button>
+                    {coverUrl ? (
+                      <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-gray-400" />
+                    )}
+                    <input 
+                      id="cover-upload" 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => setCoverUrl(reader.result as string);
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </div>
+                  
+                  <div className="flex-1">
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Playlist Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="My awesome playlist"
+                      className="w-full bg-bg-tertiary text-white rounded-lg px-4 py-2.5 border border-border focus:border-primary focus:outline-none"
+                      value={newPlaylistName}
+                      onChange={(e) => setNewPlaylistName(e.target.value)}
+                      autoFocus
+                    />
+                  </div>
                 </div>
-              </form>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="mb-6">
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Add songs</label>
+                  <div className="relative mb-4">
+                    <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search for songs, artists..."
+                      className="w-full bg-bg-tertiary text-white rounded-lg pl-10 pr-4 py-2.5 border border-border focus:border-primary focus:outline-none text-sm"
+                      value={modalSearch}
+                      onChange={(e) => setModalSearch(e.target.value)}
+                    />
+                  </div>
+                  
+                  {modalSearch.trim() && (
+                    <div className="flex flex-col gap-1 mb-6 border border-border rounded-lg p-2 bg-bg-primary/50 max-h-48 overflow-y-auto">
+                      {allSongs
+                        .filter(s => !selectedSongs.find(sel => sel._id === s._id) && (s.title.toLowerCase().includes(modalSearch.toLowerCase()) || s.artist.toLowerCase().includes(modalSearch.toLowerCase())))
+                        .slice(0, 5)
+                        .map(song => (
+                          <div key={song._id} className="flex items-center justify-between p-2 hover:bg-bg-tertiary rounded-md group">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <img src={song.coverUrl} className="w-8 h-8 rounded object-cover" />
+                              <div className="min-w-0">
+                                <p className="text-sm text-white truncate">{song.title}</p>
+                                <p className="text-xs text-gray-400 truncate">{song.artist}</p>
+                              </div>
+                            </div>
+                            <button 
+                              type="button"
+                              onClick={() => setSelectedSongs(prev => [...prev, song])}
+                              className="w-8 h-8 flex items-center justify-center rounded-full bg-bg-tertiary hover:bg-primary/20 hover:text-primary text-gray-400 transition-colors"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {selectedSongs.length > 0 && (
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Selected ({selectedSongs.length})</label>
+                    <div className="flex flex-col gap-1">
+                      {selectedSongs.map(song => (
+                        <div key={song._id} className="flex items-center justify-between p-2 bg-bg-tertiary/50 rounded-md">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <img src={song.coverUrl} className="w-8 h-8 rounded object-cover" />
+                            <div className="min-w-0">
+                              <p className="text-sm text-white truncate">{song.title}</p>
+                            </div>
+                          </div>
+                          <button 
+                            type="button"
+                            onClick={() => setSelectedSongs(prev => prev.filter(s => s._id !== song._id))}
+                            className="p-1 text-gray-400 hover:text-red-400 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 border-t border-border flex justify-end gap-3 flex-shrink-0 bg-bg-primary/50">
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setShowModal(false);
+                    setSelectedSongs([]);
+                    setModalSearch("");
+                    setCoverUrl("");
+                    setNewPlaylistName("");
+                  }}
+                  className="px-4 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-bg-tertiary transition-colors text-sm font-medium"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button"
+                  onClick={createPlaylist}
+                  disabled={!newPlaylistName.trim()}
+                  className="px-6 py-2 rounded-lg bg-gradient-to-r from-primary to-secondary text-bg-primary font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  Create Playlist
+                </button>
+              </div>
             </div>
           </div>
         )}

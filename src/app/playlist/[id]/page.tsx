@@ -7,6 +7,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
 import { usePlayerStore, Song } from "@/store/playerStore";
 import SongMenu from "@/components/SongMenu";
+import TrackList from "@/components/TrackList";
 
 interface Playlist {
   _id: string;
@@ -18,7 +19,7 @@ export default function PlaylistPage() {
   const params = useParams();
   const router = useRouter();
   const { id } = params;
-  const { token } = useAuth();
+  const { user, token } = useAuth();
   const play = usePlayerStore(state => state.play);
   
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
@@ -28,12 +29,49 @@ export default function PlaylistPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState("");
+  const [likedSongIds, setLikedSongIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (token) {
       fetchPlaylist();
+      if (user) fetchLikedSongs();
     }
-  }, [id, token]);
+  }, [id, token, user]);
+
+  const fetchLikedSongs = async () => {
+    try {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user?._id}/liked`);
+      const ids = new Set<string>(res.data.map((s: Song) => s._id));
+      setLikedSongIds(ids);
+    } catch (error) {
+      console.error("Failed to fetch liked songs", error);
+    }
+  };
+
+  const toggleLike = async (e: React.MouseEvent, songId: string) => {
+    e.stopPropagation();
+    if (!user) return;
+    const isLiked = likedSongIds.has(songId);
+    try {
+      if (isLiked) {
+        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/liked/${songId}`);
+        setLikedSongIds(prev => {
+          const next = new Set(prev);
+          next.delete(songId);
+          return next;
+        });
+      } else {
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/liked`, { songId });
+        setLikedSongIds(prev => {
+          const next = new Set(prev);
+          next.add(songId);
+          return next;
+        });
+      }
+    } catch (error) {
+      console.error("Failed to toggle like", error);
+    }
+  };
 
   const getHeaders = () => ({
     headers: { Authorization: `Bearer ${token}` }
@@ -207,37 +245,14 @@ export default function PlaylistPage() {
         </div>
 
         {/* Playlist Songs */}
-        <div className="flex flex-col gap-2 mb-12">
+        <div className="mb-12">
           {playlist.songs.length > 0 ? (
-            playlist.songs.map((song, index) => (
-              <div 
-                key={song._id + index}
-                onClick={() => play(song, playlist.songs)}
-                className="flex items-center gap-4 p-3 rounded-lg hover:bg-bg-secondary group cursor-pointer transition-colors border border-transparent hover:border-border"
-              >
-                <div className="w-8 text-gray-500 text-right">{index + 1}</div>
-                
-                <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">
-                  <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                    <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                  </div>
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-white font-medium truncate">{song.title}</h4>
-                  <p className="text-gray-400 text-sm truncate">{song.artist}</p>
-                </div>
-                
-                <div className="flex items-center gap-2 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                  <SongMenu song={song} onRemove={(e?: React.MouseEvent) => removeSong(e as any, song._id)} />
-                </div>
-                
-                <div className="w-12 text-right text-sm text-gray-400 ml-4">
-                  {formatDuration(song.duration)}
-                </div>
-              </div>
-            ))
+            <TrackList 
+              songs={playlist.songs}
+              likedSongIds={likedSongIds}
+              onToggleLike={toggleLike}
+              onRemove={removeSong}
+            />
           ) : (
             <div className="text-center py-20 text-gray-400">
               This playlist is empty. Let's add some songs!
