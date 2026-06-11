@@ -210,20 +210,20 @@ export default function LibraryPage() {
               <button 
                 onClick={handleGenerateSmartPlaylist}
                 disabled={isGeneratingAI}
-                className="relative rounded-full p-[1px] bg-gradient-to-r from-primary to-secondary hover:from-primary/80 hover:to-secondary/80 transition-all disabled:opacity-70 disabled:cursor-not-allowed group"
+                className="px-[16px] py-[8px] rounded-full text-[13px] text-[#A8CFFF] font-medium transition-opacity disabled:opacity-70 disabled:cursor-not-allowed hover:opacity-80"
+                style={{
+                  background: "linear-gradient(#080d18, #080d18) padding-box, linear-gradient(135deg, #A8CFFF, #FFD6A5) border-box",
+                  border: "1.5px solid transparent"
+                }}
               >
-                <div className="flex items-center gap-2 px-4 py-1.5 bg-bg-primary rounded-full text-xs font-medium text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary transition-colors">
-                  {isGeneratingAI ? (
-                    <>
-                      <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      ✨ Generate Smart Playlist
-                    </>
-                  )}
-                </div>
+                {isGeneratingAI ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-3.5 h-3.5 border-2 border-[#A8CFFF] border-t-transparent rounded-full animate-spin"></div>
+                    Generating...
+                  </span>
+                ) : (
+                  "Generate Smart Playlist"
+                )}
               </button>
             </div>
             

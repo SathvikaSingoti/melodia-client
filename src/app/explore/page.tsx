@@ -122,12 +122,18 @@ export default function ExplorePage() {
             <p className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary font-medium">Discover new music tailored to your taste.</p>
           </div>
           <div className="flex items-center gap-4">
-            <div 
-              onClick={() => router.push('/search')}
-              className="hidden md:flex items-center gap-2 bg-bg-secondary border border-border rounded-full px-4 py-2 text-gray-400 cursor-text hover:border-primary/50 transition-colors w-64"
-            >
+            <div className="hidden md:flex items-center gap-2 bg-bg-secondary border border-border rounded-full px-4 py-2 text-gray-400 hover:border-primary/50 transition-colors w-64 focus-within:border-primary">
               <Search className="w-4 h-4" />
-              <span className="text-sm">Search music...</span>
+              <input 
+                type="text" 
+                placeholder="Search music..." 
+                className="bg-transparent border-none outline-none text-sm text-white w-full placeholder-gray-500"
+                onChange={(e) => {
+                  if (e.target.value.trim()) {
+                    router.push(`/search?q=${encodeURIComponent(e.target.value)}`);
+                  }
+                }}
+              />
             </div>
             
             <button className="text-gray-400 hover:text-white transition-colors p-2 hidden sm:block">
