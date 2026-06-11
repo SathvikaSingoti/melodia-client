@@ -12,7 +12,8 @@ export default function PlayerBar() {
     currentSong, isPlaying, progress, duration, 
     pause, resume, next, prev, seek, volume, setVolume, updateProgress,
     isShuffle, repeatMode, toggleShuffle, toggleRepeat,
-    isFullScreen, toggleFullScreen
+    isFullScreen, toggleFullScreen,
+    isQueueOpen, toggleQueue
   } = usePlayerStore();
 
   const { user } = useAuth();
@@ -236,7 +237,11 @@ export default function PlayerBar() {
                 </div>
               </div>
 
-              <button className="p-2 text-gray-400 hover:text-white transition-colors">
+              <button 
+                onClick={toggleQueue}
+                className={`p-2 transition-colors ${isQueueOpen ? 'text-primary' : 'text-gray-400 hover:text-white'}`}
+                title="Queue"
+              >
                 <ListMusic className="w-5 h-5" />
               </button>
             </div>
@@ -351,6 +356,14 @@ export default function PlayerBar() {
             ></div>
           </div>
         </div>
+
+        <button 
+          onClick={toggleQueue}
+          className={`transition-colors ${isQueueOpen ? 'text-primary' : 'text-gray-400 hover:text-white'}`}
+          title="Queue"
+        >
+          <ListMusic className="w-5 h-5" />
+        </button>
 
         <button 
           onClick={toggleFullScreen}

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Sidebar from "./Sidebar";
 import PlayerBar from "./PlayerBar";
+import QueueSidebar from "./QueueSidebar";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { token, isLoading } = useAuth();
@@ -34,6 +35,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
       <main className="flex-1 ml-64 pb-24 overflow-y-auto">
         {children}
       </main>
+      <QueueSidebar />
       <PlayerBar />
     </div>
   );

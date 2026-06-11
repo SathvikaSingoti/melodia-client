@@ -2,6 +2,7 @@
 
 import { Song, usePlayerStore } from "@/store/playerStore";
 import { Heart, MinusCircle } from "lucide-react";
+import Link from "next/link";
 
 interface TrackListProps {
   songs: Song[];
@@ -68,7 +69,13 @@ export default function TrackList({ songs, likedSongIds, onToggleLike, onRemove 
                   <h4 className={`text-sm font-medium truncate ${isCurrent ? 'text-primary' : 'text-white'}`}>
                     {song.title}
                   </h4>
-                  <p className="text-xs text-gray-400 truncate mt-0.5">{song.artist}</p>
+                  {song.artistId ? (
+                    <Link href={`/artist/${song.artistId}`} onClick={(e) => e.stopPropagation()} className="block text-xs text-gray-400 hover:text-[#A8CFFF] hover:underline truncate">
+                      {song.artist}
+                    </Link>
+                  ) : (
+                    <p className="text-xs text-gray-400 truncate mt-0.5">{song.artist}</p>
+                  )}
                 </div>
               </div>
 

@@ -1,10 +1,12 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { Howl } from 'howler';
 
 export interface Song {
   _id: string;
   title: string;
   artist: string;
+  artistId?: string;
   album: string;
   genre: string;
   mood: string;
@@ -42,10 +44,15 @@ interface PlayerState {
 
   isFullScreen: boolean;
   toggleFullScreen: () => void;
+
+  isQueueOpen: boolean;
+  toggleQueue: () => void;
 }
 
-export const usePlayerStore = create<PlayerState>((set, get) => ({
-  currentSong: null,
+export const usePlayerStore = create<PlayerState>()(
+  persist(
+    (set, get) => ({
+      currentSong: null,
   isPlaying: false,
   progress: 0,
   duration: 0,
@@ -56,12 +63,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   isShuffle: false,
   repeatMode: 'off',
   isFullScreen: false,
+  isQueueOpen: false,
 
   toggleShuffle: () => set(state => ({ isShuffle: !state.isShuffle })),
   toggleRepeat: () => set(state => ({ 
     repeatMode: state.repeatMode === 'off' ? 'queue' : state.repeatMode === 'queue' ? 'track' : 'off' 
   })),
   toggleFullScreen: () => set(state => ({ isFullScreen: !state.isFullScreen })),
+  toggleQueue: () => set(state => ({ isQueueOpen: !state.isQueueOpen })),
 
   play: (song, queue) => {
     const { howl, volume } = get();
@@ -95,7 +104,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     
     const currentRecent = get().recentlyPlayed || [];
     const filteredRecent = currentRecent.filter(s => s._id !== song._id);
-    const newRecent = [song, ...filteredRecent].slice(0, 5);
+    const newRecent = [song, ...filteredRecent].slice(0, 20);
 
     set({
       currentSong: song,
@@ -197,4 +206,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       set({ progress: howl.seek() as number });
     }
   }
-}));
+    }),
+    {
+      name: 'melodia-player-storage',
+      partialize: (state) => ({ recentlyPlayed: state.recentlyPlayed }),
+    }
+  )
+);

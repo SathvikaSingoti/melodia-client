@@ -57,6 +57,8 @@ export default function LibraryPage() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
   
   const [showModal, setShowModal] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
@@ -136,11 +138,14 @@ export default function LibraryPage() {
   };
 
   const handleGenerateSmartPlaylist = async () => {
+    if (!aiPrompt.trim()) return;
     setIsGeneratingAI(true);
+    setShowAiModal(false);
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate-playlist`, {}, { headers });
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate-playlist`, { prompt: aiPrompt }, { headers });
       setPlaylists(prev => [...prev, res.data]);
+      setAiPrompt("");
       router.push(`/playlist/${res.data._id}`);
     } catch (error) {
       console.error("Failed to generate smart playlist", error);
@@ -205,7 +210,7 @@ export default function LibraryPage() {
             <div className="mb-6 flex justify-between items-center">
               <h3 className="text-xl font-bold text-white">Your Playlists</h3>
               <button 
-                onClick={handleGenerateSmartPlaylist}
+                onClick={() => setShowAiModal(true)}
                 disabled={isGeneratingAI}
                 className="px-[16px] py-[8px] rounded-full text-[13px] text-[#A8CFFF] font-medium transition-opacity disabled:opacity-70 disabled:cursor-not-allowed hover:opacity-80"
                 style={{
@@ -216,7 +221,7 @@ export default function LibraryPage() {
                 {isGeneratingAI ? (
                   <span className="flex items-center justify-center gap-2">
                     <div className="w-3.5 h-3.5 border-2 border-[#A8CFFF] border-t-transparent rounded-full animate-spin"></div>
-                    Generating...
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#A8CFFF] to-[#FFD6A5]">Gemini is curating your mix...</span>
                   </span>
                 ) : (
                   "Generate Smart Playlist"
@@ -443,6 +448,55 @@ export default function LibraryPage() {
                   className="px-6 py-2 rounded-lg bg-gradient-to-r from-primary to-secondary text-bg-primary font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   Create Playlist
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* AI Playlist Modal */}
+        {showAiModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div className="bg-bg-secondary w-full max-w-[400px] rounded-2xl border border-border shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden flex flex-col">
+              <div className="p-6 border-b border-border">
+                <h3 className="text-xl font-bold text-white mb-2">Generate Smart Playlist</h3>
+                <p className="text-sm text-gray-400">Describe the exact mood, activity, or genre you're looking for.</p>
+              </div>
+
+              <div className="p-6">
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Describe your vibe...</label>
+                <textarea
+                  rows={3}
+                  placeholder="e.g., 'rainy day chill', '3am can't sleep', 'gym motivation', 'sunday morning coffee'"
+                  className="w-full bg-bg-tertiary text-white rounded-lg px-4 py-3 border border-border focus:border-primary focus:outline-none text-sm resize-none"
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleGenerateSmartPlaylist();
+                    }
+                  }}
+                  autoFocus
+                />
+              </div>
+
+              <div className="p-4 border-t border-border flex justify-end gap-3 bg-bg-primary/50">
+                <button 
+                  type="button" 
+                  onClick={() => { setShowAiModal(false); setAiPrompt(""); }}
+                  className="px-4 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-bg-tertiary transition-colors text-sm font-medium"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button"
+                  onClick={handleGenerateSmartPlaylist}
+                  disabled={!aiPrompt.trim() || isGeneratingAI}
+                  className="px-6 py-2 rounded-lg text-bg-primary font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+                  style={{ background: 'linear-gradient(90deg, #A8CFFF, #FFD6A5)' }}
+                >
+                  Generate
                 </button>
               </div>
             </div>
