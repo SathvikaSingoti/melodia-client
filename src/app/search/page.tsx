@@ -184,7 +184,7 @@ export default function SearchPage() {
                     <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">
                       <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-white hover:scale-105 transition-transform shadow-lg">
+                        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-bg-primary hover:scale-105 transition-transform shadow-lg">
                           <svg className="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                         </button>
                       </div>

@@ -148,7 +148,7 @@ export default function LibraryPage() {
                   <div className="relative aspect-square mb-4 overflow-hidden rounded-lg">
                     <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button className="w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-white hover:scale-105 transition-transform shadow-lg">
+                      <button className="w-12 h-12 flex items-center justify-center rounded-full bg-white text-bg-primary hover:scale-105 transition-transform shadow-lg">
                         <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                       </button>
                     </div>
@@ -182,16 +182,23 @@ export default function LibraryPage() {
               <button 
                 onClick={handleGenerateSmartPlaylist}
                 disabled={isGeneratingAI}
-                className="px-6 py-2 rounded-full font-bold text-white bg-gradient-to-r from-primary to-secondary shadow-[0_0_15px_rgba(168,207,255,0.5)] hover:shadow-[0_0_25px_rgba(168,207,255,0.7)] transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="relative rounded-full p-[1px] bg-gradient-to-r from-primary/60 to-secondary/60 hover:from-primary hover:to-secondary transition-all disabled:opacity-70 disabled:cursor-not-allowed group"
               >
-                {isGeneratingAI ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Generating your mix...
-                  </>
-                ) : (
-                  "Generate Smart Playlist"
-                )}
+                <div className="flex items-center gap-2 px-4 py-2 bg-bg-primary rounded-full text-[13px] font-medium text-primary group-hover:bg-bg-secondary transition-colors">
+                  {isGeneratingAI ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                      </svg>
+                      Generate Smart Playlist
+                    </>
+                  )}
+                </div>
               </button>
             </div>
             

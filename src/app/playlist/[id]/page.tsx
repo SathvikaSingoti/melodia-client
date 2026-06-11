@@ -197,7 +197,7 @@ export default function PlaylistPage() {
                     play(playlist.songs[0], playlist.songs);
                   }
                 }}
-                className="w-14 h-14 bg-gradient-to-br from-primary to-secondary text-white rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-[0_8px_30px_rgba(168,207,255,0.5)]"
+                className="w-14 h-14 bg-white text-bg-primary rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-[0_8px_30px_rgba(255,255,255,0.3)]"
                 title="Play All"
               >
                 <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>

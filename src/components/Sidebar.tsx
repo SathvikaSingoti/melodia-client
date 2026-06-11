@@ -42,7 +42,7 @@ export default function Sidebar() {
       {user && (
         <div className="p-6 border-t border-border mt-auto">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-lg shadow-lg">
+            <div className="w-7 h-7 rounded-full bg-bg-primary flex items-center justify-center text-primary font-bold text-sm border border-border">
               {user.username?.[0]?.toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">

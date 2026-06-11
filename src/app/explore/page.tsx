@@ -113,7 +113,7 @@ export default function ExplorePage() {
             <p className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary font-medium">Discover new music tailored to your taste.</p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-xl shadow-[0_0_15px_rgba(168,207,255,0.4)] border-2 border-bg-tertiary">
+            <div className="w-7 h-7 rounded-full bg-bg-primary flex items-center justify-center text-primary font-bold text-sm border border-border">
               {user?.username?.[0]?.toUpperCase()}
             </div>
           </div>
@@ -127,8 +127,8 @@ export default function ExplorePage() {
               onClick={() => { setActiveGenre(genre); setActiveMood(null); }}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                 activeGenre === genre && !activeMood
-                  ? "bg-gradient-to-r from-primary to-secondary text-white shadow-[0_0_15px_rgba(168,207,255,0.4)]" 
-                  : "bg-bg-tertiary text-gray-300 hover:bg-bg-tertiary/80 hover:text-white"
+                  ? "border-[1.5px] border-primary text-primary bg-primary/10" 
+                  : "bg-bg-tertiary text-gray-300 hover:bg-bg-tertiary/80 hover:text-white border-[1.5px] border-transparent"
               }`}
             >
               {genre}
@@ -142,8 +142,8 @@ export default function ExplorePage() {
             onClick={() => setActiveMood(activeMood === moodOfTheDay.mood ? null : moodOfTheDay.mood)}
             className={`mb-8 p-6 rounded-2xl cursor-pointer transition-all border ${
               activeMood === moodOfTheDay.mood 
-                ? "bg-gradient-to-r from-primary/20 to-secondary/20 border-primary" 
-                : "bg-bg-secondary border-border hover:border-primary/50"
+                ? "bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/50" 
+                : "bg-bg-secondary border-border hover:border-primary/30"
             }`}
           >
             <div className="flex items-center gap-4">
@@ -177,7 +177,7 @@ export default function ExplorePage() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-white hover:scale-105 transition-transform shadow-lg">
+                    <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-bg-primary hover:scale-105 transition-transform shadow-lg">
                       <svg className="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     </button>
                   </div>
@@ -222,7 +222,7 @@ export default function ExplorePage() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button className="w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-white hover:scale-105 transition-transform shadow-lg">
+                    <button className="w-12 h-12 flex items-center justify-center rounded-full bg-white text-bg-primary hover:scale-105 transition-transform shadow-lg">
                       <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     </button>
                   </div>

@@ -127,7 +127,7 @@ export default function PlayerBar() {
           
           <button 
             onClick={isPlaying ? pause : resume} 
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary hover:scale-105 transition-transform text-white shadow-lg"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-white hover:scale-105 transition-transform text-bg-primary shadow-lg"
           >
             {isPlaying ? (
                // Pause Icon
@@ -153,7 +153,7 @@ export default function PlayerBar() {
             className="flex-1 h-1.5 bg-bg-tertiary rounded-full overflow-hidden cursor-pointer relative"
           >
             <div 
-              className="h-full bg-gradient-to-r from-primary to-secondary absolute left-0 top-0 bottom-0 pointer-events-none" 
+              className="h-full bg-gradient-to-r from-primary/70 to-secondary/70 absolute left-0 top-0 bottom-0 pointer-events-none" 
               style={{ width: `${(localProgress / (duration || 1)) * 100}%` }}
             ></div>
           </div>
