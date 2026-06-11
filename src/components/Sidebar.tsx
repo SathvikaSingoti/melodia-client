@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { PlayCircle, Compass, Search, Library, LogOut } from 'lucide-react';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -20,20 +21,21 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-bg-secondary h-screen flex flex-col fixed left-0 top-0 border-r border-border z-40">
       <div className="p-6 flex-1 overflow-y-auto">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-8">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-8 flex items-center gap-2">
+          <PlayCircle className="w-6 h-6 text-primary" />
           Melodia
         </h1>
         
         <nav className="space-y-4">
           <div className="space-y-1">
             <Link href="/explore" className={getLinkClass("/explore")}>
-              Explore
+              <Compass className="w-5 h-5 mr-3" /> Explore
             </Link>
             <Link href="/search" className={getLinkClass("/search")}>
-              Search
+              <Search className="w-5 h-5 mr-3" /> Search
             </Link>
             <Link href="/library" className={getLinkClass("/library")}>
-              Library
+              <Library className="w-5 h-5 mr-3" /> Library
             </Link>
           </div>
         </nav>

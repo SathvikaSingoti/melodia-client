@@ -27,13 +27,18 @@ interface PlayerState {
   play: (song: Song, queue?: Song[]) => void;
   pause: () => void;
   resume: () => void;
-  next: () => void;
-  prev: () => void;
+  next: (userInitiated?: boolean) => void;
+  prev: (userInitiated?: boolean) => void;
   seek: (time: number) => void;
   setVolume: (vol: number) => void;
   updateProgress: () => void;
   addToQueue: (song: Song) => void;
   recentlyPlayed: Song[];
+  
+  isShuffle: boolean;
+  repeatMode: 'off' | 'queue' | 'track';
+  toggleShuffle: () => void;
+  toggleRepeat: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -45,6 +50,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   recentlyPlayed: [],
   volume: 0.5,
   howl: null,
+  isShuffle: false,
+  repeatMode: 'off',
+
+  toggleShuffle: () => set(state => ({ isShuffle: !state.isShuffle })),
+  toggleRepeat: () => set(state => ({ 
+    repeatMode: state.repeatMode === 'off' ? 'queue' : state.repeatMode === 'queue' ? 'track' : 'off' 
+  })),
 
   play: (song, queue) => {
     const { howl, volume } = get();
@@ -67,7 +79,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
         set({ isPlaying: false });
       },
       onend: () => {
-        get().next();
+        get().next(false);
       },
       onseek: () => {
         // Optional: handle seek completion
@@ -111,20 +123,35 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     }
   },
 
-  next: () => {
-    const { queue, currentSong, play } = get();
+  next: (userInitiated = false) => {
+    const { queue, currentSong, play, isShuffle, repeatMode } = get();
     if (!currentSong || queue.length === 0) return;
+
+    if (!userInitiated && repeatMode === 'track') {
+      play(currentSong, queue);
+      return;
+    }
+
+    if (isShuffle) {
+      const available = queue.filter(s => s._id !== currentSong._id);
+      if (available.length > 0) {
+        const randomSong = available[Math.floor(Math.random() * available.length)];
+        play(randomSong, queue);
+      } else {
+        play(currentSong, queue);
+      }
+      return;
+    }
 
     const currentIndex = queue.findIndex((s) => s._id === currentSong._id);
     if (currentIndex >= 0 && currentIndex < queue.length - 1) {
       play(queue[currentIndex + 1], queue);
-    } else if (queue.length > 0) {
-      // Loop back to start
+    } else if (queue.length > 0 && repeatMode === 'queue') {
       play(queue[0], queue);
     }
   },
 
-  prev: () => {
+  prev: (userInitiated = false) => {
     const { queue, currentSong, howl, play } = get();
     if (!currentSong || queue.length === 0) return;
 

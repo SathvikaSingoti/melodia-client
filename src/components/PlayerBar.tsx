@@ -5,11 +5,13 @@ import axios from "axios";
 import { usePlayerStore } from "@/store/playerStore";
 import { useAuth } from "@/context/AuthContext";
 import { Song } from "@/store/playerStore";
+import { Shuffle, Repeat, Repeat1 } from "lucide-react";
 
 export default function PlayerBar() {
   const { 
     currentSong, isPlaying, progress, duration, 
-    pause, resume, next, prev, seek, volume, setVolume, updateProgress 
+    pause, resume, next, prev, seek, volume, setVolume, updateProgress,
+    isShuffle, repeatMode, toggleShuffle, toggleRepeat
   } = usePlayerStore();
 
   const { user } = useAuth();
@@ -120,7 +122,14 @@ export default function PlayerBar() {
       {/* Controls */}
       <div className="flex flex-col items-center justify-center w-1/3 gap-2">
         <div className="flex items-center gap-6">
-          <button onClick={prev} className="text-gray-400 hover:text-white transition-colors">
+          <button 
+            onClick={toggleShuffle} 
+            className={`transition-colors p-2 ${isShuffle ? 'text-primary' : 'text-gray-400 hover:text-white'}`}
+          >
+            <Shuffle className="w-4 h-4" />
+          </button>
+
+          <button onClick={() => prev(true)} className="text-gray-400 hover:text-white transition-colors">
             {/* Previous Icon */}
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
           </button>
@@ -138,9 +147,16 @@ export default function PlayerBar() {
             )}
           </button>
           
-          <button onClick={next} className="text-gray-400 hover:text-white transition-colors">
+          <button onClick={() => next(true)} className="text-gray-400 hover:text-white transition-colors">
             {/* Next Icon */}
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+          </button>
+
+          <button 
+            onClick={toggleRepeat} 
+            className={`transition-colors p-2 ${repeatMode !== 'off' ? (repeatMode === 'track' ? 'text-secondary' : 'text-primary') : 'text-gray-400 hover:text-white'}`}
+          >
+            {repeatMode === 'track' ? <Repeat1 className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
           </button>
         </div>
         

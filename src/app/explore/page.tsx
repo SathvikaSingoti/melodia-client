@@ -6,6 +6,9 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
 import { usePlayerStore, Song } from "@/store/playerStore";
 import SongMenu from "@/components/SongMenu";
+import { Search, Bell, Settings, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const GENRES = ["All", "Pop", "Hip-Hop", "R&B", "Indie", "Electronic"];
 
@@ -16,8 +19,11 @@ const MOODS = [
 ];
 
 export default function ExplorePage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const router = useRouter();
   const [songs, setSongs] = useState<Song[]>([]);
+  const [allSongs, setAllSongs] = useState<Song[]>([]);
+  const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeGenre, setActiveGenre] = useState("All");
   
@@ -35,12 +41,15 @@ export default function ExplorePage() {
     const randomMood = MOODS[Math.floor(Math.random() * MOODS.length)];
     setMoodOfTheDay(randomMood);
     setActiveMood(randomMood.mood);
+
+    axios.get(`${process.env.NEXT_PUBLIC_API_URL}/songs`).then(res => setAllSongs(res.data));
   }, []);
 
   useEffect(() => {
     fetchSongs(activeGenre);
     if (user) {
       fetchLikedSongs();
+      axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/playlists`).then(res => setUserPlaylists(res.data));
     }
   }, [activeGenre, user]);
 
@@ -112,9 +121,33 @@ export default function ExplorePage() {
             <h2 className="text-3xl font-bold text-white mb-2">Explore</h2>
             <p className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary font-medium">Discover new music tailored to your taste.</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-              {user?.username?.[0]?.toUpperCase()}
+          <div className="flex items-center gap-4">
+            <div 
+              onClick={() => router.push('/search')}
+              className="hidden md:flex items-center gap-2 bg-bg-secondary border border-border rounded-full px-4 py-2 text-gray-400 cursor-text hover:border-primary/50 transition-colors w-64"
+            >
+              <Search className="w-4 h-4" />
+              <span className="text-sm">Search music...</span>
+            </div>
+            
+            <button className="text-gray-400 hover:text-white transition-colors p-2 hidden sm:block">
+              <Bell className="w-5 h-5" />
+            </button>
+            
+            <button className="text-gray-400 hover:text-white transition-colors p-2 hidden sm:block">
+              <Settings className="w-5 h-5" />
+            </button>
+            
+            <div className="relative group/avatar">
+              <button className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm border border-transparent hover:border-primary/50 transition-all">
+                {user?.username?.[0]?.toUpperCase()}
+              </button>
+              <div className="absolute right-0 top-full mt-2 w-48 bg-bg-tertiary border border-border rounded-lg shadow-xl opacity-0 invisible group-hover/avatar:opacity-100 group-hover/avatar:visible transition-all z-50 py-1">
+                <button onClick={logout} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-bg-secondary flex items-center gap-2">
+                  <LogOut className="w-4 h-4" />
+                  Log out
+                </button>
+              </div>
             </div>
           </div>
         </header>
@@ -192,6 +225,89 @@ export default function ExplorePage() {
                   <h4 className="font-semibold text-white text-sm truncate mb-1">{song.title}</h4>
                   <p className="text-xs text-gray-400 truncate">{song.artist}</p>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Trending Now */}
+        {allSongs.length > 0 && (
+          <div className="mb-10">
+            <h3 className="text-xl font-bold text-white mb-4">Trending Now</h3>
+            <div className="flex flex-col gap-2">
+              {[...allSongs].sort((a, b) => b.plays - a.plays).slice(0, 5).map((song, i) => (
+                <div 
+                  key={song._id}
+                  onClick={() => play(song, allSongs)}
+                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-bg-secondary group cursor-pointer transition-colors border border-transparent hover:border-border"
+                >
+                  <div className="w-6 text-gray-500 font-bold text-center">{i + 1}</div>
+                  <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">
+                    <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <button className="w-8 h-8 flex items-center justify-center rounded-full bg-white text-bg-primary hover:scale-105 transition-transform shadow-lg">
+                        <svg className="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-white font-medium truncate">{song.title}</h4>
+                    <p className="text-gray-400 text-sm truncate">{song.artist}</p>
+                  </div>
+                  <div className="hidden md:block w-24 text-right text-gray-500 text-xs">{song.plays} plays</div>
+                  <div className="w-12 text-right text-sm text-gray-400">{formatDuration(song.duration)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* New Releases */}
+        {allSongs.length > 0 && (
+          <div className="mb-10">
+            <h3 className="text-xl font-bold text-white mb-4">New Releases</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[...allSongs].reverse().slice(0, 4).map(song => (
+                <div 
+                  key={song._id}
+                  onClick={() => play(song, allSongs)}
+                  className="bg-bg-secondary p-4 rounded-xl border border-border hover:border-primary/50 transition-all cursor-pointer group"
+                >
+                  <div className="relative aspect-square mb-4 overflow-hidden rounded-lg">
+                    <img src={song.coverUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button className="w-12 h-12 flex items-center justify-center rounded-full bg-white text-bg-primary hover:scale-105 transition-transform shadow-lg">
+                        <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <h4 className="font-semibold text-white truncate">{song.title}</h4>
+                  <p className="text-sm text-gray-400 truncate">{song.artist}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Curated Playlists */}
+        {userPlaylists.length > 0 && (
+          <div className="mb-10">
+            <h3 className="text-xl font-bold text-white mb-4">Curated Playlists</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {userPlaylists.slice(0, 3).map(playlist => (
+                <Link href={`/playlist/${playlist._id}`} key={playlist._id} className="flex bg-bg-secondary p-4 rounded-xl border border-border hover:border-primary/50 transition-all group">
+                  <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-bg-tertiary">
+                    {playlist.songs.length > 0 ? (
+                      <img src={playlist.songs[0].coverUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-3xl">🎵</div>
+                    )}
+                  </div>
+                  <div className="ml-4 flex-1 min-w-0 flex flex-col justify-center">
+                    <h4 className="font-bold text-white text-lg truncate mb-1">{playlist.name}</h4>
+                    <p className="text-sm text-gray-400 line-clamp-2">A personalized collection tailored to your unique taste. Handpicked for you.</p>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
