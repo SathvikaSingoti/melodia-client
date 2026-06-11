@@ -1,14 +1,17 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import toast from 'react-hot-toast';
 import { Howl } from 'howler';
+import axios from 'axios';
 
 export interface Song {
   _id: string;
   title: string;
   artist: string;
   artistId?: string;
-  album: string;
-  genre: string;
+  album?: string;
+  albumId?: string;
+  genre?: string;
   mood: string;
   duration: number;
   audioUrl: string;
@@ -17,22 +20,42 @@ export interface Song {
 }
 
 interface PlayerState {
+  radioContext: Song | null;
   currentSong: Song | null;
   isPlaying: boolean;
   progress: number;
   duration: number;
   queue: Song[];
   volume: number;
+  cachedVolume: number;
+  playbackRate: number;
   howl: Howl | null;
   
+  // Crossfade
+  crossfadeEnabled: boolean;
+  crossfadeDuration: number;
+  isCrossfading: boolean;
+  crossfadingHowl: Howl | null;
+  setCrossfade: (enabled: boolean, duration?: number) => void;
+  
+  // Loop A/B Markers
+  loopA: number | null;
+  loopB: number | null;
+  isLoopActive: boolean;
+  
   // Actions
-  play: (song: Song, queue?: Song[]) => void;
+  startRadio: (seedSong: Song, radioQueue: Song[]) => void;
+  play: (song: Song, queue?: Song[], isCrossfadeTrigger?: boolean) => void;
   pause: () => void;
   resume: () => void;
-  next: (userInitiated?: boolean) => void;
+  next: (userInitiated?: boolean, isCrossfadeTrigger?: boolean) => void;
   prev: (userInitiated?: boolean) => void;
   seek: (time: number) => void;
   setVolume: (vol: number) => void;
+  toggleMute: () => void;
+  setPlaybackRate: (rate: number) => void;
+  setLoopMarker: (marker: 'A' | 'B', time: number | null) => void;
+  toggleLoop: () => void;
   updateProgress: () => void;
   addToQueue: (song: Song) => void;
   recentlyPlayed: Song[];
@@ -47,23 +70,46 @@ interface PlayerState {
 
   isQueueOpen: boolean;
   toggleQueue: () => void;
+
+  isDetailPanelOpen: boolean;
+  toggleDetailPanel: () => void;
+  detailSong: Song | null;
+  setDetailSong: (song: Song | null) => void;
+  lastDetailUpdate: number;
+
+  isPlayerExpanded: boolean;
+  togglePlayerExpanded: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>()(
   persist(
     (set, get) => ({
-      currentSong: null,
+      radioContext: null,
+  currentSong: null,
   isPlaying: false,
   progress: 0,
   duration: 0,
   queue: [],
   recentlyPlayed: [],
-  volume: 0.5,
+  volume: 1,
+  cachedVolume: 1,
+  playbackRate: 1,
   howl: null,
+  crossfadeEnabled: false,
+  crossfadeDuration: 3,
+  isCrossfading: false,
+  crossfadingHowl: null,
+  loopA: null,
+  loopB: null,
+  isLoopActive: false,
   isShuffle: false,
   repeatMode: 'off',
   isFullScreen: false,
   isQueueOpen: false,
+  isDetailPanelOpen: false,
+  detailSong: null,
+  lastDetailUpdate: 0,
+  isPlayerExpanded: false,
 
   toggleShuffle: () => set(state => ({ isShuffle: !state.isShuffle })),
   toggleRepeat: () => set(state => ({ 
@@ -71,36 +117,131 @@ export const usePlayerStore = create<PlayerState>()(
   })),
   toggleFullScreen: () => set(state => ({ isFullScreen: !state.isFullScreen })),
   toggleQueue: () => set(state => ({ isQueueOpen: !state.isQueueOpen })),
+  toggleDetailPanel: () => set(state => ({ isDetailPanelOpen: !state.isDetailPanelOpen })),
+  togglePlayerExpanded: () => set(state => ({ isPlayerExpanded: !state.isPlayerExpanded })),
+  
+  setCrossfade: (enabled: boolean, duration?: number) => set(state => ({ 
+    crossfadeEnabled: enabled, 
+    crossfadeDuration: duration !== undefined ? duration : state.crossfadeDuration 
+  })),
+  
+  setPlaybackRate: (rate: number) => {
+    const { howl } = get();
+    if (howl) howl.rate(rate);
+    set({ playbackRate: rate });
+  },
+  
+  setLoopMarker: (marker, time) => set(state => {
+    if (marker === 'A') {
+      return { loopA: time };
+    } else {
+      return { loopB: time };
+    }
+  }),
+  
+  toggleLoop: () => set(state => ({ 
+    isLoopActive: !state.isLoopActive && state.loopA !== null && state.loopB !== null 
+  })),
+  setDetailSong: (song) => set((state) => {
+    if (song && state.detailSong?._id === song._id && state.isDetailPanelOpen) {
+      return { detailSong: null, isDetailPanelOpen: false, lastDetailUpdate: Date.now() };
+    }
+    return { detailSong: song, isDetailPanelOpen: !!song, lastDetailUpdate: Date.now() };
+  }),
+  addToQueue: (song) => {
+    set((state) => ({ queue: [...state.queue, song] }));
+    toast.success("Added to queue");
+  },
 
-  play: (song, queue) => {
-    const { howl, volume } = get();
-    
-    // Stop and unload existing howl if any
+  startRadio: (seedSong: Song, radioQueue: Song[]) => {
+    const { howl } = get();
     if (howl) {
-      howl.stop();
       howl.unload();
     }
+    set({ radioContext: seedSong });
+    
+    // Play first song of the generated radio queue
+    if (radioQueue.length > 0) {
+      const firstSong = radioQueue[0];
+      const newHowl = new Howl({
+        src: [firstSong.audioUrl],
+        html5: true,
+        volume: get().volume,
+        rate: get().playbackRate,
+        onplay: () => set({ isPlaying: true }),
+        onpause: () => set({ isPlaying: false }),
+        onend: () => get().next(false),
+        onload: () => set({ duration: firstSong.duration }),
+      });
+      newHowl.play();
+      set({ 
+        currentSong: firstSong,
+        queue: radioQueue,
+        howl: newHowl,
+        isPlaying: true,
+        progress: 0,
+        duration: firstSong.duration,
+        loopA: null,
+        loopB: null,
+        isLoopActive: false,
+        isCrossfading: false,
+      });
+    }
+  },
 
-    // Create new Howl instance
+  play: (song: Song, newQueue?: Song[], isCrossfadeTrigger: boolean = false) => {
+    const { howl, queue, radioContext, volume, crossfadeDuration, isCrossfading } = get();
+
+    // Clear radioContext if this play action is for a different song 
+    // and not just auto-advancing the existing queue
+    if (newQueue && radioContext) {
+      const isSameQueue = newQueue.length === queue.length && newQueue.every((s, i) => s._id === queue[i]?._id);
+      if (!isSameQueue) {
+        set({ radioContext: null });
+      }
+    }
+    
+    // Stop and unload existing howl if any, unless we are crossfading
+    if (howl) {
+      if (isCrossfadeTrigger) {
+        // We are crossfading from the current howl to the new one
+        const currentVol = howl.volume();
+        howl.fade(currentVol, 0, crossfadeDuration * 1000);
+        setTimeout(() => {
+          howl.unload();
+          const currentState = get();
+          if (currentState.howl === newHowl) {
+            set({ crossfadingHowl: null, isCrossfading: false });
+          }
+        }, crossfadeDuration * 1000);
+      } else {
+        howl.unload();
+      }
+    }
+
     const newHowl = new Howl({
       src: [song.audioUrl],
-      html5: true, // Force HTML5 Audio to allow streaming large files
-      volume: volume,
-      onplay: () => {
-        set({ isPlaying: true, duration: newHowl.duration() });
-      },
-      onpause: () => {
-        set({ isPlaying: false });
-      },
+      html5: true,
+      volume: isCrossfadeTrigger ? 0 : volume,
+      rate: get().playbackRate,
+      onplay: () => set({ isPlaying: true }),
+      onpause: () => set({ isPlaying: false }),
       onend: () => {
-        get().next(false);
+        // Only trigger next if we aren't currently crossfading away from this song
+        if (!get().isCrossfading) {
+          get().next(false);
+        }
       },
-      onseek: () => {
-        // Optional: handle seek completion
-      }
+      onload: () => set({ duration: song.duration }),
     });
 
     newHowl.play();
+    if (isCrossfadeTrigger) {
+      newHowl.fade(0, volume, crossfadeDuration * 1000);
+    }
+    
+    // Track play count
+    axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/songs/${song._id}/play`).catch(console.error);
     
     const currentRecent = get().recentlyPlayed || [];
     const filteredRecent = currentRecent.filter(s => s._id !== song._id);
@@ -111,16 +252,12 @@ export const usePlayerStore = create<PlayerState>()(
       howl: newHowl,
       isPlaying: true,
       progress: 0,
-      queue: queue || get().queue,
-      recentlyPlayed: newRecent
+      queue: newQueue || queue,
+      recentlyPlayed: newRecent,
+      loopA: null,
+      loopB: null,
+      isLoopActive: false
     });
-  },
-
-  addToQueue: (song) => {
-    const { queue } = get();
-    if (!queue.find(s => s._id === song._id)) {
-      set({ queue: [...queue, song] });
-    }
   },
 
   pause: () => {
@@ -132,12 +269,12 @@ export const usePlayerStore = create<PlayerState>()(
 
   resume: () => {
     const { howl } = get();
-    if (howl && !howl.playing()) {
+    if (howl) {
       howl.play();
     }
   },
 
-  next: (userInitiated = false) => {
+  next: (userInitiated = true, isCrossfadeTrigger = false) => {
     const { queue, currentSong, play, isShuffle, repeatMode } = get();
     if (!currentSong || queue.length === 0) return;
 
@@ -146,22 +283,28 @@ export const usePlayerStore = create<PlayerState>()(
       return;
     }
 
+    let nextSong: Song | undefined;
+
     if (isShuffle) {
       const available = queue.filter(s => s._id !== currentSong._id);
-      if (available.length > 0) {
-        const randomSong = available[Math.floor(Math.random() * available.length)];
-        play(randomSong, queue);
-      } else {
-        play(currentSong, queue);
+      nextSong = available.length > 0 ? available[Math.floor(Math.random() * available.length)] : currentSong;
+    } else {
+      const currentIndex = queue.findIndex((s) => s._id === currentSong._id);
+      if (currentIndex >= 0 && currentIndex < queue.length - 1) {
+        nextSong = queue[currentIndex + 1];
+      } else if (queue.length > 0 && repeatMode === 'queue') {
+        nextSong = queue[0];
       }
-      return;
     }
 
-    const currentIndex = queue.findIndex((s) => s._id === currentSong._id);
-    if (currentIndex >= 0 && currentIndex < queue.length - 1) {
-      play(queue[currentIndex + 1], queue);
-    } else if (queue.length > 0 && repeatMode === 'queue') {
-      play(queue[0], queue);
+    if (nextSong) {
+      play(nextSong, undefined, isCrossfadeTrigger);
+    } else {
+      const { howl } = get();
+      if (howl && !isCrossfadeTrigger) {
+        howl.stop();
+      }
+      set({ isPlaying: false, progress: 0 });
     }
   },
 
@@ -200,16 +343,52 @@ export const usePlayerStore = create<PlayerState>()(
     set({ volume: vol });
   },
 
+  toggleMute: () => {
+    const { volume, cachedVolume, howl } = get();
+    if (volume > 0) {
+      if (howl) howl.volume(0);
+      set({ volume: 0, cachedVolume: volume });
+    } else {
+      const restoreVol = cachedVolume > 0 ? cachedVolume : 1;
+      if (howl) howl.volume(restoreVol);
+      set({ volume: restoreVol });
+    }
+  },
+
   updateProgress: () => {
-    const { howl, isPlaying } = get();
+    const { howl, isPlaying, isLoopActive, loopA, loopB, crossfadeEnabled, crossfadeDuration, isCrossfading, duration } = get();
     if (howl && isPlaying) {
-      set({ progress: howl.seek() as number });
+      const currentProgress = howl.seek() as number;
+      
+      // Enforce A/B Loop
+      if (isLoopActive && loopA !== null && loopB !== null) {
+        // If we crossed the B marker, or we are before the A marker somehow
+        if (currentProgress >= loopB) {
+          howl.seek(loopA);
+          set({ progress: loopA });
+          return;
+        }
+      }
+
+      // Check Crossfade condition
+      if (crossfadeEnabled && !isCrossfading && duration > 0) {
+        if (duration - currentProgress <= crossfadeDuration) {
+          set({ isCrossfading: true });
+          get().next(false, true); // Automatically start next song with crossfade
+        }
+      }
+      
+      set({ progress: currentProgress });
     }
   }
     }),
     {
       name: 'melodia-player-storage',
-      partialize: (state) => ({ recentlyPlayed: state.recentlyPlayed }),
+      partialize: (state) => ({ 
+        recentlyPlayed: state.recentlyPlayed,
+        crossfadeEnabled: state.crossfadeEnabled,
+        crossfadeDuration: state.crossfadeDuration
+      }),
     }
   )
 );

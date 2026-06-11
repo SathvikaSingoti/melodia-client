@@ -8,11 +8,13 @@ import { useAuth } from "@/context/AuthContext";
 import { usePlayerStore, Song } from "@/store/playerStore";
 import SongMenu from "@/components/SongMenu";
 import TrackList from "@/components/TrackList";
+import { Music, Play } from "lucide-react";
 
 interface Playlist {
   _id: string;
   name: string;
   songs: Song[];
+  isAIGenerated?: boolean;
 }
 
 export default function PlaylistPage() {
@@ -140,42 +142,20 @@ export default function PlaylistPage() {
     }
   };
 
-  const renderCover = () => {
-    if (!playlist) return null;
-    const songs = playlist.songs;
-    
-    if (songs.length === 0) {
-      return (
-        <div className="w-full h-full bg-bg-tertiary flex items-center justify-center text-6xl shadow-2xl">
-          🎵
-        </div>
-      );
-    } else if (songs.length < 4) {
-      return (
-        <img src={songs[0].coverUrl} alt="Cover" className="w-full h-full object-cover shadow-2xl" />
-      );
-    } else {
-      return (
-        <div className="w-full h-full grid grid-cols-2 grid-rows-2 shadow-2xl">
-          {songs.slice(0, 4).map((song, i) => (
-            <img key={i} src={song.coverUrl} alt="Cover" className="w-full h-full object-cover" />
-          ))}
-        </div>
-      );
-    }
+  const formatDuration = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (h > 0) return `${h} hr ${m} min`;
+    return `${m} min`;
   };
 
-  const formatDuration = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, "0")}`;
-  };
+  const totalDuration = playlist?.songs.reduce((acc, song) => acc + song.duration, 0) || 0;
 
   if (loading) {
     return (
       <ProtectedRoute>
-        <div className="flex justify-center py-20">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <div className="flex justify-center items-center h-[calc(100vh-160px)]">
+          <div className="w-8 h-8 border-4 border-[#c87941] border-t-transparent rounded-full animate-spin"></div>
         </div>
       </ProtectedRoute>
     );
@@ -184,28 +164,44 @@ export default function PlaylistPage() {
   if (!playlist) {
     return (
       <ProtectedRoute>
-        <div className="p-8 text-center text-white">Playlist not found</div>
+        <div className="p-8 text-center text-gray-400">Playlist not found</div>
       </ProtectedRoute>
     );
   }
 
   return (
     <ProtectedRoute>
-      <div className="p-8 max-w-5xl mx-auto pb-32">
-        <button 
-          onClick={() => router.back()}
-          className="mb-6 flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-          Back
-        </button>
+      <div className="flex h-full w-full max-w-[1400px] mx-auto overflow-hidden">
+        
+        {/* LEFT COLUMN - Fixed Details */}
+        <div className="w-[260px] h-full overflow-y-auto no-scrollbar flex-shrink-0 flex flex-col p-8 bg-[#111111] border-r border-[#1e1e1e]">
+          
+          <button 
+            onClick={() => router.back()}
+            className="mb-8 flex items-center gap-2 text-gray-400 hover:text-white transition-colors self-start text-sm font-semibold uppercase tracking-widest"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            Back
+          </button>
 
-        <div className="flex flex-col md:flex-row gap-8 mb-12 items-end">
-          <div className="w-64 h-64 rounded-xl overflow-hidden flex-shrink-0 border border-border shadow-2xl">
-            {renderCover()}
+          <div className="w-[200px] h-[200px] rounded-xl mx-auto overflow-hidden shadow-2xl mb-6 flex-shrink-0 relative border border-border group">
+            {playlist.songs.length > 0 ? (
+              <img src={playlist.songs[0].coverUrl} alt="Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-500 bg-bg-tertiary">
+                <Music className="w-16 h-16 opacity-50" />
+              </div>
+            )}
+            
+            {playlist.isAIGenerated && (
+              <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-[#c87941] border border-[#c87941]/30">
+                ✨ AI Mix
+              </div>
+            )}
           </div>
-          <div className="flex-1 w-full">
-            <p className="uppercase text-xs font-bold tracking-widest text-gray-400 mb-2">Playlist</p>
+          
+          <div className="text-center mb-6">
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Playlist</span>
             {isEditingName ? (
               <input 
                 type="text" 
@@ -214,105 +210,107 @@ export default function PlaylistPage() {
                 onBlur={savePlaylistName}
                 onKeyDown={(e) => e.key === 'Enter' && savePlaylistName()}
                 autoFocus
-                className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tighter bg-transparent border-b border-white focus:outline-none w-full"
+                className="text-2xl font-bold text-white text-center w-full bg-transparent border-b border-[#c87941] focus:outline-none mb-2"
               />
             ) : (
               <h1 
-                className="text-3xl md:text-4xl font-medium text-white mb-6 tracking-tight cursor-pointer hover:underline"
+                className="text-2xl font-bold text-white mb-2 tracking-tight cursor-pointer hover:text-[#c87941] transition-colors"
                 onClick={() => { setIsEditingName(true); setEditName(playlist.name); }}
                 title="Click to edit"
               >
                 {playlist.name}
               </h1>
             )}
-            <div className="flex items-center gap-6">
-              <p className="text-gray-300 font-medium">
-                {playlist.songs.length} {playlist.songs.length === 1 ? 'song' : 'songs'}
-              </p>
-              <button 
-                onClick={() => {
-                  if (playlist.songs.length > 0) {
-                    play(playlist.songs[0], playlist.songs);
-                  }
-                }}
-                className="w-14 h-14 bg-white text-bg-primary rounded-full flex items-center justify-center hover:scale-105 transition-transform"
-                title="Play All"
-              >
-                <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-              </button>
-            </div>
+            <p className="text-gray-400 text-sm">{playlist.songs.length} songs • {formatDuration(totalDuration)}</p>
           </div>
+
+          <button 
+            onClick={() => {
+              if (playlist.songs.length > 0) {
+                play(playlist.songs[0], playlist.songs);
+              }
+            }}
+            disabled={playlist.songs.length === 0}
+            className="w-full py-3 rounded-full font-bold tracking-widest uppercase transition-transform flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
+            style={{ backgroundColor: '#c87941', color: 'white' }}
+          >
+            <Play className="w-5 h-5 fill-current" /> Play All
+          </button>
         </div>
 
-        {/* Playlist Songs */}
-        <div className="mb-12">
-          {playlist.songs.length > 0 ? (
-            <TrackList 
-              songs={playlist.songs}
-              likedSongIds={likedSongIds}
-              onToggleLike={toggleLike}
-              onRemove={removeSong}
-            />
-          ) : (
-            <div className="text-center py-20 text-gray-400">
-              This playlist is empty. Let's add some songs!
-            </div>
-          )}
-        </div>
-
-        {/* Add Songs Section */}
-        <div className="bg-bg-secondary p-6 rounded-xl border border-border">
-          <h3 className="text-xl font-bold text-white mb-4">Let's find something for your playlist</h3>
-          <div className="relative mb-4">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={handleSearch}
-              placeholder="Search for songs or artists"
-              className="w-full bg-bg-tertiary text-white rounded-lg px-4 py-3 border border-border focus:border-primary focus:outline-none"
-            />
-          </div>
+        {/* RIGHT COLUMN - Scrollable Content */}
+        <div className="flex-1 h-full overflow-y-auto no-scrollbar p-8">
           
-          {searchQuery && (
-            <div className="flex flex-col gap-2 max-h-64 overflow-y-auto rounded-lg">
-              {isSearching ? (
-                <p className="text-gray-400 p-4">Searching...</p>
-              ) : searchResults.length > 0 ? (
-                searchResults.map(song => {
-                  const isAdded = playlist.songs.some(s => s._id === song._id);
-                  return (
-                    <div key={song._id} className="flex items-center justify-between p-3 hover:bg-bg-tertiary rounded-lg group">
-                      <div className="flex items-center gap-4">
-                        <img src={song.coverUrl} className="w-10 h-10 rounded" alt="Cover" />
-                        <div>
-                          <p className="text-white font-medium">{song.title}</p>
-                          <p className="text-gray-400 text-sm">{song.artist}</p>
+          <div className="mb-12">
+            {playlist.songs.length > 0 ? (
+              <TrackList 
+                songs={playlist.songs}
+                likedSongIds={likedSongIds}
+                onToggleLike={toggleLike}
+                onRemove={removeSong}
+              />
+            ) : (
+              <div className="text-center py-20 text-gray-500 bg-black/20 rounded-xl border border-dashed border-border">
+                <p className="text-lg font-medium mb-2">This playlist is empty</p>
+                <p className="text-sm">Search below to start adding songs.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Add Songs Section */}
+          <div className="bg-[#111111] p-6 rounded-xl border border-[#1e1e1e]">
+            <h3 className="text-lg font-bold text-white mb-4">Let's find something for your playlist</h3>
+            <div className="relative mb-4">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearch}
+                placeholder="Search for songs or artists"
+                className="w-full bg-black/40 text-white rounded-lg px-4 py-3 border border-border focus:border-[#c87941] focus:outline-none transition-colors"
+              />
+            </div>
+            
+            {searchQuery && (
+              <div className="flex flex-col gap-2 max-h-80 overflow-y-auto rounded-lg no-scrollbar">
+                {isSearching ? (
+                  <p className="text-gray-400 p-4">Searching...</p>
+                ) : searchResults.length > 0 ? (
+                  searchResults.map(song => {
+                    const isAdded = playlist.songs.some(s => s._id === song._id);
+                    return (
+                      <div key={song._id} className="flex items-center justify-between p-3 hover:bg-white/5 rounded-lg group transition-colors">
+                        <div className="flex items-center gap-4">
+                          <img src={song.coverUrl} className="w-10 h-10 rounded shadow-md" alt="Cover" />
+                          <div>
+                            <p className="text-white font-medium text-sm">{song.title}</p>
+                            <p className="text-gray-400 text-xs">{song.artist}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <SongMenu song={song} />
+                          <button
+                            onClick={() => addSong(song)}
+                            disabled={isAdded}
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors border ${
+                              isAdded 
+                                ? "bg-transparent text-gray-500 border-gray-700 cursor-not-allowed" 
+                                : "bg-transparent text-white border-white hover:border-[#c87941] hover:text-[#c87941]"
+                            }`}
+                          >
+                            {isAdded ? "Added" : "Add"}
+                          </button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <SongMenu song={song} />
-                        <button
-                          onClick={() => addSong(song)}
-                          disabled={isAdded}
-                          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
-                            isAdded 
-                              ? "bg-transparent text-gray-500 border-gray-600 cursor-not-allowed" 
-                              : "bg-transparent text-white border-white hover:scale-105"
-                          }`}
-                        >
-                          {isAdded ? "Added" : "Add"}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="text-gray-400 p-4">No results found</p>
-              )}
-            </div>
-          )}
-        </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-gray-400 p-4">No results found</p>
+                )}
+              </div>
+            )}
+          </div>
 
+        </div>
       </div>
     </ProtectedRoute>
   );

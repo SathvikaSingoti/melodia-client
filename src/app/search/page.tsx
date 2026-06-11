@@ -7,6 +7,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { usePlayerStore, Song } from "@/store/playerStore";
 import { useAuth } from "@/context/AuthContext";
 import SongMenu from "@/components/SongMenu";
+import Link from "next/link";
 
 const GENRES = [
   { name: "Pop", emoji: "🎤", style: "bg-[rgba(168,207,255,0.08)] border-[#A8CFFF]" },
@@ -32,6 +33,7 @@ export default function SearchPage() {
   const play = usePlayerStore(state => state.play);
   const currentSong = usePlayerStore(state => state.currentSong);
   const isPlaying = usePlayerStore(state => state.isPlaying);
+  const setDetailSong = usePlayerStore(state => state.setDetailSong);
   
   const [selectedGenre, setSelectedGenre] = useState("");
   const [genreResults, setGenreResults] = useState<Song[]>([]);
@@ -40,10 +42,27 @@ export default function SearchPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const q = params.get('q');
+    const section = params.get('section');
     if (q) {
       setQuery(q);
       setLoading(true);
       searchSongs(q);
+    } else if (section) {
+      setLoading(true);
+      axios.get(`${process.env.NEXT_PUBLIC_API_URL}/songs`).then(res => {
+        let sorted = res.data.filter((s: Song, i: number, a: Song[]) => a.findIndex(t => t.title === s.title && t.artist === s.artist) === i);
+        if (section === 'trending') {
+          sorted = [...sorted].sort((a,b) => (b.plays || 0) - (a.plays || 0));
+          setQuery("Trending Now");
+        } else if (section === 'new') {
+          sorted = [...sorted].reverse();
+          setQuery("New Releases");
+        } else if (section === 'recommended') {
+          setQuery("Recommended");
+        }
+        setResults(sorted);
+        setLoading(false);
+      });
     }
   }, []);
 
@@ -100,7 +119,8 @@ export default function SearchPage() {
 
     try {
       const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/songs/search?q=${encodeURIComponent(searchQuery)}`);
-      setResults(res.data);
+      const unique = res.data.filter((s: Song, i: number, a: Song[]) => a.findIndex(t => t.title === s.title && t.artist === s.artist) === i);
+      setResults(unique);
     } catch (error) {
       console.error("Search failed", error);
     } finally {
@@ -130,7 +150,8 @@ export default function SearchPage() {
     setLoadingGenre(true);
     try {
       const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/songs?genre=${encodeURIComponent(genre)}`);
-      setGenreResults(res.data);
+      const unique = res.data.filter((s: Song, i: number, a: Song[]) => a.findIndex(t => t.title === s.title && t.artist === s.artist) === i);
+      setGenreResults(unique);
     } catch (err) {
       console.error(err);
     } finally {
@@ -141,7 +162,8 @@ export default function SearchPage() {
   const filteredResults = results.filter(song => {
     if (filter === "All") return true;
     if (filter === "Artist") return song.artist.toLowerCase().includes(query.toLowerCase());
-    if (filter === "Genre") return song.genre.toLowerCase().includes(query.toLowerCase());
+    if (filter === "Genre") return song.genre?.toLowerCase().includes(query.toLowerCase());
+    if (filter === "Duration") return song.duration < 180; // Example duration filter
     return true;
   });
 
@@ -165,21 +187,22 @@ export default function SearchPage() {
 
   return (
     <ProtectedRoute>
-      <div className="p-8 max-w-5xl mx-auto pb-32">
-        <div className="mb-10">
+      <div className="p-8 w-full mx-auto pb-32">
+        <div className="mb-10 flex justify-center">
           <input
             type="text"
             value={query}
             onChange={handleSearchChange}
             placeholder="What do you want to listen to?"
-            className="w-full bg-bg-secondary text-white text-lg rounded-full py-4 px-6 border-2 border-border focus:border-primary focus:outline-none transition-colors shadow-lg placeholder-gray-500"
+            className="w-full max-w-[600px] bg-bg-secondary text-white text-lg rounded-full py-4 px-6 border-2 border-border focus:border-[#9060f0] transition-colors shadow-lg placeholder-gray-500 outline-none"
+            style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}
           />
         </div>
 
         {query ? (
           <>
-            <div className="flex gap-3 mb-6">
-              {["All", "Artist", "Genre"].map(f => (
+            <div className="flex gap-3 mb-8 justify-center">
+              {["All", "Artist", "Genre", "Duration"].map(f => (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
@@ -203,13 +226,16 @@ export default function SearchPage() {
                 {filteredResults.map(song => (
                   <div 
                     key={song._id}
-                    onClick={() => play(song, filteredResults)}
+                    onClick={() => setDetailSong(song)}
                     className="flex items-center gap-4 p-3 rounded-lg hover:bg-bg-secondary group cursor-pointer transition-colors border border-transparent hover:border-border"
                   >
                     <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">
                       <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-bg-primary hover:scale-105 transition-transform shadow-lg">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); play(song, filteredResults); }}
+                          className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-bg-primary hover:scale-105 transition-transform shadow-lg"
+                        >
                           <svg className="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                         </button>
                       </div>
@@ -224,11 +250,15 @@ export default function SearchPage() {
                     
                     <div className="flex-1 min-w-0">
                       <h4 className={`font-medium truncate ${currentSong?._id === song._id ? 'text-primary' : 'text-white'}`}>{song.title}</h4>
-                      <p className="text-gray-400 text-sm truncate">{song.artist}</p>
+                      <div className="text-gray-400 text-sm truncate">
+                        {song.artistId ? (
+                          <Link href={`/artist/${song.artistId}`} onClick={(e) => e.stopPropagation()} className="hover:text-white hover:underline">{song.artist}</Link>
+                        ) : song.artist}
+                      </div>
                     </div>
 
-                    <div className="hidden md:block w-32">
-                      <span className="text-xs bg-bg-tertiary px-2 py-1 rounded text-gray-300">{song.genre}</span>
+                    <div className="hidden md:block w-32 ml-4">
+                      <span className="text-xs bg-bg-tertiary px-2 py-1 rounded text-gray-300">{song.genre || 'Music'}</span>
                     </div>
 
                     <button 
@@ -284,13 +314,16 @@ export default function SearchPage() {
                     {genreResults.map(song => (
                       <div 
                         key={song._id}
-                        onClick={() => play(song, genreResults)}
+                        onClick={() => setDetailSong(song)}
                         className="flex items-center gap-4 p-3 rounded-lg hover:bg-bg-secondary group cursor-pointer transition-colors border border-transparent hover:border-border"
                       >
                         <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">
                           <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-bg-primary hover:scale-105 transition-transform shadow-lg">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); play(song, genreResults); }}
+                              className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-bg-primary hover:scale-105 transition-transform shadow-lg"
+                            >
                               <svg className="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                             </button>
                           </div>
@@ -305,7 +338,11 @@ export default function SearchPage() {
                         
                         <div className="flex-1 min-w-0">
                           <h4 className={`font-medium truncate ${currentSong?._id === song._id ? 'text-primary' : 'text-white'}`}>{song.title}</h4>
-                          <p className="text-gray-400 text-sm truncate">{song.artist}</p>
+                          <div className="text-gray-400 text-sm truncate">
+                            {song.artistId ? (
+                              <Link href={`/artist/${song.artistId}`} onClick={(e) => e.stopPropagation()} className="hover:text-white hover:underline">{song.artist}</Link>
+                            ) : song.artist}
+                          </div>
                         </div>
                         
                         <button 

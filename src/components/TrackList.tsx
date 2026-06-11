@@ -3,6 +3,7 @@
 import { Song, usePlayerStore } from "@/store/playerStore";
 import { Heart, MinusCircle } from "lucide-react";
 import Link from "next/link";
+import SongMenu from "./SongMenu";
 
 interface TrackListProps {
   songs: Song[];
@@ -15,6 +16,7 @@ export default function TrackList({ songs, likedSongIds, onToggleLike, onRemove 
   const play = usePlayerStore(state => state.play);
   const currentSong = usePlayerStore(state => state.currentSong);
   const isPlaying = usePlayerStore(state => state.isPlaying);
+  const setDetailSong = usePlayerStore(state => state.setDetailSong);
 
   const formatDuration = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -44,7 +46,7 @@ export default function TrackList({ songs, likedSongIds, onToggleLike, onRemove 
           return (
             <div 
               key={`${song._id}-${i}`}
-              onClick={() => play(song, songs)}
+              onClick={() => setDetailSong(song)}
               className="group grid grid-cols-[40px_minmax(0,1fr)_80px_80px] md:grid-cols-[40px_minmax(0,2fr)_minmax(0,1fr)_100px_80px] gap-4 px-4 py-2 hover:bg-[rgba(168,207,255,0.05)] rounded-lg cursor-pointer items-center transition-colors"
             >
               {/* Index / Playing State */}
@@ -62,8 +64,16 @@ export default function TrackList({ songs, likedSongIds, onToggleLike, onRemove 
 
               {/* Title & Cover */}
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-bg-tertiary">
+                <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-bg-tertiary relative">
                   <img src={song.coverUrl} alt="" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); play(song, songs); }}
+                      className="w-8 h-8 flex items-center justify-center rounded-full bg-white text-bg-primary hover:scale-105 transition-transform"
+                    >
+                      <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </button>
+                  </div>
                 </div>
                 <div className="min-w-0 flex-1">
                   <h4 className={`text-sm font-medium truncate ${isCurrent ? 'text-primary' : 'text-white'}`}>
@@ -81,7 +91,13 @@ export default function TrackList({ songs, likedSongIds, onToggleLike, onRemove 
 
               {/* Album */}
               <div className="hidden md:block min-w-0 text-sm text-gray-400 truncate">
-                {song.album || song.artist}
+                {song.albumId ? (
+                  <Link href={`/album/${song.albumId}`} onClick={(e) => e.stopPropagation()} className="hover:text-[#A8CFFF] hover:underline">
+                    {song.album || song.artist}
+                  </Link>
+                ) : (
+                  song.album || song.artist
+                )}
               </div>
 
               {/* Duration */}
@@ -104,9 +120,8 @@ export default function TrackList({ songs, likedSongIds, onToggleLike, onRemove 
                   >
                     <MinusCircle className="w-5 h-5" />
                   </button>
-                ) : (
-                  <div className="w-7"></div>
-                )}
+                ) : null}
+                <SongMenu song={song} />
               </div>
             </div>
           );

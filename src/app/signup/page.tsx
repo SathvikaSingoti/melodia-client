@@ -15,12 +15,32 @@ export default function SignupPage() {
   const { login } = useAuth();
   const router = useRouter();
 
+  const getPasswordStrength = (pass: string) => {
+    if (!pass) return { score: 0, label: '', color: 'bg-transparent' };
+    let score = 0;
+    if (pass.length > 5) score += 1;
+    if (pass.length >= 8) score += 1;
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(pass)) score += 1;
+    if (/[A-Z]/.test(pass) && /[0-9]/.test(pass)) score += 1;
+
+    if (score <= 1) return { score, label: 'Weak', color: 'bg-red-500', textColor: 'text-red-500' };
+    if (score === 2 || score === 3) return { score, label: 'Medium', color: 'bg-yellow-500', textColor: 'text-yellow-500' };
+    return { score, label: 'Strong', color: 'bg-green-500', textColor: 'text-green-500' };
+  };
+
+  const strength = getPasswordStrength(password);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     
     if (password !== confirmPassword) {
       setError("Passwords do not match");
+      return;
+    }
+
+    if (strength.score <= 1) {
+      setError("Password is too weak. Use at least 8 characters and a special character.");
       return;
     }
 
@@ -31,7 +51,7 @@ export default function SignupPage() {
         password,
       });
       login(res.data.token, res.data.user);
-      router.push("/explore");
+      router.push("/onboarding");
     } catch (err: any) {
       setError(err.response?.data?.message || "Signup failed");
     }
@@ -54,9 +74,18 @@ export default function SignupPage() {
           <p className="text-gray-400 text-sm">Create a new account</p>
         </div>
 
-        {error && (
+        {error && !error.includes("already exists") && (
           <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
             {error}
+          </div>
+        )}
+
+        {error && error.includes("already exists") && (
+          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center flex flex-col gap-1">
+            <span>Account already exists.</span>
+            <Link href="/login" className="text-white underline hover:text-primary transition-colors">
+              Login instead?
+            </Link>
           </div>
         )}
 
@@ -95,6 +124,19 @@ export default function SignupPage() {
               placeholder="••••••••"
               required
             />
+            {password && (
+              <div className="mt-2 flex items-center justify-between">
+                <div className="flex gap-1 flex-1 mr-4">
+                  {[1, 2, 3, 4].map(level => (
+                    <div 
+                      key={level} 
+                      className={`h-1.5 flex-1 rounded-full ${strength.score >= level ? strength.color : 'bg-gray-700'}`}
+                    ></div>
+                  ))}
+                </div>
+                <span className={`text-xs font-medium ${strength.textColor}`}>{strength.label}</span>
+              </div>
+            )}
           </div>
 
           <div>

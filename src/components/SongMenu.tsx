@@ -4,6 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { usePlayerStore, Song } from "@/store/playerStore";
+import toast from "react-hot-toast";
+
+import { useRouter } from "next/navigation";
+import { Radio } from "lucide-react";
 
 interface Playlist {
   _id: string;
@@ -12,12 +16,17 @@ interface Playlist {
 
 export default function SongMenu({ song, onRemove }: { song: Song, onRemove?: () => void }) {
   const { user, token } = useAuth();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [showPlaylists, setShowPlaylists] = useState(false);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [overflowsRight, setOverflowsRight] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const submenuRef = useRef<HTMLDivElement>(null);
   
   const addToQueue = usePlayerStore(state => state.addToQueue);
+  const startRadio = usePlayerStore(state => state.startRadio);
+  const [isStartingRadio, setIsStartingRadio] = useState(false);
 
   // Close on outside click
   useEffect(() => {
@@ -30,6 +39,18 @@ export default function SongMenu({ song, onRemove }: { song: Song, onRemove?: ()
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  useEffect(() => {
+    if (showPlaylists && submenuRef.current) {
+      const rect = submenuRef.current.getBoundingClientRect();
+      // If it overflows the right window edge, flip it left
+      if (rect.right > window.innerWidth - 20) {
+        setOverflowsRight(true);
+      } else {
+        setOverflowsRight(false);
+      }
+    }
+  }, [showPlaylists]);
 
   const loadPlaylists = async () => {
     if (!user) return;
@@ -50,6 +71,7 @@ export default function SongMenu({ song, onRemove }: { song: Song, onRemove?: ()
       });
       setIsOpen(false);
       setShowPlaylists(false);
+      toast.success("Added to playlist ✓");
     } catch (e) {
       console.error(e);
     }
@@ -58,6 +80,37 @@ export default function SongMenu({ song, onRemove }: { song: Song, onRemove?: ()
   const handleAddQueue = () => {
     addToQueue(song);
     setIsOpen(false);
+  };
+
+  const handleStartRadio = async () => {
+    if (!token) {
+      toast.error("Please login to use AI radio");
+      return;
+    }
+    
+    setIsOpen(false);
+    setIsStartingRadio(true);
+    const loadingToast = toast.loading(`Building radio for ${song.title}...`);
+    
+    try {
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ai/radio`, 
+        { songId: song._id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      const radioQueue = res.data;
+      if (radioQueue && radioQueue.length > 0) {
+        startRadio(song, radioQueue);
+        toast.success("Radio ready ✓", { id: loadingToast });
+      } else {
+        toast.error("Could not build radio", { id: loadingToast });
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to build radio", { id: loadingToast });
+    } finally {
+      setIsStartingRadio(false);
+    }
   };
 
   return (
@@ -71,36 +124,63 @@ export default function SongMenu({ song, onRemove }: { song: Song, onRemove?: ()
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-bg-tertiary border border-border rounded-lg shadow-xl z-[100] py-1" onClick={e => e.stopPropagation()}>
-          {showPlaylists ? (
-            <>
-              <button onClick={() => setShowPlaylists(false)} className="w-full text-left px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-bg-secondary flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
-                Back
-              </button>
-              <div className="border-t border-border my-1"></div>
-              <div className="overflow-hidden">
-                {playlists.slice(0, 4).map(p => (
-                  <button key={p._id} onClick={() => handleAddPlaylist(p._id)} className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-bg-secondary truncate">
-                    {p.name}
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : (
-            <>
-              <button onClick={() => setShowPlaylists(true)} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary flex justify-between items-center">
-                Add to playlist
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
-              </button>
-              <button onClick={handleAddQueue} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary">
-                Add to queue
-              </button>
-              {onRemove && (
-                <button onClick={() => { onRemove(); setIsOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-bg-secondary hover:text-red-300">
-                  Remove from playlist
-                </button>
+          <div 
+            className="relative group/playlist"
+            onMouseEnter={() => setShowPlaylists(true)}
+            onMouseLeave={() => setShowPlaylists(false)}
+          >
+            <button className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary flex justify-between items-center">
+              Add to playlist
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+            </button>
+            
+            {/* Submenu for playlists */}
+            <div 
+              ref={submenuRef}
+              className={`absolute ${overflowsRight ? 'right-full mr-1' : 'left-full ml-1'} top-0 w-48 bg-bg-tertiary border border-border rounded-lg shadow-xl py-1 opacity-0 invisible group-hover/playlist:opacity-100 group-hover/playlist:visible transition-all max-h-64 overflow-y-auto no-scrollbar`}
+            >
+              {playlists.length > 0 ? (
+                <>
+                  {playlists.map(p => (
+                    <button key={p._id} onClick={() => handleAddPlaylist(p._id)} className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-bg-secondary truncate">
+                      {p.name}
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <div className="px-4 py-2 text-sm text-gray-500 italic">No playlists found</div>
               )}
-            </>
+            </div>
+          </div>
+          
+          <button 
+            onClick={() => {
+              const url = song.artistId ? `/artist/${song.artistId}` : `/search?q=${encodeURIComponent(song.artist)}`;
+              router.push(url);
+              setIsOpen(false);
+            }} 
+            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary"
+          >
+            Go to artist
+          </button>
+          
+          <button onClick={handleAddQueue} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary">
+            Add to queue
+          </button>
+
+          <button 
+            onClick={handleStartRadio} 
+            disabled={isStartingRadio}
+            className="w-full text-left px-4 py-2 text-sm text-[#FFD6A5] hover:bg-bg-secondary flex justify-between items-center"
+          >
+            {isStartingRadio ? "Starting..." : "Start radio"}
+            <Radio className="w-4 h-4 ml-2" />
+          </button>
+          
+          {onRemove && (
+            <button onClick={() => { onRemove(); setIsOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-bg-secondary hover:text-red-300">
+              Remove from playlist
+            </button>
           )}
         </div>
       )}

@@ -31,7 +31,11 @@ function LoginForm() {
         password,
       });
       login(res.data.token, res.data.user);
-      router.push("/explore");
+      if (!res.data.user.onboardingCompleted) {
+        router.push("/onboarding");
+      } else {
+        router.push("/explore");
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || "Login failed");
     }
@@ -50,9 +54,18 @@ function LoginForm() {
         <p className="text-gray-400 text-sm">Sign in to your account</p>
       </div>
 
-      {error && (
+      {error && !error.includes("No account found") && (
         <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
           {error}
+        </div>
+      )}
+
+      {error && error.includes("No account found") && (
+        <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center flex flex-col gap-1">
+          <span>No account found.</span>
+          <Link href="/signup" className="text-white underline hover:text-primary transition-colors">
+            Sign up instead?
+          </Link>
         </div>
       )}
 

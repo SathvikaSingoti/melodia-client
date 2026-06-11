@@ -9,6 +9,11 @@ interface User {
   _id: string;
   username: string;
   email: string;
+  onboardingCompleted?: boolean;
+  avatarUrl?: string;
+  favoriteGenres?: string[];
+  favoriteArtists?: string[];
+  createdAt?: string;
 }
 
 interface AuthContextType {
@@ -35,7 +40,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (storedToken && storedUser) {
       setToken(storedToken);
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        if (!parsedUser._id && parsedUser.id) {
+          parsedUser._id = parsedUser.id;
+        }
+        setUser(parsedUser);
       } catch (e) {
         console.error("Failed to parse stored user", e);
       }
