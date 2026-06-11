@@ -125,7 +125,17 @@ export default function PlayerBar() {
               filter: 'blur(80px) scale(1.2)'
             }}
           />
-          <div className="absolute inset-0 bg-[rgba(8,13,24,0.75)]" />
+          <div className="absolute inset-0 bg-[rgba(8,13,24,0.82)]" />
+
+          {/* Depth Orbs */}
+          <div 
+            className="absolute -top-[200px] -left-[200px] w-[600px] h-[600px] rounded-full pointer-events-none opacity-50 mix-blend-screen"
+            style={{ background: 'radial-gradient(circle at center, rgba(168,207,255,0.15) 0%, transparent 70%)', filter: 'blur(40px)' }}
+          />
+          <div 
+            className="absolute -bottom-[200px] -right-[200px] w-[600px] h-[600px] rounded-full pointer-events-none opacity-50 mix-blend-screen"
+            style={{ background: 'radial-gradient(circle at center, rgba(255,214,165,0.1) 0%, transparent 70%)', filter: 'blur(40px)' }}
+          />
 
           <div className="absolute top-0 left-0 right-0 p-8 flex justify-end z-10">
             <button 
@@ -137,18 +147,21 @@ export default function PlayerBar() {
           </div>
 
           <div className="relative z-10 flex flex-col items-center w-full max-w-md px-6">
-            <div className={`w-[320px] h-[320px] rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(168,207,255,0.15)] mb-10 transition-transform duration-500 ${isPlaying ? 'scale-[1.02]' : 'scale-100'}`}>
+            <div 
+              className={`w-[320px] h-[320px] rounded-[16px] overflow-hidden mb-10 transition-transform duration-500 ${isPlaying ? 'scale-[1.02]' : 'scale-100'}`}
+              style={{ boxShadow: '0 0 40px rgba(168,207,255,0.25), 0 20px 60px rgba(0,0,0,0.5)' }}
+            >
               <img src={currentSong.coverUrl} className="w-full h-full object-cover" alt="Cover" />
             </div>
 
-            <div className="w-full flex items-center justify-between mb-8">
-              <div className="min-w-0">
-                <h2 className="text-[28px] font-semibold text-white truncate leading-tight mb-1">{currentSong.title}</h2>
-                <p className="text-[16px] text-[#A8CFFF] cursor-pointer hover:underline truncate">{currentSong.artist}</p>
+            <div className="w-full flex flex-col mb-8 text-center">
+              <div className="flex items-center justify-between w-full mb-1">
+                <h2 className="text-[28px] font-semibold text-white truncate leading-tight text-left flex-1">{currentSong.title}</h2>
+                <button onClick={toggleLike} className="flex-shrink-0 ml-4 hover:scale-110 transition-transform">
+                  <Heart className={`w-8 h-8 ${isLiked ? 'text-[#FFD6A5]' : 'text-gray-400'}`} fill={isLiked ? "currentColor" : "none"} />
+                </button>
               </div>
-              <button onClick={toggleLike} className="flex-shrink-0 ml-4 hover:scale-110 transition-transform">
-                <Heart className={`w-8 h-8 ${isLiked ? 'text-[#FFD6A5]' : 'text-gray-400'}`} fill={isLiked ? "currentColor" : "none"} />
-              </button>
+              <p className="text-[16px] text-[#A8CFFF] cursor-pointer hover:underline truncate text-left">{currentSong.artist}</p>
             </div>
 
             <div className="w-full mb-8">
@@ -158,8 +171,11 @@ export default function PlayerBar() {
                 className="w-full h-2 bg-white/20 rounded-full cursor-pointer relative group"
               >
                 <div 
-                  className="h-full bg-gradient-to-r from-[#A8CFFF] to-[#FFD6A5] absolute left-0 top-0 bottom-0 pointer-events-none rounded-full" 
-                  style={{ width: `${(localProgress / (duration || 1)) * 100}%` }}
+                  className="h-full absolute left-0 top-0 bottom-0 pointer-events-none rounded-full" 
+                  style={{ 
+                    width: `${(localProgress / (duration || 1)) * 100}%`,
+                    background: 'linear-gradient(90deg, #A8CFFF, #FFD6A5)'
+                  }}
                 >
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transform translate-x-1/2 transition-opacity" />
                 </div>
