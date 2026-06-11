@@ -108,7 +108,7 @@ export default function PlayerBar() {
           onClick={toggleLike}
           className="p-2 text-gray-400 hover:text-white transition-colors ml-2"
         >
-          <svg className={`w-5 h-5 ${isLiked ? 'text-primary' : ''}`} fill="currentColor" viewBox="0 0 24 24">
+          <svg className={`w-5 h-5 ${isLiked ? 'text-secondary' : ''}`} fill="currentColor" viewBox="0 0 24 24">
             <path d={isLiked 
               ? "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
               : "M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"}
@@ -127,7 +127,7 @@ export default function PlayerBar() {
           
           <button 
             onClick={isPlaying ? pause : resume} 
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-primary hover:scale-105 transition-transform text-white"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary hover:scale-105 transition-transform text-white shadow-lg"
           >
             {isPlaying ? (
                // Pause Icon
@@ -153,7 +153,7 @@ export default function PlayerBar() {
             className="flex-1 h-1.5 bg-bg-tertiary rounded-full overflow-hidden cursor-pointer relative"
           >
             <div 
-              className="h-full bg-primary absolute left-0 top-0 bottom-0 pointer-events-none" 
+              className="h-full bg-gradient-to-r from-primary to-secondary absolute left-0 top-0 bottom-0 pointer-events-none" 
               style={{ width: `${(localProgress / (duration || 1)) * 100}%` }}
             ></div>
           </div>

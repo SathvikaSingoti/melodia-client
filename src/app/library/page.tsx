@@ -117,7 +117,7 @@ export default function LibraryPage() {
           >
             Liked Songs
             {activeTab === "likes" && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full shadow-[0_-2px_10px_rgba(168,85,247,0.5)]"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full shadow-[0_-2px_10px_rgba(168,207,255,0.5)]"></div>
             )}
           </button>
           <button 
@@ -126,7 +126,7 @@ export default function LibraryPage() {
           >
             My Playlists
             {activeTab === "playlists" && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full shadow-[0_-2px_10px_rgba(168,85,247,0.5)]"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full shadow-[0_-2px_10px_rgba(168,207,255,0.5)]"></div>
             )}
           </button>
         </div>
@@ -148,7 +148,7 @@ export default function LibraryPage() {
                   <div className="relative aspect-square mb-4 overflow-hidden rounded-lg">
                     <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button className="w-12 h-12 flex items-center justify-center rounded-full bg-primary text-white hover:scale-105 transition-transform shadow-lg">
+                      <button className="w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-white hover:scale-105 transition-transform shadow-lg">
                         <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                       </button>
                     </div>
@@ -160,7 +160,7 @@ export default function LibraryPage() {
                       <p className="text-sm text-gray-400 truncate" title={song.artist}>{song.artist}</p>
                     </div>
                     <div className="flex items-center gap-1">
-                      <button onClick={(e) => unlikeSong(e, song._id)} className="text-primary hover:scale-110 transition-transform">
+                      <button onClick={(e) => unlikeSong(e, song._id)} className="text-secondary hover:scale-110 transition-transform">
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                         </svg>
@@ -182,7 +182,7 @@ export default function LibraryPage() {
               <button 
                 onClick={handleGenerateSmartPlaylist}
                 disabled={isGeneratingAI}
-                className="px-6 py-2 rounded-full font-bold text-white bg-gradient-to-r from-[#A855F7] to-[#7C3AED] shadow-[0_0_15px_rgba(168,85,247,0.5)] hover:shadow-[0_0_25px_rgba(168,85,247,0.7)] transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="px-6 py-2 rounded-full font-bold text-white bg-gradient-to-r from-primary to-secondary shadow-[0_0_15px_rgba(168,207,255,0.5)] hover:shadow-[0_0_25px_rgba(168,207,255,0.7)] transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isGeneratingAI ? (
                   <>
@@ -198,9 +198,9 @@ export default function LibraryPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               <div 
                 onClick={() => setShowModal(true)}
-                className="group aspect-square bg-bg-secondary p-4 rounded-xl border-2 border-dashed border-border hover:border-primary transition-all cursor-pointer flex flex-col items-center justify-center gap-3"
+                className="w-full aspect-square bg-bg-secondary rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors group"
               >
-                <div className="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center group-hover:bg-primary transition-colors text-gray-400 group-hover:text-white">
+                <div className="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-primary group-hover:to-secondary transition-colors text-gray-400 group-hover:text-white">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
                 </div>
                 <span className="font-medium text-gray-400 group-hover:text-white transition-colors">Create Playlist</span>
@@ -279,7 +279,7 @@ export default function LibraryPage() {
                   </button>
                   <button 
                     type="submit"
-                    className="px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition-colors shadow-lg"
+                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-secondary text-white font-medium hover:opacity-90 transition-opacity shadow-lg"
                   >
                     Create
                   </button>

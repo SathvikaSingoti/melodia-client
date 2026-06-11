@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #A855F7;
-  --color-secondary: #EC4899;
-  --color-bg-primary: #0A0A0F;
-  --color-bg-secondary: #111118;
-  --color-bg-tertiary: #1A1A24;
-  --color-border: #2A2A35;
+  --color-primary: #A8CFFF;
+  --color-secondary: #FFD6A5;
+  --color-bg-primary: #080d18;
+  --color-bg-secondary: #0c1220;
+  --color-bg-tertiary: #0f1828;
+  --color-border: rgba(168,207,255,0.13);
   
   --font-sans: "Inter", "sans-serif";
   
@@ -32,7 +32,7 @@
     background: rgba(26, 26, 36, 0.4);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(168, 207, 255, 0.15);
   }
   
   .glass-panel {

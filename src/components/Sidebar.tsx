@@ -12,7 +12,7 @@ export default function Sidebar() {
     const isActive = pathname.startsWith(path);
     return `flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
       isActive 
-        ? "text-white bg-bg-tertiary shadow-[inset_2px_0_0_0_rgba(168,85,247,1)]" 
+        ? "text-white bg-bg-tertiary shadow-[inset_2px_0_0_0_rgba(168,207,255,1)]" 
         : "text-gray-400 hover:text-white hover:bg-bg-tertiary"
     }`;
   };
@@ -20,7 +20,7 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-bg-secondary h-screen flex flex-col fixed left-0 top-0 border-r border-border z-40">
       <div className="p-6 flex-1 overflow-y-auto">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-[#A855F7] to-[#7C3AED] bg-clip-text text-transparent mb-8">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-8">
           Melodia
         </h1>
         
@@ -42,7 +42,7 @@ export default function Sidebar() {
       {user && (
         <div className="p-6 border-t border-border mt-auto">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#A855F7] to-[#7C3AED] flex items-center justify-center text-white font-bold text-lg shadow-lg">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-lg shadow-lg">
               {user.username?.[0]?.toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
