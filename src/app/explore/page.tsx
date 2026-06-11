@@ -10,7 +10,7 @@ import { Search, Bell, Settings, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-const GENRES = ["All", "Pop", "Hip-Hop", "R&B", "Indie", "Electronic"];
+const GENRES = ["All", "Pop", "Hip-Hop", "R&B", "Indie", "Electronic", "Rock", "Classical", "Jazz", "Ambient", "Folk"];
 
 const MOODS = [
   { mood: "Chill", emoji: "🌿" },
