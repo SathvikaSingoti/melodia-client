@@ -180,7 +180,7 @@ export default function PlaylistPage() {
               />
             ) : (
               <h1 
-                className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tighter cursor-pointer hover:underline"
+                className="text-3xl md:text-4xl font-medium text-white mb-6 tracking-tight cursor-pointer hover:underline"
                 onClick={() => { setIsEditingName(true); setEditName(playlist.name); }}
                 title="Click to edit"
               >
@@ -197,7 +197,7 @@ export default function PlaylistPage() {
                     play(playlist.songs[0], playlist.songs);
                   }
                 }}
-                className="w-14 h-14 bg-white text-bg-primary rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-[0_8px_30px_rgba(255,255,255,0.3)]"
+                className="w-14 h-14 bg-white text-bg-primary rounded-full flex items-center justify-center hover:scale-105 transition-transform"
                 title="Play All"
               >
                 <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -230,16 +230,7 @@ export default function PlaylistPage() {
                 </div>
                 
                 <div className="flex items-center gap-2 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button 
-                    onClick={(e) => removeSong(e, song._id)}
-                    className="p-2 text-gray-400 hover:text-white transition-colors"
-                    title="Remove from playlist"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </button>
-                  <SongMenu song={song} />
+                  <SongMenu song={song} onRemove={(e?: React.MouseEvent) => removeSong(e as any, song._id)} />
                 </div>
                 
                 <div className="w-12 text-right text-sm text-gray-400 ml-4">

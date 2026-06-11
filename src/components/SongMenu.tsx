@@ -10,7 +10,7 @@ interface Playlist {
   name: string;
 }
 
-export default function SongMenu({ song }: { song: Song }) {
+export default function SongMenu({ song, onRemove }: { song: Song, onRemove?: () => void }) {
   const { user, token } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [showPlaylists, setShowPlaylists] = useState(false);
@@ -78,9 +78,9 @@ export default function SongMenu({ song }: { song: Song }) {
                 Back
               </button>
               <div className="border-t border-border my-1"></div>
-              <div className="max-h-40 overflow-y-auto">
-                {playlists.map(p => (
-                  <button key={p._id} onClick={() => handleAddPlaylist(p._id)} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary truncate">
+              <div className="overflow-hidden">
+                {playlists.slice(0, 4).map(p => (
+                  <button key={p._id} onClick={() => handleAddPlaylist(p._id)} className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-bg-secondary truncate">
                     {p.name}
                   </button>
                 ))}
@@ -95,6 +95,11 @@ export default function SongMenu({ song }: { song: Song }) {
               <button onClick={handleAddQueue} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary">
                 Add to queue
               </button>
+              {onRemove && (
+                <button onClick={() => { onRemove(); setIsOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-bg-secondary hover:text-red-300">
+                  Remove from playlist
+                </button>
+              )}
             </>
           )}
         </div>

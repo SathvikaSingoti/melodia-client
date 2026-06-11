@@ -113,7 +113,7 @@ export default function ExplorePage() {
             <p className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary font-medium">Discover new music tailored to your taste.</p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-full bg-bg-primary flex items-center justify-center text-primary font-bold text-sm border border-border">
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
               {user?.username?.[0]?.toUpperCase()}
             </div>
           </div>

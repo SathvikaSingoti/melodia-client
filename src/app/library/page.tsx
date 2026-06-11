@@ -9,6 +9,34 @@ import { useRouter } from "next/navigation";
 import { usePlayerStore, Song } from "@/store/playerStore";
 import SongMenu from "@/components/SongMenu";
 
+function PlaylistMenu({ playlist, onPlay, onQueue, onDelete }: { playlist: any, onPlay: () => void, onQueue: () => void, onDelete: () => void }) {
+  const [open, setOpen] = useState(false);
+  
+  useEffect(() => {
+    const close = () => setOpen(false);
+    if (open) document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [open]);
+
+  return (
+    <div className="relative">
+      <button 
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        className="w-8 h-8 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+      >
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 bottom-full mb-2 w-40 bg-bg-tertiary border border-border rounded-lg shadow-xl py-1 z-50 overflow-hidden" onClick={e => e.stopPropagation()}>
+          <button onClick={() => { onPlay(); setOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary">Play</button>
+          <button onClick={() => { onQueue(); setOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary">Add to queue</button>
+          <button onClick={() => { onDelete(); setOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-bg-secondary">Delete playlist</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface Playlist {
   _id: string;
   name: string;
@@ -238,13 +266,37 @@ export default function LibraryPage() {
                 }
 
                 return (
-                  <Link 
-                    href={`/playlist/${playlist._id}`} 
+                  <div 
+                    onClick={() => router.push(`/playlist/${playlist._id}`)} 
                     key={playlist._id}
-                    className="bg-bg-secondary p-4 rounded-xl border border-border hover:border-primary/50 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.5)] cursor-pointer block relative"
+                    className="bg-bg-secondary p-4 rounded-xl border border-border hover:border-primary/50 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.5)] cursor-pointer block relative group/card"
                   >
-                    <div className="aspect-square mb-4 overflow-hidden rounded-lg">
+                    <div className="aspect-square mb-4 overflow-hidden rounded-lg relative">
                       {coverNode}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-end justify-between p-2">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (playlist.songs.length > 0) play(playlist.songs[0], playlist.songs);
+                          }}
+                          className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-bg-primary hover:scale-105 transition-transform shadow-lg"
+                        >
+                          <svg className="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </button>
+                        <PlaylistMenu 
+                          playlist={playlist}
+                          onPlay={() => { if (playlist.songs.length > 0) play(playlist.songs[0], playlist.songs); }}
+                          onQueue={() => { playlist.songs.forEach((s: any) => usePlayerStore.getState().addToQueue(s)); }}
+                          onDelete={async () => {
+                            try {
+                              await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/playlists/${playlist._id}`, { headers: { Authorization: `Bearer ${token}` } });
+                              setPlaylists(prev => prev.filter(p => p._id !== playlist._id));
+                            } catch (e) {
+                              console.error(e);
+                            }
+                          }}
+                        />
+                      </div>
                     </div>
                     <h3 className="font-semibold text-white truncate">{playlist.name}</h3>
                     <p className="text-sm text-gray-400 mt-1">{playlist.songs.length} songs</p>
@@ -254,7 +306,7 @@ export default function LibraryPage() {
                         ✨ AI Mix
                       </span>
                     )}
-                  </Link>
+                  </div>
                 );
               })}
             </div>

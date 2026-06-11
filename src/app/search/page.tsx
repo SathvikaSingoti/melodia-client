@@ -9,14 +9,14 @@ import { useAuth } from "@/context/AuthContext";
 import SongMenu from "@/components/SongMenu";
 
 const GENRES = [
-  { name: "Pop", emoji: "🎤" },
-  { name: "Hip-Hop", emoji: "🎧" },
-  { name: "R&B", emoji: "💜" },
-  { name: "Indie", emoji: "🌿" },
-  { name: "Electronic", emoji: "⚡" },
-  { name: "Rock", emoji: "🎸" },
-  { name: "Jazz", emoji: "🎷" },
-  { name: "Classical", emoji: "🎻" }
+  { name: "Pop", emoji: "🎤", style: "bg-[rgba(168,207,255,0.08)] border-[#A8CFFF]" },
+  { name: "Hip-Hop", emoji: "🎧", style: "bg-[rgba(255,214,165,0.08)] border-[#FFD6A5]" },
+  { name: "R&B", emoji: "💜", style: "bg-[rgba(201,184,255,0.08)] border-[#C9B8FF]" },
+  { name: "Indie", emoji: "🌿", style: "bg-[rgba(168,237,203,0.08)] border-[#A8EDCB]" },
+  { name: "Electronic", emoji: "⚡", style: "bg-[rgba(168,207,255,0.06)] border-[#A8CFFF]" },
+  { name: "Rock", emoji: "🎸", style: "bg-[rgba(255,214,165,0.08)] border-[#FFD6A5]" },
+  { name: "Jazz", emoji: "🎷", style: "bg-[rgba(201,184,255,0.08)] border-[#C9B8FF]" },
+  { name: "Classical", emoji: "🎻", style: "bg-[rgba(168,237,203,0.08)] border-[#A8EDCB]" }
 ];
 
 export default function SearchPage() {
@@ -158,10 +158,10 @@ export default function SearchPage() {
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                     filter === f 
-                      ? "bg-primary text-white" 
-                      : "bg-bg-tertiary text-gray-400 hover:text-white"
+                      ? "border-[1.5px] border-primary text-primary bg-primary/10" 
+                      : "bg-bg-tertiary text-gray-300 hover:bg-bg-tertiary/80 hover:text-white border-[1.5px] border-transparent"
                   }`}
                 >
                   {f}
@@ -238,11 +238,10 @@ export default function SearchPage() {
                   <div 
                     key={genre.name}
                     onClick={() => handleGenreClick(genre.name)}
-                    className="aspect-[2/1] rounded-xl p-4 flex items-center justify-between cursor-pointer hover:scale-[1.03] transition-transform overflow-hidden relative shadow-lg glass-panel border border-border"
+                    className={`aspect-[2/1] rounded-xl p-4 flex items-center justify-between cursor-pointer hover:scale-[1.03] transition-transform overflow-hidden relative shadow-lg border ${genre.style}`}
                   >
                     <h4 className="text-white font-bold text-lg z-10">{genre.name}</h4>
                     <div className="text-4xl z-10 opacity-90">{genre.emoji}</div>
-                    <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-primary/20 rounded-full blur-2xl z-0"></div>
                   </div>
                 ))}
               </div>
@@ -262,7 +261,6 @@ export default function SearchPage() {
                         <img src={artist.coverUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={artist.name} />
                       </div>
                       <h4 className="text-white font-medium truncate">{artist.name}</h4>
-                      <p className="text-gray-400 text-xs mt-1">{artist.count} {artist.count === 1 ? 'song' : 'songs'}</p>
                     </div>
                   ))}
                 </div>
