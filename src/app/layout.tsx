@@ -5,6 +5,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "react-hot-toast";
 import CommandPalette from "@/components/CommandPalette";
 import KeyboardShortcuts from "@/components/KeyboardShortcuts";
+import MiniPlayer from "@/components/MiniPlayer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -44,6 +45,7 @@ export default function RootLayout({
           />
           <CommandPalette />
           <KeyboardShortcuts />
+          <MiniPlayer />
         </AuthProvider>
       </body>
     </html>

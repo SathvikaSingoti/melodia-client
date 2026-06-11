@@ -5,7 +5,7 @@ import axios from "axios";
 import { usePlayerStore } from "@/store/playerStore";
 import { useAuth } from "@/context/AuthContext";
 import { Song } from "@/store/playerStore";
-import { Shuffle, Repeat, Repeat1, ChevronDown, Heart, ListMusic, MonitorSpeaker, Maximize2 } from "lucide-react";
+import { Shuffle, Repeat, Repeat1, ChevronDown, Heart, ListMusic, MonitorSpeaker, Maximize2, PictureInPicture } from "lucide-react";
 import Link from "next/link";
 
 export default function PlayerBar() {
@@ -14,7 +14,8 @@ export default function PlayerBar() {
     pause, resume, next, prev, seek, volume, setVolume, updateProgress,
     isShuffle, repeatMode, toggleShuffle, toggleRepeat,
     isPlayerExpanded, togglePlayerExpanded,
-    isDetailPanelOpen, toggleDetailPanel, setDetailSong
+    isDetailPanelOpen, toggleDetailPanel, setDetailSong,
+    isMiniPlayerOpen, toggleMiniPlayer
   } = usePlayerStore();
 
   const { user } = useAuth();
@@ -245,10 +246,18 @@ export default function PlayerBar() {
 
         <button 
           onClick={(e) => { e.stopPropagation(); toggleDetailPanel(); }}
-          className={`transition-colors ${isDetailPanelOpen ? 'text-primary' : 'text-gray-400 hover:text-white'}`}
+          className={`transition-colors ${isDetailPanelOpen ? 'text-[#c87941]' : 'text-gray-400 hover:text-white'}`}
           title="Queue & Details"
         >
           <ListMusic className="w-5 h-5" />
+        </button>
+
+        <button 
+          onClick={(e) => { e.stopPropagation(); toggleMiniPlayer(); }}
+          className={`transition-colors ${isMiniPlayerOpen ? 'text-[#c87941]' : 'text-gray-400 hover:text-white'}`}
+          title="Mini Player"
+        >
+          <PictureInPicture className="w-5 h-5" />
         </button>
 
         <button 

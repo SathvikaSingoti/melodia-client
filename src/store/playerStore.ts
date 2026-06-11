@@ -79,6 +79,10 @@ interface PlayerState {
 
   isPlayerExpanded: boolean;
   togglePlayerExpanded: () => void;
+
+  isMiniPlayerOpen: boolean;
+  setMiniPlayerOpen: (isOpen: boolean) => void;
+  toggleMiniPlayer: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>()(
@@ -110,6 +114,7 @@ export const usePlayerStore = create<PlayerState>()(
   detailSong: null,
   lastDetailUpdate: 0,
   isPlayerExpanded: false,
+  isMiniPlayerOpen: false,
 
   toggleShuffle: () => set(state => ({ isShuffle: !state.isShuffle })),
   toggleRepeat: () => set(state => ({ 
@@ -120,6 +125,9 @@ export const usePlayerStore = create<PlayerState>()(
   toggleDetailPanel: () => set(state => ({ isDetailPanelOpen: !state.isDetailPanelOpen })),
   togglePlayerExpanded: () => set(state => ({ isPlayerExpanded: !state.isPlayerExpanded })),
   
+  setMiniPlayerOpen: (isOpen: boolean) => set({ isMiniPlayerOpen: isOpen }),
+  toggleMiniPlayer: () => set(state => ({ isMiniPlayerOpen: !state.isMiniPlayerOpen })),
+
   setCrossfade: (enabled: boolean, duration?: number) => set(state => ({ 
     crossfadeEnabled: enabled, 
     crossfadeDuration: duration !== undefined ? duration : state.crossfadeDuration 
