@@ -39,6 +39,9 @@ interface PlayerState {
   repeatMode: 'off' | 'queue' | 'track';
   toggleShuffle: () => void;
   toggleRepeat: () => void;
+
+  isFullScreen: boolean;
+  toggleFullScreen: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -52,11 +55,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   howl: null,
   isShuffle: false,
   repeatMode: 'off',
+  isFullScreen: false,
 
   toggleShuffle: () => set(state => ({ isShuffle: !state.isShuffle })),
   toggleRepeat: () => set(state => ({ 
     repeatMode: state.repeatMode === 'off' ? 'queue' : state.repeatMode === 'queue' ? 'track' : 'off' 
   })),
+  toggleFullScreen: () => set(state => ({ isFullScreen: !state.isFullScreen })),
 
   play: (song, queue) => {
     const { howl, volume } = get();
