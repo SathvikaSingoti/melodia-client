@@ -95,7 +95,7 @@ export default function SongMenu({ song, onRemove }: { song: Song, onRemove?: ()
     try {
       const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ai/radio`, 
         { songId: song._id },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${localStorage.getItem("melodia_token")}` } }
       );
       
       const radioQueue = res.data;

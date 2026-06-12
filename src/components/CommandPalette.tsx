@@ -192,7 +192,7 @@ export default function CommandPalette() {
               const seedSong = searchRes.data[0];
               const radioRes = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ai/radio`, 
                 { songId: seedSong._id },
-                { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+                { headers: { Authorization: `Bearer ${localStorage.getItem("melodia_token")}` } }
               );
               
               if (radioRes.data && radioRes.data.length > 0) {

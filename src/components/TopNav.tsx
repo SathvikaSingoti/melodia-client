@@ -31,7 +31,7 @@ export default function TopNav() {
       <div className="flex items-center">
         <Link 
           href="/explore" 
-          className="font-[800] text-[18px] tracking-[-0.5px] bg-clip-text text-transparent" 
+          className="font-[900] text-[22px] tracking-[-0.5px] bg-clip-text text-transparent" 
           style={{ backgroundImage: "linear-gradient(135deg, #c4a090, #a88070)" }}
         >
           Melodia
@@ -46,9 +46,8 @@ export default function TopNav() {
             <Link 
               key={tab.path} 
               href={tab.path}
-              className="text-[13px] px-4 py-[6px] rounded-md transition-colors"
+              className="text-[13px] px-4 py-[6px] rounded-md transition-all duration-150 ease-in hover:scale-105 relative"
               style={{
-                backgroundColor: isActive ? "#c4a09018" : "transparent",
                 color: isActive ? "#c4a090" : "#786870",
                 fontWeight: isActive ? 600 : 400
               }}
@@ -63,6 +62,9 @@ export default function TopNav() {
                 {(tab as any).icon && (tab as any).icon}
                 {tab.label}
               </span>
+              {isActive && (
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[3px] h-[3px] rounded-full" style={{ backgroundColor: "#c4a090" }} />
+              )}
             </Link>
           );
         })}
@@ -83,9 +85,15 @@ export default function TopNav() {
         >
           ?
         </button>
-        <button className="text-gray-400 hover:text-white transition-colors relative">
-          <Bell className="w-4 h-4" />
-        </button>
+        <div className="relative group/bell">
+          <button className="text-gray-400 hover:text-white transition-colors relative">
+            <Bell className="w-4 h-4" />
+          </button>
+          <div className="absolute right-0 top-full mt-2 w-48 rounded-lg shadow-xl opacity-0 invisible group-hover/bell:opacity-100 group-hover/bell:visible transition-all z-50 p-4 flex flex-col items-center justify-center gap-2" style={{ backgroundColor: "#181616", border: "1px solid #2c2828" }}>
+            <Bell className="w-6 h-6" style={{ color: "#c4a090" }} />
+            <p className="text-sm text-center" style={{ color: "#ede8e4" }}>No new notifications</p>
+          </div>
+        </div>
 
         <div className="relative group/avatar">
           <button 

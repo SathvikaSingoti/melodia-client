@@ -10,9 +10,9 @@ import Link from "next/link";
 import { Play } from "lucide-react";
 
 const MOODS = [
-  { mood: "Chill & Focused", emoji: "🌿" },
-  { mood: "Energetic Vibe", emoji: "⚡" },
-  { mood: "Happy & Upbeat", emoji: "😊" }
+  { label: "Chill & Focused", mood: "Chill", emoji: "🌿" },
+  { label: "Energetic Vibe", mood: "Energetic", emoji: "⚡" },
+  { label: "Happy & Upbeat", mood: "Happy", emoji: "😊" }
 ];
 
 export default function ExplorePage() {
@@ -21,8 +21,9 @@ export default function ExplorePage() {
   const [artists, setArtists] = useState<any[]>([]);
   const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFading, setIsFading] = useState(false);
   
-  const [moodOfTheDay, setMoodOfTheDay] = useState<{mood: string, emoji: string} | null>(null);
+  const [moodOfTheDay, setMoodOfTheDay] = useState<{label: string, mood: string, emoji: string} | null>(null);
   const [activeMood, setActiveMood] = useState<string | null>(null);
   const [likedSongIds, setLikedSongIds] = useState<Set<string>>(new Set());
   
@@ -32,19 +33,34 @@ export default function ExplorePage() {
   const currentSong = usePlayerStore(state => state.currentSong);
   const setDetailSong = usePlayerStore(state => state.setDetailSong);
 
+  const fetchSongs = async (moodQuery?: string | null) => {
+    setIsFading(true);
+    try {
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/songs${moodQuery ? `?mood=${moodQuery}` : ''}`;
+      const [songsRes, artistsRes] = await Promise.all([
+        axios.get(url),
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/artists`).catch(() => ({ data: [] }))
+      ]);
+      const uniqueSongs = songsRes.data.filter((s: Song, i: number, a: Song[]) => a.findIndex(t => t.title === s.title && t.artist === s.artist) === i);
+      
+      setTimeout(() => {
+        setAllSongs(uniqueSongs);
+        setArtists(artistsRes.data);
+        setIsFading(false);
+        setLoading(false);
+      }, 300);
+    } catch (e) {
+      console.error(e);
+      setIsFading(false);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const randomMood = MOODS[Math.floor(Math.random() * MOODS.length)];
     setMoodOfTheDay(randomMood);
-
-    Promise.all([
-      axios.get(`${process.env.NEXT_PUBLIC_API_URL}/songs`),
-      axios.get(`${process.env.NEXT_PUBLIC_API_URL}/artists`).catch(() => ({ data: [] }))
-    ]).then(([songsRes, artistsRes]) => {
-      const uniqueSongs = songsRes.data.filter((s: Song, i: number, a: Song[]) => a.findIndex(t => t.title === s.title && t.artist === s.artist) === i);
-      setAllSongs(uniqueSongs);
-      setArtists(artistsRes.data);
-      setLoading(false);
-    });
+    setActiveMood(randomMood.mood);
+    fetchSongs(randomMood.mood);
   }, []);
 
   useEffect(() => {
@@ -85,7 +101,7 @@ export default function ExplorePage() {
     return (
       <ProtectedRoute>
         <div className="flex justify-center py-20">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-[#c4a090] border-t-transparent rounded-full animate-spin"></div>
         </div>
       </ProtectedRoute>
     );
@@ -97,26 +113,45 @@ export default function ExplorePage() {
   const newDrops = [...allSongs].reverse().slice(0, 4);
   const aiPlaylist = userPlaylists.find(p => p.name.toLowerCase().includes("ai")) || userPlaylists[0];
 
+  const hour = new Date().getHours();
+  let greeting = "Good evening";
+  if (hour < 12) greeting = "Good morning";
+  else if (hour < 18) greeting = "Good afternoon";
+
   return (
     <ProtectedRoute>
-      <div className="p-8 max-w-5xl mx-auto space-y-12">
+      <div className={`p-8 max-w-5xl mx-auto space-y-12 transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
         
-        {/* 1. MOOD BANNER CARD */}
+        {/* 1. MOOD BANNER HERO */}
         {moodOfTheDay && (
           <div 
-            onClick={() => setActiveMood(activeMood === moodOfTheDay.mood ? null : moodOfTheDay.mood)}
-            className="w-full p-6 rounded-[10px] cursor-pointer transition-all border-l-[3px] shadow-lg flex flex-col justify-center"
+            onClick={() => {
+              const nextMoods = MOODS.filter(m => m.mood !== moodOfTheDay.mood);
+              const randomMood = nextMoods[Math.floor(Math.random() * nextMoods.length)];
+              setMoodOfTheDay(randomMood);
+              setActiveMood(randomMood.mood);
+              fetchSongs(randomMood.mood);
+            }}
+            className="w-full rounded-[14px] p-10 cursor-pointer relative overflow-hidden group transition-all"
             style={{ 
-              backgroundColor: '#181616', 
-              borderColor: activeMood === moodOfTheDay.mood ? '#fff' : '#c4a090' 
+              background: "linear-gradient(45deg, #1a1614, #221f1f)", 
+              backgroundSize: "200% 200%",
+              animation: "gradientFlow 8s ease infinite" 
             }}
           >
-            <span className="text-[10px] font-bold tracking-widest uppercase mb-1" style={{ color: '#ede8e4' }}>
-              Mood of the day {activeMood === moodOfTheDay.mood && "(Active)"}
-            </span>
-            <div className="flex items-center gap-4">
-              <span className="text-4xl">{moodOfTheDay.emoji}</span>
-              <h2 className="text-3xl font-[800] text-white tracking-tight">{moodOfTheDay.mood}</h2>
+            <div 
+              className="absolute -right-20 -top-20 w-[300px] h-[300px] rounded-full blur-[80px] opacity-60 group-hover:opacity-80 transition-opacity duration-700 pointer-events-none"
+              style={{ background: "#c4a09020" }}
+            />
+            <div className="relative z-10 flex flex-col gap-2">
+              <span className="text-[14px] text-gray-400 font-medium">{greeting}</span>
+              <div className="flex items-center gap-4">
+                <h1 className="text-[52px] font-[900] tracking-[-2px] text-[#ede8e4]" style={{ lineHeight: 1.1 }}>
+                  {moodOfTheDay.label}
+                </h1>
+                <span className="text-[48px] inline-block animate-bounce-slow">{moodOfTheDay.emoji}</span>
+              </div>
+              <span className="text-gray-400 mt-2">Your soundtrack for today</span>
             </div>
           </div>
         )}
@@ -130,9 +165,9 @@ export default function ExplorePage() {
                 <div 
                   key={song._id} 
                   onClick={() => play(song, forYouSongs)}
-                  className="flex-shrink-0 w-48 group cursor-pointer"
+                  className="flex-shrink-0 w-[180px] group cursor-pointer hover:scale-[1.02] transition-transform duration-300"
                 >
-                  <div className="w-48 h-48 rounded-lg overflow-hidden mb-3 relative shadow-md">
+                  <div className="w-[180px] h-[180px] rounded-lg overflow-hidden mb-3 relative group-hover:shadow-[0_0_20px_rgba(196,160,144,0.2)] transition-shadow">
                     <img src={song.coverUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <button className="w-12 h-12 flex items-center justify-center rounded-full bg-white text-black hover:scale-105 transition-transform shadow-xl">
@@ -140,8 +175,8 @@ export default function ExplorePage() {
                       </button>
                     </div>
                   </div>
-                  <h4 className="font-semibold text-white truncate text-[15px]">{song.title}</h4>
-                  <div className="text-[13px] text-gray-400 truncate">{song.artist}</div>
+                  <h4 className="font-semibold text-[#ede8e4] truncate text-[15px]">{song.title}</h4>
+                  <div className="text-[13px] truncate" style={{ color: "#c4a090" }}>{song.artist}</div>
                 </div>
               ))}
             </div>

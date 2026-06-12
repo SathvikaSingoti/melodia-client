@@ -4,10 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { usePlayerStore } from "@/store/playerStore";
-import TopNav from "@/components/TopNav";
-import PlayerBar from "@/components/PlayerBar";
-import Sidebar from "@/components/Sidebar";
-import SongDetailPanel from "@/components/SongDetailPanel";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { Clock, Music, Flame, Hash, Play } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -45,7 +42,6 @@ export default function StatsPage() {
   const [isLoading, setIsLoading] = useState(true);
   
   const play = usePlayerStore(state => state.play);
-  const isDetailPanelOpen = usePlayerStore(state => state.isDetailPanelOpen);
 
   useEffect(() => {
     if (!user || !token) return;
@@ -88,13 +84,8 @@ export default function StatsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-bg-primary text-text-primary overflow-hidden">
-      <Sidebar />
-      <div className={`flex flex-col flex-1 relative transition-all duration-300 ${isDetailPanelOpen ? "mr-80" : ""}`}>
-        <TopNav />
-        
-        <main className="flex-1 overflow-y-auto no-scrollbar pb-32">
-          <div className="max-w-6xl mx-auto px-6 py-10 fade-in">
+    <ProtectedRoute>
+      <div className="max-w-6xl mx-auto px-6 py-10 fade-in">
             
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
@@ -336,10 +327,6 @@ export default function StatsPage() {
             ) : null}
 
           </div>
-        </main>
-      </div>
-      <PlayerBar />
-      <SongDetailPanel />
-    </div>
+    </ProtectedRoute>
   );
 }
