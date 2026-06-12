@@ -68,7 +68,8 @@ export default function OnboardingPage() {
   const handleComplete = async () => {
     setLoading(true);
     try {
-      const res = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/users/${user?.id}`, {
+      const userId = user?._id || user?.id;
+      const res = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`, {
         onboardingCompleted: true,
         favoriteGenres: selectedGenres,
         favoriteArtists: selectedArtists,
