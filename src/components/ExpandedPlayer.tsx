@@ -465,8 +465,7 @@ export default function ExpandedPlayer() {
                         key={i} 
                         className="w-[3px] bg-[#c4a090] rounded-t-sm" 
                         style={{ 
-                          animation: `pulse ${(60 / fakeBPM) / playbackRate}s ease-in-out infinite alternate`,
-                          animationDelay: `${i * 0.1}s`, 
+                          animation: `pulse ${(60 / fakeBPM) / playbackRate}s ease-in-out ${i * 0.1}s infinite alternate`,
                           height: `${30 + Math.random() * 70}%` 
                         }} 
                       />
