@@ -61,51 +61,7 @@ export default function StatsPage() {
       }
     };
     
-    const checkAndSeedHistory = async () => {
-      if (localStorage.getItem("historySeedDone")) return;
-      
-      try {
-        const historyRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/history`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        if (historyRes.data.length < 10) {
-          toast.loading("Generating listening history...", { id: "seed" });
-          const songsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/songs`);
-          const songs = songsRes.data;
-          
-          if (songs && songs.length > 0) {
-            const promises = [];
-            for (let i = 0; i < 100; i++) {
-              const randomSong = songs[Math.floor(Math.random() * songs.length)];
-              const randomOffset = Math.random() * 30 * 24 * 60 * 60 * 1000;
-              const date = new Date(Date.now() - randomOffset);
-              
-              promises.push(
-                axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/history`, {
-                  songId: randomSong._id,
-                  duration: randomSong.duration,
-                  playedAt: date.toISOString()
-                }, {
-                  headers: { Authorization: `Bearer ${token}` }
-                })
-              );
-            }
-            await Promise.all(promises);
-            localStorage.setItem("historySeedDone", "true");
-            toast.success("History generated!", { id: "seed" });
-            fetchStats();
-          }
-        } else {
-          localStorage.setItem("historySeedDone", "true");
-        }
-      } catch (err) {
-        console.error("Seeding failed", err);
-        toast.dismiss("seed");
-      }
-    };
-
-    fetchStats().then(() => checkAndSeedHistory());
+    fetchStats();
   }, [user, token, period]);
 
   const getGenreColor = (genre: string) => {
