@@ -290,24 +290,24 @@ export default function ProfilePage() {
                   <li>{playlists.length} playlists</li>
                   <li>Your entire listening history</li>
                 </ul>
-                <div className="mt-4 text-[#e87070] font-medium">This action cannot be undone.</div>
+                <div className="mt-4 text-[#786870] font-medium">This action cannot be undone.</div>
               </div>
-
-              {deleteError && (
-                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
-                  {deleteError}
-                </div>
-              )}
 
               <input 
                 type="text" 
-                placeholder="Type DELETE"
+                placeholder="Type DELETE to confirm"
                 value={deleteInput}
                 onChange={(e) => setDeleteInput(e.target.value)}
-                className="w-full bg-[#221f1f] border border-[#2c2828] rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-[#e87070] mb-6 text-center tracking-widest"
+                className="w-full bg-[#221f1f] border border-[#2c2828] rounded-lg px-4 py-3 text-[#ede8e4] text-sm focus:outline-none focus:ring-1 focus:ring-[#e87070] focus:border-[#e87070] text-center tracking-widest"
               />
               
-              <div className="flex justify-end gap-3">
+              {deleteError && (
+                <div className="mt-2 mb-4 text-[#e87070] text-xs text-center">
+                  {deleteError}
+                </div>
+              )}
+              
+              <div className={`flex justify-end gap-3 ${!deleteError ? 'mt-6' : ''}`}>
                 <button 
                   onClick={() => { setShowDeleteModal(false); setDeleteInput(""); setDeleteError(""); }}
                   disabled={isDeleting}
