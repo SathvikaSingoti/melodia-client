@@ -132,8 +132,7 @@ export default function PlaylistPage() {
     }
   };
 
-  const removeSong = async (e: React.MouseEvent, songId: string) => {
-    e.stopPropagation();
+  const removeSong = async (songId: string) => {
     try {
       const res = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/playlists/${id}/songs/${songId}`, getHeaders());
       setPlaylist(res.data);
@@ -247,7 +246,7 @@ export default function PlaylistPage() {
                 songs={playlist.songs}
                 likedSongIds={likedSongIds}
                 onToggleLike={toggleLike}
-                onRemove={removeSong}
+                onRemovePlaylist={removeSong}
               />
             ) : (
               <div className="text-center py-20 text-gray-500 bg-black/20 rounded-xl border border-dashed border-border">

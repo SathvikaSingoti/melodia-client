@@ -43,6 +43,7 @@ export default function ProfilePage() {
   
   const genreFrequencies: Record<string, number> = {};
   likedSongs.forEach(song => {
+    if (!song.genre) return;
     genreFrequencies[song.genre] = (genreFrequencies[song.genre] || 0) + 1;
   });
   const topGenres = Object.entries(genreFrequencies)

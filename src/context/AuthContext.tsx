@@ -69,20 +69,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  const login = (newToken: string, newUser: User) => {
+  const login = React.useCallback((newToken: string, newUser: User) => {
     setToken(newToken);
     setUser(newUser);
     localStorage.setItem("melodia_token", newToken);
     localStorage.setItem("melodia_user", JSON.stringify(newUser));
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = React.useCallback(() => {
     setToken(null);
     setUser(null);
     localStorage.removeItem("melodia_token");
     localStorage.removeItem("melodia_user");
     router.push("/login");
-  };
+  }, [router]);
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
