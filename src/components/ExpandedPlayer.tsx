@@ -44,7 +44,7 @@ export default function ExpandedPlayer() {
 
     const ws = WaveSurfer.create({
       container: waveformRef.current,
-      waveColor: '#333333',
+      waveColor: '#2c2828',
       progressColor: '#c4a090',
       cursorColor: 'transparent', // We'll manage cursor manually or let WaveSurfer do it via setTime
       barWidth: 2,
@@ -190,16 +190,18 @@ export default function ExpandedPlayer() {
             </button>
             
             {showSettings && (
-              <div className="absolute top-12 right-0 w-72 bg-[#181616] border border-[#2c2828] rounded-xl shadow-2xl p-4 z-50 flex flex-col gap-5 animate-in slide-in-from-top-2">
+              <div className="absolute top-[48px] right-0 w-[260px] bg-[#1a1614] border border-[#2c2828] rounded-[12px] shadow-[0_8px_32px_rgba(0,0,0,0.6)] p-[20px] z-[100] flex flex-col gap-5 animate-in slide-in-from-top-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Playback Speed</span>
-                  <div className="flex items-center bg-[#0a0909] border border-[#2c2828] rounded-full p-0.5">
+                  <span className="text-[11px] font-[600] tracking-[0.08em] text-[#786870]">PLAYBACK SPEED</span>
+                  <div className="flex items-center gap-1">
                     {[0.5, 0.75, 1, 1.25, 1.5].map(rate => (
                       <button
                         key={rate}
                         onClick={() => setPlaybackRate(rate)}
-                        className={`px-2 py-1 text-[10px] font-bold rounded-full transition-colors ${
-                          playbackRate === rate ? 'bg-[#c4a090] text-white' : 'text-gray-500 hover:text-gray-300'
+                        className={`px-[10px] py-[4px] text-[12px] rounded-full transition-colors ${
+                          playbackRate === rate 
+                            ? 'bg-[#c4a09022] text-[#c4a090] border border-[#c4a090]' 
+                            : 'bg-[#221f1f] text-[#786870] border border-[#2c2828] hover:bg-[#2c2828]'
                         }`}
                       >
                         {rate}x
@@ -209,7 +211,7 @@ export default function ExpandedPlayer() {
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Crossfade</span>
+                  <span className="text-[11px] font-[600] tracking-[0.08em] text-[#786870]">CROSSFADE</span>
                   <div className="flex items-center gap-3">
                     {crossfadeEnabled && (
                       <div className="flex items-center gap-2">
@@ -219,27 +221,27 @@ export default function ExpandedPlayer() {
                           onChange={(e) => setCrossfade(true, parseInt(e.target.value))}
                           className="w-16 h-1 bg-[#2c2828] rounded-lg appearance-none cursor-pointer accent-[#c4a090]"
                         />
-                        <span className="text-[10px] font-mono text-gray-500 w-3">{crossfadeDuration}s</span>
+                        <span className="text-[13px] text-[#ede8e4] w-3">{crossfadeDuration}s</span>
                       </div>
                     )}
                     <button 
                       onClick={() => setCrossfade(!crossfadeEnabled)}
                       className={`w-8 h-4 rounded-full flex items-center transition-colors ${crossfadeEnabled ? 'bg-[#c4a090]' : 'bg-[#2c2828]'}`}
                     >
-                      <div className={`w-3 h-3 bg-white rounded-full transition-transform ${crossfadeEnabled ? 'translate-x-[18px]' : 'translate-x-1'}`} />
+                      <div className={`w-3 h-3 bg-[#ede8e4] rounded-full transition-transform ${crossfadeEnabled ? 'translate-x-[18px]' : 'translate-x-1'}`} />
                     </button>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Loop A→B</span>
+                  <span className="text-[11px] font-[600] tracking-[0.08em] text-[#786870]">LOOP A→B</span>
                   <button 
                     onClick={toggleLoop}
                     disabled={loopA === null || loopB === null}
-                    className={`px-4 py-1 rounded-full text-xs font-bold border transition-all ${
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
                       isLoopActive 
-                        ? 'border-[#c4a090] bg-[#c4a090]/10 text-[#c4a090]' 
-                        : 'border-[#2c2828] text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed'
+                        ? 'border border-[#c4a090] bg-[#c4a09022] text-[#c4a090]' 
+                        : 'border border-[#2c2828] bg-[#221f1f] text-[#786870] hover:bg-[#2c2828] disabled:opacity-30 disabled:cursor-not-allowed'
                     }`}
                   >
                     {isLoopActive ? 'ACTIVE' : 'INACTIVE'}
@@ -257,7 +259,7 @@ export default function ExpandedPlayer() {
             <div className="w-full relative flex-shrink-0">
               <div 
                 ref={overlayRef}
-                className="w-full h-[120px] bg-[#1a1814] relative cursor-text group rounded overflow-hidden"
+                className="w-full h-[120px] bg-[#111010] relative cursor-text group rounded overflow-hidden"
                 onPointerDown={handleWaveformClick}
               >
                 {/* Fallback seekbar if WaveSurfer fails */}
@@ -281,11 +283,11 @@ export default function ExpandedPlayer() {
                 {/* Marker A */}
                 {loopA !== null && (
                   <div 
-                    className="absolute top-0 bottom-0 w-[2px] bg-[#5bc4e8] z-30 cursor-ew-resize group/marker"
+                    className="absolute top-0 bottom-0 w-[2px] bg-[#c4a090] z-30 cursor-ew-resize group/marker"
                     style={{ left: `${(loopA / duration) * 100}%` }}
                     onPointerDown={(e) => { e.stopPropagation(); setDraggingMarker('A'); }}
                   >
-                    <div className="absolute top-0 -translate-x-1/2 -translate-y-full bg-[#5bc4e8] text-[#080808] text-[10px] font-bold px-1.5 py-0.5 rounded-t">
+                    <div className="absolute top-0 -translate-x-1/2 -translate-y-full bg-[#c4a090] text-[#080808] text-[10px] font-bold px-1.5 py-0.5 rounded-t">
                       A
                     </div>
                   </div>
@@ -294,11 +296,11 @@ export default function ExpandedPlayer() {
                 {/* Marker B */}
                 {loopB !== null && (
                   <div 
-                    className="absolute top-0 bottom-0 w-[2px] bg-[#9060f0] z-30 cursor-ew-resize group/marker"
+                    className="absolute top-0 bottom-0 w-[2px] bg-[#a88070] z-30 cursor-ew-resize group/marker"
                     style={{ left: `${(loopB / duration) * 100}%` }}
                     onPointerDown={(e) => { e.stopPropagation(); setDraggingMarker('B'); }}
                   >
-                    <div className="absolute top-0 -translate-x-1/2 -translate-y-full bg-[#9060f0] text-[#080808] text-[10px] font-bold px-1.5 py-0.5 rounded-t">
+                    <div className="absolute top-0 -translate-x-1/2 -translate-y-full bg-[#a88070] text-[#080808] text-[10px] font-bold px-1.5 py-0.5 rounded-t">
                       B
                     </div>
                   </div>
@@ -334,13 +336,13 @@ export default function ExpandedPlayer() {
               <div className="flex items-center gap-2 mt-2">
                 <button 
                   onClick={() => setLoopMarker('A', progress)}
-                  className={`px-3 py-1 text-xs font-bold rounded ${loopA !== null ? 'bg-[#5bc4e8]/20 text-[#5bc4e8]' : 'bg-[#2c2828] text-gray-400 hover:bg-[#2c2828]'}`}
+                  className={`px-3 py-1 text-xs font-bold rounded border ${loopA !== null ? 'bg-[#c4a09022] text-[#c4a090] border-[#c4a090]' : 'bg-[#221f1f] text-[#786870] border-[#2c2828] hover:bg-[#2c2828]'}`}
                 >
                   Set A
                 </button>
                 <button 
                   onClick={() => setLoopMarker('B', progress)}
-                  className={`px-3 py-1 text-xs font-bold rounded ${loopB !== null ? 'bg-[#9060f0]/20 text-[#9060f0]' : 'bg-[#2c2828] text-gray-400 hover:bg-[#2c2828]'}`}
+                  className={`px-3 py-1 text-xs font-bold rounded border ${loopB !== null ? 'bg-[#78607022] text-[#786870] border-[#786870]' : 'bg-[#221f1f] text-[#786870] border-[#2c2828] hover:bg-[#2c2828]'}`}
                 >
                   Set B
                 </button>
