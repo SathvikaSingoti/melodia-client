@@ -3,8 +3,7 @@
 import { usePlayerStore } from "@/store/playerStore";
 import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, ChevronDown, ListMusic, Heart, Volume2, Settings2 } from "lucide-react";
 import Link from "next/link";
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import WaveSurfer from "wavesurfer.js";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 
 export default function ExpandedPlayer() {
   const { 
@@ -18,86 +17,34 @@ export default function ExpandedPlayer() {
     crossfadeEnabled, crossfadeDuration, setCrossfade
   } = usePlayerStore();
 
-  const waveformRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const wsRef = useRef<WaveSurfer | null>(null);
   const [draggingMarker, setDraggingMarker] = useState<'A' | 'B' | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [wsError, setWsError] = useState(false);
 
-  // Initialize WaveSurfer
-  useEffect(() => {
-    if (!waveformRef.current || !currentSong) return;
-
-    if (wsRef.current) {
-      const oldWs = wsRef.current;
-      setTimeout(() => {
-        try {
-          if ((oldWs as any).abortController) {
-            (oldWs as any).abortController = null;
-          }
-          oldWs.destroy(); 
-        } catch (e) {}
-      }, 0);
-    }
-    setWsError(false);
-
-    const ws = WaveSurfer.create({
-      container: waveformRef.current,
-      waveColor: '#2c2828',
-      progressColor: '#c4a090',
-      cursorColor: 'transparent', // We'll manage cursor manually or let WaveSurfer do it via setTime
-      barWidth: 2,
-      barGap: 2,
-      barRadius: 2,
-      height: 120,
-      interact: false, // We use custom overlay for interaction
-      normalize: true,
-    });
-
-    ws.setVolume(0); // Mute since Howler plays the audio
+  const waveformBars = useMemo(() => {
+    if (!currentSong) return [];
     
-    // Catch AbortError which happens if destroyed before load finishes
-    ws.on('error', (err) => {
-      console.error('WaveSurfer error:', err);
-      setWsError(true);
-    });
-
-    ws.load(currentSong.audioUrl).catch(err => {
-      if (err.name !== 'AbortError') {
-        console.error('WaveSurfer load error:', err);
-        setWsError(true);
-      }
-    });
-    wsRef.current = ws;
-
-    return () => {
-      // Delay destroy to avoid Next.js intercepting AbortError during React cleanup phase
-      setTimeout(() => {
-        if (ws) {
-          try {
-            // Nullify the internal abortController so that the Next.js fetch polyfill 
-            // doesn't throw a global 'signal is aborted without reason' overlay.
-            if ((ws as any).abortController) {
-              (ws as any).abortController = null;
-            }
-            ws.destroy();
-          } catch (err) {
-            // Ignore errors on destroy
-          }
-        }
-      }, 0);
-    };
-  }, [currentSong?.audioUrl]);
-
-  // Sync WaveSurfer with Howler progress
-  useEffect(() => {
-    if (wsRef.current && duration > 0) {
-      // Avoid seeking past duration
-      const safeProgress = Math.min(progress, duration);
-      wsRef.current.setTime(safeProgress);
+    // Simple deterministic PRNG based on song ID
+    let hash = 0;
+    const seedStr = currentSong._id;
+    for (let i = 0; i < seedStr.length; i++) {
+      hash = Math.imul(31, hash) + seedStr.charCodeAt(i) | 0;
     }
-  }, [progress, duration]);
+    
+    const random = () => {
+      hash = Math.imul(741103597, hash) + 1 | 0;
+      let t = Math.imul(hash ^ (hash >>> 15), 1597334677);
+      t = Math.imul(t ^ (t >>> 15), 3812015801);
+      return ((t ^ (t >>> 15)) >>> 0) / 4294967296;
+    };
+    
+    const bars = [];
+    for (let i = 0; i < 80; i++) {
+      // Height between 10% and 90%
+      bars.push(10 + random() * 80);
+    }
+    return bars;
+  }, [currentSong?._id]);
 
   // Handle Dragging Loop Markers
   useEffect(() => {
@@ -259,26 +206,29 @@ export default function ExpandedPlayer() {
             <div className="w-full relative flex-shrink-0">
               <div 
                 ref={overlayRef}
-                className="w-full h-[120px] bg-[#111010] relative cursor-text group rounded overflow-hidden"
+                className="w-full h-[120px] bg-[#111010] relative cursor-text group rounded overflow-hidden flex items-center justify-between px-2"
                 onPointerDown={handleWaveformClick}
               >
-                {/* Fallback seekbar if WaveSurfer fails */}
-                {wsError && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-full h-2 bg-[#2c2828] mx-4 rounded-full overflow-hidden relative">
-                       <div className="absolute top-0 bottom-0 left-0 bg-gray-500" style={{ width: `${(progress / (duration || 1)) * 100}%` }} />
-                    </div>
-                  </div>
-                )}
+                {/* CSS Waveform Visualization */}
+                {waveformBars.map((heightPct, idx) => {
+                  const isPlayed = (idx / 80) <= (progress / (duration || 1));
+                  return (
+                    <div 
+                      key={idx}
+                      className="w-[3px] rounded-[2px] transition-colors pointer-events-none"
+                      style={{ 
+                        height: `${heightPct}%`, 
+                        backgroundColor: isPlayed ? '#c4a090' : '#2c2828'
+                      }}
+                    />
+                  );
+                })}
 
                 {/* Custom Progress Cursor Line */}
                 <div 
                   className="absolute top-0 bottom-0 w-[2px] bg-[#c4a090] z-20 pointer-events-none shadow-[0_0_8px_#c4a090]"
                   style={{ left: `${(progress / (duration || 1)) * 100}%` }}
                 />
-                
-                {/* WaveSurfer Container */}
-                <div ref={waveformRef} className={`absolute inset-0 z-10 pointer-events-none ${wsError ? 'opacity-0' : 'opacity-100'}`} style={{ width: '100%', height: '120px' }} />
 
                 {/* Marker A */}
                 {loopA !== null && (
