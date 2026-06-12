@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
@@ -8,7 +9,8 @@ import { Song, usePlayerStore } from "@/store/playerStore";
 import toast from "react-hot-toast";
 
 export default function ProfilePage() {
-  const { user, token, login } = useAuth();
+  const { user, token, login, logout } = useAuth();
+  const router = useRouter();
   const [likedSongs, setLikedSongs] = useState<Song[]>([]);
   const [playlists, setPlaylists] = useState<any[]>([]);
   
@@ -17,6 +19,12 @@ export default function ProfilePage() {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const play = usePlayerStore(state => state.play);
+
+  // Delete account state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteInput, setDeleteInput] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     if (user && token) {
@@ -81,6 +89,29 @@ export default function ProfilePage() {
         setIsUploading(false);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteInput !== "DELETE" || !user || !token) return;
+    setIsDeleting(true);
+    setDeleteError("");
+    
+    try {
+      const userId = user._id || user.id;
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success("Account deleted. Goodbye 👋");
+      
+      setTimeout(() => {
+        logout();
+      }, 2000);
+      
+    } catch (err: any) {
+      setIsDeleting(false);
+      setDeleteError(err.response?.data?.message || "Failed to delete account");
     }
   };
 
@@ -221,7 +252,80 @@ export default function ProfilePage() {
             </div>
           </div>
 
+          <div className="mt-12 pt-12 border-t border-[#2c2828]">
+            <div className="mb-4">
+              <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">DANGER ZONE</span>
+            </div>
+            <div className="bg-[#e870700a] border border-[#e8707026] rounded-[10px] p-[16px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-[14px] font-bold text-[#e87070] mb-1">Delete Account</h3>
+                <p className="text-[12px] text-[#786870]">
+                  This will permanently delete your account, liked songs, and all playlists. This cannot be undone.
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowDeleteModal(true)}
+                className="bg-transparent border border-[#e87070] text-[#e87070] rounded-[8px] px-[16px] py-[8px] text-[13px] hover:bg-[#e870701a] transition-colors flex-shrink-0 font-medium"
+              >
+                Delete my account
+              </button>
+            </div>
+          </div>
+
         </div>
+
+        {/* Delete Account Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-[#181616] w-full max-w-[400px] rounded-[14px] border border-[#2c2828] shadow-2xl p-[24px]">
+              <div className="text-center mb-4">
+                <span className="text-[32px]">⚠️</span>
+              </div>
+              <h3 className="text-[18px] font-[600] text-[#ede8e4] text-center mb-4">Delete your account?</h3>
+              <div className="text-[13px] text-[#786870] leading-[1.6] mb-6">
+                You're about to permanently delete:
+                <ul className="list-disc pl-5 mt-2 space-y-1">
+                  <li>Your account and profile</li>
+                  <li>{likedSongs.length} liked songs</li>
+                  <li>{playlists.length} playlists</li>
+                  <li>Your entire listening history</li>
+                </ul>
+                <div className="mt-4 text-[#e87070] font-medium">This action cannot be undone.</div>
+              </div>
+
+              {deleteError && (
+                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+                  {deleteError}
+                </div>
+              )}
+
+              <input 
+                type="text" 
+                placeholder="Type DELETE"
+                value={deleteInput}
+                onChange={(e) => setDeleteInput(e.target.value)}
+                className="w-full bg-[#221f1f] border border-[#2c2828] rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-[#e87070] mb-6 text-center tracking-widest"
+              />
+              
+              <div className="flex justify-end gap-3">
+                <button 
+                  onClick={() => { setShowDeleteModal(false); setDeleteInput(""); setDeleteError(""); }}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold text-gray-400 border border-[#2c2828] hover:bg-white/5 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleDeleteAccount}
+                  disabled={deleteInput !== "DELETE" || isDeleting}
+                  className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold bg-[#e87070] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isDeleting ? "Deleting..." : "Delete Forever"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </ProtectedRoute>
   );
