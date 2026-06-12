@@ -7,8 +7,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { usePlayerStore, Song } from "@/store/playerStore";
 import TrackList from "@/components/TrackList";
-import { Search, Image as ImageIcon, X, Plus, Music, Heart, LogOut, Play } from "lucide-react";
+import { Search, Image as ImageIcon, X, Plus, Music, Heart, LogOut, Play, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
+import AIGenerateModal from "@/components/AIGenerateModal";
 
 interface Playlist {
   _id: string;
@@ -36,6 +37,7 @@ export default function LibraryPage() {
   const [loading, setLoading] = useState(true);
   
   const [showModal, setShowModal] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   
   const [allSongs, setAllSongs] = useState<Song[]>([]);
@@ -315,12 +317,22 @@ export default function LibraryPage() {
 
             <button 
               onClick={() => setShowModal(true)}
-              className="w-full flex items-center gap-4 px-3 py-2 rounded-lg transition-colors hover:bg-white/5 group border border-transparent border-dashed hover:border-gray-500"
+              className="w-full flex items-center gap-4 px-3 py-2 rounded-lg transition-colors hover:bg-white/5 group border border-transparent border-dashed hover:border-gray-500 mb-1"
             >
               <div className="w-10 h-10 rounded bg-white/5 flex items-center justify-center flex-shrink-0 group-hover:bg-white/10 transition-colors">
                 <Plus className="w-5 h-5 text-gray-400 group-hover:text-white" />
               </div>
               <span className="font-semibold text-gray-400 group-hover:text-white transition-colors">Create Playlist</span>
+            </button>
+
+            <button 
+              onClick={() => setShowAIModal(true)}
+              className="w-full flex items-center gap-4 px-3 py-2 rounded-lg transition-colors hover:bg-[#c4a09015] group border border-transparent border-dashed hover:border-[#c4a09050]"
+            >
+              <div className="w-10 h-10 rounded bg-[#c4a09020] flex items-center justify-center flex-shrink-0 group-hover:bg-[#c4a09030] transition-colors">
+                <Sparkles className="w-5 h-5 text-[#c4a090] group-hover:text-[#e8c0b0]" />
+              </div>
+              <span className="font-semibold text-[#c4a090] group-hover:text-[#e8c0b0] transition-colors">Generate Smart Playlist</span>
             </button>
           </div>
 
@@ -536,6 +548,37 @@ export default function LibraryPage() {
             </div>
           </div>
         )}
+
+        {/* AI Generate Modal */}
+        <AIGenerateModal 
+          isOpen={showAIModal}
+          onClose={() => setShowAIModal(false)}
+          title="Generate Smart Playlist"
+          onSubmit={async (promptMsg) => {
+            if (!user) throw new Error("Not logged in");
+            const toastId = toast.loading(`Generating playlist...`);
+            try {
+              const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate-playlist`, { prompt: promptMsg, userId: user._id });
+              // Re-fetch playlists to get the newly generated one
+              const playlistsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/playlists`);
+              setPlaylists(playlistsRes.data);
+              
+              // Find the newest AI playlist to navigate to it
+              const aiPlaylists = playlistsRes.data.filter((p: Playlist) => p.isAIGenerated);
+              if (aiPlaylists.length > 0) {
+                // Assuming the last one in the array or by highest ID is the newest
+                const latest = aiPlaylists[aiPlaylists.length - 1];
+                setActiveCollection(latest._id);
+              }
+              
+              toast.success(`Playlist generated!`, { id: toastId });
+            } catch (e) { 
+              toast.error(`Failed to generate playlist`, { id: toastId }); 
+              throw e; 
+            }
+          }}
+        />
+
       </div>
     </ProtectedRoute>
   );

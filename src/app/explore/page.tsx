@@ -9,6 +9,7 @@ import SongMenu from "@/components/SongMenu";
 import Link from "next/link";
 import { Play, Flame, Disc3, Clock } from "lucide-react";
 import toast from 'react-hot-toast';
+import AIGenerateModal from "@/components/AIGenerateModal";
 
 const MOODS = [
   { label: "Chill & Focused", mood: "Chill", emoji: "🌿" },
@@ -24,6 +25,9 @@ export default function ExplorePage() {
   const [aiPlaylist, setAiPlaylist] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isFading, setIsFading] = useState(false);
+  
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiModalMode, setAiModalMode] = useState<"generate" | "regenerate">("generate");
   
   const [moodOfTheDay, setMoodOfTheDay] = useState<{label: string, mood: string, emoji: string} | null>(null);
   const [activeMood, setActiveMood] = useState<string | null>(null);
@@ -205,17 +209,9 @@ export default function ExplorePage() {
                 <div className="flex items-center gap-4 mb-2">
                   <h4 className="text-3xl font-bold text-white">{aiPlaylist.name}</h4>
                   <button 
-                    onClick={async () => {
-                      const promptMsg = prompt("What kind of mix would you like to regenerate?");
-                      if (promptMsg && user) {
-                        const toastId = toast.loading(`Regenerating playlist...`);
-                        try {
-                          await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate-playlist`, { prompt: promptMsg, userId: user._id });
-                          const freshRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/playlists?aiGenerated=true&limit=1&userId=${user._id}`);
-                          if (freshRes.data && freshRes.data.length > 0) setAiPlaylist(freshRes.data[0]);
-                          toast.success(`Playlist regenerated!`, { id: toastId });
-                        } catch (e) { toast.error("Failed to regenerate", { id: toastId }); }
-                      }
+                    onClick={() => {
+                      setAiModalMode("regenerate");
+                      setShowAIModal(true);
                     }}
                     className="text-[10px] uppercase font-bold text-gray-500 hover:text-[#9060f0] transition-colors"
                   >
@@ -253,17 +249,9 @@ export default function ExplorePage() {
               <p className="text-sm text-gray-400 mb-0">Generate a personalized, AI-curated mix blending your favorite genres and recent discoveries.</p>
             </div>
             <button 
-              onClick={async () => {
-                const promptMsg = prompt("What kind of mix would you like to generate?");
-                if (promptMsg && user) {
-                  const toastId = toast.loading(`Generating playlist for: "${promptMsg}"...`);
-                  try {
-                    await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate-playlist`, { prompt: promptMsg, userId: user._id });
-                    const freshRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/playlists?aiGenerated=true&limit=1&userId=${user._id}`);
-                    if (freshRes.data && freshRes.data.length > 0) setAiPlaylist(freshRes.data[0]);
-                    toast.success(`Playlist generated!`, { id: toastId });
-                  } catch (e) { toast.error("Failed to generate playlist", { id: toastId }); }
-                }
+              onClick={() => {
+                setAiModalMode("generate");
+                setShowAIModal(true);
               }}
               className="bg-white text-black font-semibold text-sm px-6 py-2 rounded-full hover:scale-105 transition-transform ml-6 flex-shrink-0"
             >
@@ -394,6 +382,25 @@ export default function ExplorePage() {
         )}
 
       </div>
+
+      <AIGenerateModal 
+        isOpen={showAIModal}
+        onClose={() => setShowAIModal(false)}
+        title={aiModalMode === "regenerate" ? "Regenerate your mix" : "Generate a new mix"}
+        onSubmit={async (promptMsg) => {
+          if (!user) throw new Error("Not logged in");
+          const toastId = toast.loading(`${aiModalMode === "regenerate" ? "Regenerating" : "Generating"} playlist...`);
+          try {
+            await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate-playlist`, { prompt: promptMsg, userId: user._id });
+            const freshRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/playlists?aiGenerated=true&limit=1&userId=${user._id}`);
+            if (freshRes.data && freshRes.data.length > 0) setAiPlaylist(freshRes.data[0]);
+            toast.success(`Playlist ${aiModalMode === "regenerate" ? "regenerated" : "generated"}!`, { id: toastId });
+          } catch (e) { 
+            toast.error(`Failed to ${aiModalMode} playlist`, { id: toastId }); 
+            throw e; 
+          }
+        }}
+      />
     </ProtectedRoute>
   );
 }
