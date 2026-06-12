@@ -9,16 +9,26 @@ import { useAuth } from "@/context/AuthContext";
 import SongMenu from "@/components/SongMenu";
 import Link from "next/link";
 
-const GENRES = [
-  { name: "Pop", emoji: "🎤", style: "bg-[rgba(168,207,255,0.08)] border-[#c4a090]" },
-  { name: "Hip-Hop", emoji: "🎧", style: "bg-[rgba(255,214,165,0.08)] border-[#c4a090]" },
-  { name: "R&B", emoji: "💜", style: "bg-[rgba(201,184,255,0.08)] border-[#C9B8FF]" },
-  { name: "Indie", emoji: "🌿", style: "bg-[rgba(168,237,203,0.08)] border-[#A8EDCB]" },
-  { name: "Electronic", emoji: "⚡", style: "bg-[rgba(168,207,255,0.06)] border-[#c4a090]" },
-  { name: "Rock", emoji: "🎸", style: "bg-[rgba(255,214,165,0.08)] border-[#c4a090]" },
-  { name: "Jazz", emoji: "🎷", style: "bg-[rgba(201,184,255,0.08)] border-[#C9B8FF]" },
-  { name: "Classical", emoji: "🎻", style: "bg-[rgba(168,237,203,0.08)] border-[#A8EDCB]" }
-];
+const GENRE_EMOJI: Record<string, string> = {
+  pop: "🎤", "hip-hop": "🎧", hiphop: "🎧", rap: "🎧",
+  "r&b": "💜", rnb: "💜", indie: "🌿", electronic: "⚡",
+  rock: "🎸", jazz: "🎷", classical: "🎻", ambient: "🌙",
+  folk: "🪕"
+};
+
+const getGenreEmoji = (genre: string) => {
+  return GENRE_EMOJI[genre.toLowerCase()] || "🎵";
+};
+
+const getGenreStyle = (i: number) => {
+  const styles = [
+    "bg-[rgba(168,207,255,0.08)] border-[#c4a090]",
+    "bg-[rgba(255,214,165,0.08)] border-[#c4a090]",
+    "bg-[rgba(201,184,255,0.08)] border-[#C9B8FF]",
+    "bg-[rgba(168,237,203,0.08)] border-[#A8EDCB]"
+  ];
+  return styles[i % styles.length];
+};
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
@@ -38,6 +48,7 @@ export default function SearchPage() {
   const [selectedGenre, setSelectedGenre] = useState("");
   const [genreResults, setGenreResults] = useState<Song[]>([]);
   const [loadingGenre, setLoadingGenre] = useState(false);
+  const [dbGenres, setDbGenres] = useState<{genre: string, count: number}[]>([]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -46,7 +57,7 @@ export default function SearchPage() {
     if (q) {
       setQuery(q);
       setLoading(true);
-      searchSongs(q);
+      searchSongs(q, "All");
     } else if (section) {
       setLoading(true);
       axios.get(`${process.env.NEXT_PUBLIC_API_URL}/songs`).then(res => {
@@ -72,6 +83,7 @@ export default function SearchPage() {
     }
     // Fetch all songs for artists empty state
     axios.get(`${process.env.NEXT_PUBLIC_API_URL}/songs`).then(res => setAllSongs(res.data));
+    axios.get(`${process.env.NEXT_PUBLIC_API_URL}/songs/genres`).then(res => setDbGenres(res.data));
   }, [user]);
 
   const fetchLikedSongs = async () => {
@@ -110,15 +122,15 @@ export default function SearchPage() {
     }
   };
 
-  const searchSongs = async (searchQuery: string) => {
-    if (!searchQuery.trim()) {
+  const searchSongs = async (searchQuery: string, activeFilter: string) => {
+    if (!searchQuery.trim() && activeFilter !== "Duration") {
       setResults([]);
       setLoading(false);
       return;
     }
 
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/songs/search?q=${encodeURIComponent(searchQuery)}`);
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/songs/search?q=${encodeURIComponent(searchQuery)}&filter=${activeFilter.toLowerCase()}`);
       const unique = res.data.filter((s: Song, i: number, a: Song[]) => a.findIndex(t => t.title === s.title && t.artist === s.artist) === i);
       setResults(unique);
     } catch (error) {
@@ -129,16 +141,34 @@ export default function SearchPage() {
   };
 
   const debouncedSearch = useCallback(
-    debounce((q: string) => {
-      searchSongs(q);
+    debounce((q: string, f: string) => {
+      searchSongs(q, f);
     }, 300),
     []
   );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
+    if (filter === "Duration") return;
     setLoading(true);
-    debouncedSearch(e.target.value);
+    debouncedSearch(e.target.value, filter);
+  };
+
+  const handleFilterChange = (newFilter: string) => {
+    setFilter(newFilter);
+    setLoading(true);
+    if (newFilter === "Duration") {
+      setQuery("short");
+      searchSongs("short", "Duration");
+    } else {
+      searchSongs(query, newFilter);
+    }
+  };
+
+  const handleDurationOption = (option: string) => {
+    setQuery(option);
+    setLoading(true);
+    searchSongs(option, "Duration");
   };
   
   const handleGenreClick = async (genre: string) => {
@@ -159,13 +189,7 @@ export default function SearchPage() {
     }
   };
 
-  const filteredResults = results.filter(song => {
-    if (filter === "All") return true;
-    if (filter === "Artist") return song.artist.toLowerCase().includes(query.toLowerCase());
-    if (filter === "Genre") return song.genre?.toLowerCase().includes(query.toLowerCase());
-    if (filter === "Duration") return song.duration < 180; // Example duration filter
-    return true;
-  });
+  const filteredResults = results;
 
   const formatDuration = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -190,12 +214,14 @@ export default function SearchPage() {
       <div className="p-8 w-full mx-auto pb-32">
         <div className="mb-10 flex justify-center">
           <input
+            id="main-search-input"
             type="text"
             value={query}
             onChange={handleSearchChange}
             placeholder="What do you want to listen to?"
             className="w-full max-w-[600px] bg-bg-secondary text-white text-lg rounded-full py-4 px-6 border-2 border-border focus:border-[#9060f0] transition-colors shadow-lg placeholder-gray-500 outline-none"
             style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}
+            autoFocus
           />
         </div>
 
@@ -205,7 +231,7 @@ export default function SearchPage() {
               {["All", "Artist", "Genre", "Duration"].map(f => (
                 <button
                   key={f}
-                  onClick={() => setFilter(f)}
+                  onClick={() => handleFilterChange(f)}
                   className={`px-6 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                     filter === f 
                       ? "border-[1.5px] border-primary text-primary bg-primary/10" 
@@ -216,6 +242,22 @@ export default function SearchPage() {
                 </button>
               ))}
             </div>
+
+            {filter === "Duration" && (
+              <div className="flex gap-4 justify-center mb-6">
+                {["short", "medium", "long"].map(opt => (
+                  <button
+                    key={opt}
+                    onClick={() => handleDurationOption(opt)}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors border border-border ${
+                      query === opt ? "bg-[#c4a090] text-white" : "bg-bg-tertiary text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    {opt} {opt === "short" ? "(<2m)" : opt === "medium" ? "(2-4m)" : "(>4m)"}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {loading ? (
               <div className="flex justify-center py-10">
@@ -289,14 +331,14 @@ export default function SearchPage() {
             <div>
               <h3 className="text-xl font-bold text-white mb-6">Browse all</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {GENRES.map((genre) => (
+                {dbGenres.map((genreObj, idx) => (
                   <div 
-                    key={genre.name}
-                    onClick={() => handleGenreClick(genre.name)}
-                    className={`aspect-[2/1] rounded-xl p-4 flex items-center justify-between cursor-pointer hover:scale-[1.03] transition-transform overflow-hidden relative shadow-lg border ${selectedGenre === genre.name ? 'border-primary shadow-[0_0_15px_rgba(168,207,255,0.3)]' : genre.style}`}
+                    key={genreObj.genre}
+                    onClick={() => handleGenreClick(genreObj.genre)}
+                    className={`aspect-[2/1] rounded-xl p-4 flex items-center justify-between cursor-pointer hover:scale-[1.03] transition-transform overflow-hidden relative shadow-lg border ${selectedGenre === genreObj.genre ? 'border-primary shadow-[0_0_15px_rgba(168,207,255,0.3)]' : getGenreStyle(idx)}`}
                   >
-                    <h4 className="text-white font-bold text-lg z-10">{genre.name}</h4>
-                    <div className="text-4xl z-10 opacity-90">{genre.emoji}</div>
+                    <h4 className="text-white font-bold text-lg z-10">{genreObj.genre}</h4>
+                    <div className="text-4xl z-10 opacity-90">{getGenreEmoji(genreObj.genre)}</div>
                   </div>
                 ))}
               </div>

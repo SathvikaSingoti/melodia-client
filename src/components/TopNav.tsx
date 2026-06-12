@@ -72,7 +72,16 @@ export default function TopNav() {
 
       {/* Right: Icons + Avatar */}
       <div className="flex items-center gap-4">
-        <Link href="/search" className="flex items-center gap-2 px-2 py-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition-colors group">
+        <Link 
+          href="/search" 
+          onClick={(e) => {
+            if (pathname === '/search') {
+              e.preventDefault();
+              document.getElementById('main-search-input')?.focus();
+            }
+          }}
+          className="flex items-center gap-2 px-2 py-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition-colors group"
+        >
           <Search className="w-4 h-4" />
           <span className="hidden sm:inline-flex items-center text-[10px] font-mono tracking-widest uppercase border border-gray-600 rounded px-1.5 py-0.5 group-hover:border-gray-400 transition-colors">
             ⌘K

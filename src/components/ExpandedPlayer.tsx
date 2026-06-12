@@ -23,6 +23,7 @@ export default function ExpandedPlayer() {
   const wsRef = useRef<WaveSurfer | null>(null);
   const [draggingMarker, setDraggingMarker] = useState<'A' | 'B' | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [wsError, setWsError] = useState(false);
 
   // Initialize WaveSurfer
   useEffect(() => {
@@ -31,6 +32,7 @@ export default function ExpandedPlayer() {
     if (wsRef.current) {
       wsRef.current.destroy();
     }
+    setWsError(false);
 
     const ws = WaveSurfer.create({
       container: waveformRef.current,
@@ -48,8 +50,16 @@ export default function ExpandedPlayer() {
     ws.setVolume(0); // Mute since Howler plays the audio
     
     // Catch AbortError which happens if destroyed before load finishes
+    ws.on('error', (err) => {
+      console.error('WaveSurfer error:', err);
+      setWsError(true);
+    });
+
     ws.load(currentSong.audioUrl).catch(err => {
-      if (err.name !== 'AbortError') console.error('WaveSurfer load error:', err);
+      if (err.name !== 'AbortError') {
+        console.error('WaveSurfer load error:', err);
+        setWsError(true);
+      }
     });
     wsRef.current = ws;
 
@@ -145,7 +155,7 @@ export default function ExpandedPlayer() {
             </button>
             {currentSong && (
               <div className="flex flex-col">
-                <span className="text-sm font-bold uppercase tracking-widest text-[#c4a090]">Now Editing</span>
+                <span className="text-sm font-bold uppercase tracking-widest text-[#c4a090]">Now Playing</span>
                 <span className="text-xs text-gray-400 truncate w-64">{currentSong.title} — {currentSong.artist}</span>
               </div>
             )}
@@ -229,9 +239,18 @@ export default function ExpandedPlayer() {
             <div className="w-full relative flex-shrink-0">
               <div 
                 ref={overlayRef}
-                className="w-full h-[120px] relative cursor-text group"
+                className="w-full h-[120px] bg-[#1a1814] relative cursor-text group rounded overflow-hidden"
                 onPointerDown={handleWaveformClick}
               >
+                {/* Fallback seekbar if WaveSurfer fails */}
+                {wsError && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-full h-2 bg-[#2c2828] mx-4 rounded-full overflow-hidden relative">
+                       <div className="absolute top-0 bottom-0 left-0 bg-gray-500" style={{ width: `${(progress / (duration || 1)) * 100}%` }} />
+                    </div>
+                  </div>
+                )}
+
                 {/* Custom Progress Cursor Line */}
                 <div 
                   className="absolute top-0 bottom-0 w-[2px] bg-[#c4a090] z-20 pointer-events-none shadow-[0_0_8px_#c4a090]"
@@ -239,7 +258,7 @@ export default function ExpandedPlayer() {
                 />
                 
                 {/* WaveSurfer Container */}
-                <div ref={waveformRef} className="absolute inset-0 z-10 pointer-events-none" />
+                <div ref={waveformRef} className={`absolute inset-0 z-10 pointer-events-none ${wsError ? 'opacity-0' : 'opacity-100'}`} style={{ width: '100%', height: '120px' }} />
 
                 {/* Marker A */}
                 {loopA !== null && (

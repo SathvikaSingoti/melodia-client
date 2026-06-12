@@ -296,7 +296,7 @@ export default function LibraryPage() {
         </div>
 
         {/* RIGHT PANEL - Sidebar */}
-        <div className="w-[280px] bg-[#181616] border-l border-[#2c2828] flex flex-col h-full flex-shrink-0">
+        <div className="w-[300px] bg-[#181616] border-l border-[#2c2828] flex flex-col h-full flex-shrink-0">
           <div className="p-6 pb-4">
             <h2 className="text-xl font-bold text-white mb-6">Your Library</h2>
             

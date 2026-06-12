@@ -21,6 +21,7 @@ export default function ExplorePage() {
   const [allSongs, setAllSongs] = useState<Song[]>([]);
   const [artists, setArtists] = useState<any[]>([]);
   const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
+  const [aiPlaylist, setAiPlaylist] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isFading, setIsFading] = useState(false);
   
@@ -72,6 +73,11 @@ export default function ExplorePage() {
       axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/playlists`).then(res => {
         setUserPlaylists(res.data);
       });
+      axios.get(`${process.env.NEXT_PUBLIC_API_URL}/playlists?aiGenerated=true&limit=1&userId=${user._id}`).then(res => {
+        if (res.data && res.data.length > 0) {
+          setAiPlaylist(res.data[0]);
+        }
+      });
     }
   }, [user]);
 
@@ -112,7 +118,6 @@ export default function ExplorePage() {
   const forYouSongs = allSongs.slice(0, 3);
   const trendingSongs = [...allSongs].sort((a, b) => (b.plays || 0) - (a.plays || 0)).slice(0, 5);
   const newDrops = [...allSongs].reverse().slice(0, 4);
-  const aiPlaylist = userPlaylists.find(p => p.name.toLowerCase().includes("ai")) || userPlaylists[0];
 
   const hour = new Date().getHours();
   let greeting = "Good evening";
@@ -197,7 +202,26 @@ export default function ExplorePage() {
                 )}
               </div>
               <div className="flex-1">
-                <h4 className="text-3xl font-bold text-white mb-2">{aiPlaylist.name}</h4>
+                <div className="flex items-center gap-4 mb-2">
+                  <h4 className="text-3xl font-bold text-white">{aiPlaylist.name}</h4>
+                  <button 
+                    onClick={async () => {
+                      const promptMsg = prompt("What kind of mix would you like to regenerate?");
+                      if (promptMsg && user) {
+                        const toastId = toast.loading(`Regenerating playlist...`);
+                        try {
+                          await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate-playlist`, { prompt: promptMsg, userId: user._id });
+                          const freshRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/playlists?aiGenerated=true&limit=1&userId=${user._id}`);
+                          if (freshRes.data && freshRes.data.length > 0) setAiPlaylist(freshRes.data[0]);
+                          toast.success(`Playlist regenerated!`, { id: toastId });
+                        } catch (e) { toast.error("Failed to regenerate", { id: toastId }); }
+                      }
+                    }}
+                    className="text-[10px] uppercase font-bold text-gray-500 hover:text-[#9060f0] transition-colors"
+                  >
+                    ↻ Regenerate
+                  </button>
+                </div>
                 <p className="text-sm text-gray-400 mb-4 line-clamp-2">A personalized, AI-curated mix blending your favorite genres and recent discoveries.</p>
                 <button 
                   onClick={async () => {
@@ -234,15 +258,11 @@ export default function ExplorePage() {
                 if (promptMsg && user) {
                   const toastId = toast.loading(`Generating playlist for: "${promptMsg}"...`);
                   try {
-                    const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate-playlist`, {
-                      prompt: promptMsg,
-                      userId: user._id
-                    });
-                    toast.success(`Playlist generated! Refresh to see it.`, { id: toastId });
-                    // Optionally refresh userPlaylists here
-                  } catch (e) {
-                    toast.error("Failed to generate playlist", { id: toastId });
-                  }
+                    await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate-playlist`, { prompt: promptMsg, userId: user._id });
+                    const freshRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/playlists?aiGenerated=true&limit=1&userId=${user._id}`);
+                    if (freshRes.data && freshRes.data.length > 0) setAiPlaylist(freshRes.data[0]);
+                    toast.success(`Playlist generated!`, { id: toastId });
+                  } catch (e) { toast.error("Failed to generate playlist", { id: toastId }); }
                 }
               }}
               className="bg-white text-black font-semibold text-sm px-6 py-2 rounded-full hover:scale-105 transition-transform ml-6 flex-shrink-0"

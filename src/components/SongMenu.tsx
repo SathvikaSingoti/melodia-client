@@ -20,7 +20,7 @@ export default function SongMenu({ song, onRemove }: { song: Song, onRemove?: ()
   const [isOpen, setIsOpen] = useState(false);
   const [showPlaylists, setShowPlaylists] = useState(false);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [overflowsRight, setOverflowsRight] = useState(false);
+  const [openRight, setOpenRight] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const submenuRef = useRef<HTMLDivElement>(null);
   
@@ -43,11 +43,11 @@ export default function SongMenu({ song, onRemove }: { song: Song, onRemove?: ()
   useEffect(() => {
     if (showPlaylists && submenuRef.current) {
       const rect = submenuRef.current.getBoundingClientRect();
-      // If it overflows the right window edge, flip it left
-      if (rect.right > window.innerWidth - 20) {
-        setOverflowsRight(true);
+      // If it overflows the left window edge, flip it right
+      if (rect.left < 20) {
+        setOpenRight(true);
       } else {
-        setOverflowsRight(false);
+        setOpenRight(false);
       }
     }
   }, [showPlaylists]);
@@ -130,14 +130,14 @@ export default function SongMenu({ song, onRemove }: { song: Song, onRemove?: ()
             onMouseLeave={() => setShowPlaylists(false)}
           >
             <button className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary flex justify-between items-center">
-              Add to playlist
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
+              <span className="flex-1">Add to playlist</span>
             </button>
             
             {/* Submenu for playlists */}
             <div 
               ref={submenuRef}
-              className={`absolute ${overflowsRight ? 'right-full mr-1' : 'left-full ml-1'} top-0 w-48 bg-bg-tertiary border border-border rounded-lg shadow-xl py-1 opacity-0 invisible group-hover/playlist:opacity-100 group-hover/playlist:visible transition-all max-h-64 overflow-y-auto no-scrollbar`}
+              className={`absolute ${openRight ? 'left-full ml-1' : 'right-full mr-1'} top-0 w-48 bg-bg-tertiary border border-border rounded-lg shadow-xl py-1 opacity-0 invisible group-hover/playlist:opacity-100 group-hover/playlist:visible transition-all max-h-64 overflow-y-auto no-scrollbar`}
             >
               {playlists.length > 0 ? (
                 <>
