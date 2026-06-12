@@ -18,6 +18,12 @@ interface Playlist {
   isAIGenerated?: boolean;
 }
 
+interface Artist {
+  _id: string;
+  name: string;
+  imageUrl?: string;
+}
+
 export default function LibraryPage() {
   const { user, token, logout } = useAuth();
   const router = useRouter();
@@ -26,6 +32,7 @@ export default function LibraryPage() {
   const [activeCollection, setActiveCollection] = useState<string>("likes");
   const [likedSongs, setLikedSongs] = useState<Song[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [following, setFollowing] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [showModal, setShowModal] = useState(false);
@@ -35,6 +42,8 @@ export default function LibraryPage() {
   const [modalSearch, setModalSearch] = useState("");
   const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
   const [coverUrl, setCoverUrl] = useState<string>("");
+  
+  const [playlistSearch, setPlaylistSearch] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -45,12 +54,14 @@ export default function LibraryPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [likedRes, playlistsRes] = await Promise.all([
+      const [likedRes, playlistsRes, followingRes] = await Promise.all([
         axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user?._id}/liked`),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user?._id}/playlists`)
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user?._id}/playlists`),
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user?._id}/following`)
       ]);
       setLikedSongs(likedRes.data);
       setPlaylists(playlistsRes.data);
+      setFollowing(followingRes.data);
     } catch (error) {
       console.error("Failed to fetch library data", error);
     } finally {
@@ -59,10 +70,10 @@ export default function LibraryPage() {
   };
 
   useEffect(() => {
-    if (showModal && allSongs.length === 0) {
+    if ((showModal || activeCollection !== "likes") && allSongs.length === 0) {
       axios.get(`${process.env.NEXT_PUBLIC_API_URL}/songs`).then(res => setAllSongs(res.data));
     }
-  }, [showModal, allSongs.length]);
+  }, [showModal, activeCollection, allSongs.length]);
 
   const unlikeSong = async (e: React.MouseEvent, songId: string) => {
     e.stopPropagation();
@@ -85,7 +96,7 @@ export default function LibraryPage() {
         name: newPlaylistName,
         songs: selectedSongs.map(s => s._id),
         coverUrl: coverUrl
-      });
+      }, { headers: { Authorization: `Bearer ${token}` } });
       setPlaylists(prev => [...prev, res.data]);
       setShowModal(false);
       setNewPlaylistName("");
@@ -95,6 +106,22 @@ export default function LibraryPage() {
       toast.success("Playlist created ✓");
     } catch (error) {
       console.error("Failed to create playlist", error);
+    }
+  };
+
+  const addSongToPlaylist = async (song: Song) => {
+    if (!activeCollection || activeCollection === "likes") return;
+    try {
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/playlists/${activeCollection}/songs`, 
+        { songId: song._id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setPlaylists(prev => prev.map(p => p._id === activeCollection ? res.data : p));
+      setPlaylistSearch("");
+      toast.success("Added to playlist");
+    } catch (error) {
+      console.error("Failed to add song to playlist", error);
     }
   };
 
@@ -174,13 +201,93 @@ export default function LibraryPage() {
               )}
 
               {activePlaylist.songs.length > 0 ? (
-                <TrackList 
-                  songs={activePlaylist.songs} 
-                  likedSongIds={new Set(likedSongs.map(s => s._id))}
-                  onToggleLike={unlikeSong}
-                />
+                <>
+                  <TrackList 
+                    songs={activePlaylist.songs} 
+                    likedSongIds={new Set(likedSongs.map(s => s._id))}
+                    onToggleLike={unlikeSong}
+                  />
+                  <div className="mt-12 mb-20 max-w-2xl">
+                    <h3 className="text-lg font-bold text-white mb-4">Add more songs...</h3>
+                    <div className="relative mb-6">
+                      <Search className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Search for songs to add..."
+                        className="w-full bg-[#181616] text-white rounded-xl pl-12 pr-4 py-3 border border-[#2c2828] focus:border-[#c4a090] focus:outline-none"
+                        value={playlistSearch}
+                        onChange={(e) => setPlaylistSearch(e.target.value)}
+                      />
+                    </div>
+                    {playlistSearch.trim() && (
+                      <div className="flex flex-col gap-2">
+                        {allSongs
+                          .filter(s => !activePlaylist.songs.find(ps => ps._id === s._id) && (s.title.toLowerCase().includes(playlistSearch.toLowerCase()) || s.artist.toLowerCase().includes(playlistSearch.toLowerCase())))
+                          .slice(0, 5)
+                          .map(song => (
+                            <div key={song._id} className="flex items-center justify-between p-3 hover:bg-[#181616] rounded-xl border border-transparent hover:border-[#2c2828] transition-colors group">
+                              <div className="flex items-center gap-4 min-w-0">
+                                <img src={song.coverUrl} className="w-10 h-10 rounded object-cover" />
+                                <div className="min-w-0">
+                                  <p className="text-sm font-bold text-white truncate">{song.title}</p>
+                                  <p className="text-xs text-gray-400 truncate">{song.artist}</p>
+                                </div>
+                              </div>
+                              <button 
+                                onClick={() => addSongToPlaylist(song)}
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-[#181616] border border-[#2c2828] hover:bg-[#c4a090] hover:text-white hover:border-[#c4a090] text-gray-400 transition-colors"
+                              >
+                                <Plus className="w-4 h-4" />
+                              </button>
+                            </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
               ) : (
-                <div className="text-center py-20 text-gray-500">This playlist is empty.</div>
+                <div className="py-20 flex flex-col items-center justify-center max-w-2xl mx-auto">
+                  <div className="w-24 h-24 rounded-full bg-[#181616] border border-[#2c2828] flex items-center justify-center mb-6">
+                    <Music className="w-10 h-10 text-gray-500" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-white mb-2">This playlist is empty</h2>
+                  <p className="text-gray-400 mb-10 text-center">Let's find some tracks for your new collection.</p>
+                  
+                  <div className="w-full relative mb-6">
+                    <Search className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search for songs to add..."
+                      className="w-full bg-[#181616] text-white rounded-xl pl-12 pr-4 py-4 border border-[#2c2828] focus:border-[#c4a090] focus:outline-none shadow-lg"
+                      value={playlistSearch}
+                      onChange={(e) => setPlaylistSearch(e.target.value)}
+                    />
+                  </div>
+                  {playlistSearch.trim() && (
+                    <div className="w-full flex flex-col gap-2">
+                      {allSongs
+                        .filter(s => s.title.toLowerCase().includes(playlistSearch.toLowerCase()) || s.artist.toLowerCase().includes(playlistSearch.toLowerCase()))
+                        .slice(0, 5)
+                        .map(song => (
+                          <div key={song._id} className="flex items-center justify-between p-3 bg-[#181616] rounded-xl border border-[#2c2828] group">
+                            <div className="flex items-center gap-4 min-w-0">
+                              <img src={song.coverUrl} className="w-10 h-10 rounded object-cover" />
+                              <div className="min-w-0">
+                                <p className="text-sm font-bold text-white truncate">{song.title}</p>
+                                <p className="text-xs text-gray-400 truncate">{song.artist}</p>
+                              </div>
+                            </div>
+                            <button 
+                              onClick={() => addSongToPlaylist(song)}
+                              className="w-8 h-8 flex items-center justify-center rounded-full bg-[#2c2828] hover:bg-[#c4a090] hover:text-white text-gray-300 transition-colors"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           ) : (
@@ -224,7 +331,7 @@ export default function LibraryPage() {
                 onClick={() => setActiveCollection(playlist._id)}
                 className={`w-full flex items-center gap-4 px-3 py-2 rounded-lg transition-colors ${activeCollection === playlist._id ? "bg-[#c4a09022]" : "hover:bg-white/5"}`}
               >
-                <div className="w-10 h-10 rounded overflow-hidden bg-bg-tertiary flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded overflow-hidden bg-[#2c2828] flex items-center justify-center flex-shrink-0">
                   {playlist.songs.length > 0 ? (
                     <img src={playlist.songs[0].coverUrl} alt={playlist.name} className="w-full h-full object-cover" />
                   ) : (
@@ -237,6 +344,31 @@ export default function LibraryPage() {
                 </div>
               </button>
             ))}
+          </div>
+
+          <div className="flex-1 overflow-y-auto no-scrollbar px-3 pb-4 space-y-1 border-t border-[#2c2828] pt-4">
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-3">Following</h3>
+            {following.map(artist => (
+              <button
+                key={artist._id}
+                onClick={() => router.push(`/artist/${artist._id}`)}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors hover:bg-white/5"
+              >
+                <div className="w-7 h-7 rounded-full overflow-hidden bg-[#2c2828] flex items-center justify-center flex-shrink-0">
+                  {artist.imageUrl ? (
+                    <img src={artist.imageUrl} alt={artist.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-[10px] font-bold text-gray-500">{artist.name.charAt(0)}</span>
+                  )}
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <h4 className="font-medium text-sm text-gray-300 truncate">{artist.name}</h4>
+                </div>
+              </button>
+            ))}
+            {following.length === 0 && (
+              <div className="px-3 text-xs text-gray-500 italic">No artists followed yet.</div>
+            )}
           </div>
 
           <div className="p-4 border-t border-[#2c2828] flex items-center justify-between bg-black/20">

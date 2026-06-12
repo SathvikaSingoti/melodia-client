@@ -87,8 +87,9 @@ export default function TimelinePage() {
     // grid[dayOfWeek][hour] (dayOfWeek: 0 = Sun, 1 = Mon ... 6 = Sat)
     const grid = Array.from({ length: 7 }, () => Array(24).fill(0));
     
-    // Top Songs
+    // Top Songs & Genres
     const songCounts: Record<string, { song: Song, count: number }> = {};
+    const genreCounts: Record<string, number> = {};
 
     // Grouping
     const now = new Date();
@@ -113,9 +114,12 @@ export default function TimelinePage() {
       // Grid
       grid[date.getDay()][date.getHours()]++;
 
-      // Top Songs
+      // Top Songs & Genre
       if (!songCounts[entry.song._id]) songCounts[entry.song._id] = { song: entry.song, count: 0 };
       songCounts[entry.song._id].count++;
+      
+      const genre = entry.song.genre || "Unknown";
+      genreCounts[genre] = (genreCounts[genre] || 0) + 1;
 
       // Grouping Logic
       let groupLabel = "Earlier";
@@ -187,9 +191,18 @@ export default function TimelinePage() {
 
     const topList = Object.values(songCounts).sort((a, b) => b.count - a.count).slice(0, 5);
 
+    let favoriteGenre = "None";
+    let maxGenreCount = 0;
+    for (const [g, count] of Object.entries(genreCounts)) {
+      if (count > maxGenreCount) {
+        maxGenreCount = count;
+        favoriteGenre = g;
+      }
+    }
+
     return {
       timelineGroups,
-      stats: { plays, hours, artists: uniqueArtists },
+      stats: { plays, hours, artists: uniqueArtists, favoriteGenre },
       moodGrid: grid,
       topSongs: topList,
       mostActive: { day: mostActiveDay, hour: mostActiveHour }
@@ -356,7 +369,7 @@ export default function TimelinePage() {
                </div>
                <div className="text-xs text-gray-400 flex items-center justify-between">
                  <span>Favorite genre:</span>
-                 <strong className="text-white">Pop</strong>
+                 <strong className="text-white">{stats.favoriteGenre}</strong>
                </div>
             </div>
           </div>
