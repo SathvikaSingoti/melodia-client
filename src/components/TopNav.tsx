@@ -26,13 +26,13 @@ export default function TopNav() {
   ];
 
   return (
-    <nav className="w-full h-[56px] flex items-center justify-between px-6 flex-shrink-0 z-50 relative" style={{ background: "#0d0d0d", borderBottom: "1px solid #1e1e1e" }}>
+    <nav className="w-full h-[56px] flex items-center justify-between px-6 flex-shrink-0 z-50 relative" style={{ background: "#181616", borderBottom: "1px solid #2c2828" }}>
       {/* Left: Wordmark */}
       <div className="flex items-center">
         <Link 
           href="/explore" 
-          className="font-[800] text-[18px] tracking-[-0.5px]" 
-          style={{ color: "#c87941" }}
+          className="font-[800] text-[18px] tracking-[-0.5px] bg-clip-text text-transparent" 
+          style={{ backgroundImage: "linear-gradient(135deg, #c4a090, #a88070)" }}
         >
           Melodia
         </Link>
@@ -48,15 +48,15 @@ export default function TopNav() {
               href={tab.path}
               className="text-[13px] px-4 py-[6px] rounded-md transition-colors"
               style={{
-                backgroundColor: isActive ? "#c8794122" : "transparent",
-                color: isActive ? "#c87941" : "#666",
+                backgroundColor: isActive ? "#c4a09018" : "transparent",
+                color: isActive ? "#c4a090" : "#786870",
                 fontWeight: isActive ? 600 : 400
               }}
               onMouseEnter={(e) => {
-                if (!isActive) e.currentTarget.style.color = "#aaa";
+                if (!isActive) e.currentTarget.style.color = "#ede8e4";
               }}
               onMouseLeave={(e) => {
-                if (!isActive) e.currentTarget.style.color = "#666";
+                if (!isActive) e.currentTarget.style.color = "#786870";
               }}
             >
               <span className="flex items-center">
@@ -90,7 +90,7 @@ export default function TopNav() {
         <div className="relative group/avatar">
           <button 
             className="w-[28px] h-[28px] rounded-full flex items-center justify-center text-[12px] font-bold overflow-hidden"
-            style={{ border: "1px solid #c8794144", color: "#c87941" }}
+            style={{ border: "1px solid #c4a09044", color: "#c4a090" }}
           >
             {user?.avatarUrl ? (
               <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
@@ -106,7 +106,7 @@ export default function TopNav() {
                 <span className="text-sm text-gray-300">Crossfade</span>
                 <button 
                   onClick={() => setCrossfade(!crossfadeEnabled)}
-                  className={`w-8 h-4 rounded-full flex items-center transition-colors ${crossfadeEnabled ? 'bg-[#c87941]' : 'bg-gray-600'}`}
+                  className={`w-8 h-4 rounded-full flex items-center transition-colors ${crossfadeEnabled ? 'bg-[#c4a090]' : 'bg-gray-600'}`}
                 >
                   <div className={`w-3 h-3 bg-white rounded-full transition-transform ${crossfadeEnabled ? 'translate-x-4' : 'translate-x-1'}`} />
                 </button>
@@ -118,7 +118,7 @@ export default function TopNav() {
                     min="1" max="8" step="1" 
                     value={crossfadeDuration}
                     onChange={(e) => setCrossfade(true, parseInt(e.target.value))}
-                    className="w-full accent-[#c87941]"
+                    className="w-full accent-[#c4a090]"
                   />
                   <span className="text-xs text-gray-400 w-4">{crossfadeDuration}s</span>
                 </div>

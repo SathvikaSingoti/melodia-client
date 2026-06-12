@@ -27,7 +27,7 @@ interface StatsData {
 }
 
 const GENRE_COLORS: Record<string, string> = {
-  "Pop": "#c87941",
+  "Pop": "#c4a090",
   "Hip-Hop": "#9060f0",
   "R&B": "#5bc4e8",
   "Indie": "#7ec88a",
@@ -102,12 +102,12 @@ export default function StatsPage() {
                 <h1 className="text-4xl font-black tracking-tight text-white mb-2">Your Music Stats</h1>
                 <p className="text-gray-400">Insights from your listening history</p>
               </div>
-              <div className="flex bg-[#111111] p-1 rounded-full border border-[#2a2a2a]">
+              <div className="flex bg-[#181616] p-1 rounded-full border border-[#2c2828]">
                 {(["week", "month", "all"] as Period[]).map(p => (
                   <button
                     key={p}
                     onClick={() => setPeriod(p)}
-                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${period === p ? "bg-[#c87941]/10 text-[#c87941] border border-[#c87941]/30" : "text-gray-400 hover:text-white border border-transparent"}`}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${period === p ? "bg-[#c4a090]/10 text-[#c4a090] border border-[#c4a090]/30" : "text-gray-400 hover:text-white border border-transparent"}`}
                   >
                     {p === "week" ? "This week" : p === "month" ? "This month" : "All time"}
                   </button>
@@ -122,28 +122,28 @@ export default function StatsPage() {
                 
                 {/* 4 Cards Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                  <div className="bg-[#111111] rounded-[12px] border border-[#1e1e1e] p-5 flex flex-col gap-4">
+                  <div className="bg-[#181616] rounded-[12px] border border-[#2c2828] p-5 flex flex-col gap-4">
                     <div className="text-gray-400"><Clock className="w-5 h-5" /></div>
                     <div>
                       <div className="text-2xl font-bold text-white mb-1">{formatHours(stats.totalMinutes)}</div>
                       <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Time spent listening</div>
                     </div>
                   </div>
-                  <div className="bg-[#111111] rounded-[12px] border border-[#1e1e1e] p-5 flex flex-col gap-4">
+                  <div className="bg-[#181616] rounded-[12px] border border-[#2c2828] p-5 flex flex-col gap-4">
                     <div className="text-gray-400"><Music className="w-5 h-5" /></div>
                     <div>
                       <div className="text-2xl font-bold text-white mb-1">{stats.songsPlayed} songs</div>
                       <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Unique tracks</div>
                     </div>
                   </div>
-                  <div className="bg-[#111111] rounded-[12px] border border-[#1e1e1e] p-5 flex flex-col gap-4">
+                  <div className="bg-[#181616] rounded-[12px] border border-[#2c2828] p-5 flex flex-col gap-4">
                     <div className="text-gray-400 text-xl">{getGenreEmoji(stats.topGenre)}</div>
                     <div>
-                      <div className="text-2xl font-bold text-[#c87941] mb-1 truncate">{stats.topGenre}</div>
+                      <div className="text-2xl font-bold text-[#c4a090] mb-1 truncate">{stats.topGenre}</div>
                       <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Your dominant vibe</div>
                     </div>
                   </div>
-                  <div className="bg-[#111111] rounded-[12px] border border-[#1e1e1e] p-5 flex flex-col gap-4">
+                  <div className="bg-[#181616] rounded-[12px] border border-[#2c2828] p-5 flex flex-col gap-4">
                     <div className="text-orange-500"><Flame className="w-5 h-5" /></div>
                     <div>
                       <div className="text-2xl font-bold text-white mb-1">{stats.streak} day streak 🔥</div>
@@ -157,7 +157,7 @@ export default function StatsPage() {
                   {/* Genre Breakdown */}
                   <div>
                     <h2 className="text-xl font-bold text-white mb-6">Your Sound DNA</h2>
-                    <div className="bg-[#111111] rounded-[12px] border border-[#1e1e1e] p-6 flex flex-col gap-5">
+                    <div className="bg-[#181616] rounded-[12px] border border-[#2c2828] p-6 flex flex-col gap-5">
                       {stats.genreBreakdown.length > 0 ? (
                         stats.genreBreakdown.map((g, i) => {
                           const maxMins = stats.genreBreakdown[0].minutes;
@@ -194,12 +194,12 @@ export default function StatsPage() {
                           <Link 
                             key={artist.artist} 
                             href={artist.artistId ? `/artist/${artist.artistId}` : '#'}
-                            className={`flex items-center gap-4 p-3 rounded-[12px] border ${i === 0 ? 'border-[#c87941]/30 bg-[#c87941]/5' : 'border-[#1e1e1e] bg-[#111111] hover:bg-[#1a1a1a]'} transition-colors`}
+                            className={`flex items-center gap-4 p-3 rounded-[12px] border ${i === 0 ? 'border-[#c4a090]/30 bg-[#c4a090]/5' : 'border-[#2c2828] bg-[#181616] hover:bg-[#1a1a1a]'} transition-colors`}
                           >
-                            <div className={`w-6 text-center font-bold ${i === 0 ? 'text-[#c87941]' : 'text-gray-600'}`}>
+                            <div className={`w-6 text-center font-bold ${i === 0 ? 'text-[#c4a090]' : 'text-gray-600'}`}>
                               #{i + 1}
                             </div>
-                            <div className="w-12 h-12 rounded-full bg-[#2a2a2a] flex items-center justify-center text-gray-500 font-bold overflow-hidden flex-shrink-0">
+                            <div className="w-12 h-12 rounded-full bg-[#2c2828] flex items-center justify-center text-gray-500 font-bold overflow-hidden flex-shrink-0">
                               {/* Using initial for artist image since we don't store it natively in this query, but could fetch if added */}
                               {artist.artist[0]}
                             </div>
@@ -222,12 +222,12 @@ export default function StatsPage() {
                 {/* Top Songs */}
                 <div>
                   <h2 className="text-xl font-bold text-white mb-6">Most Played Songs</h2>
-                  <div className="flex flex-col gap-2 bg-[#111111] rounded-[12px] border border-[#1e1e1e] overflow-hidden">
+                  <div className="flex flex-col gap-2 bg-[#181616] rounded-[12px] border border-[#2c2828] overflow-hidden">
                     {stats.topSongs.length > 0 ? (
                       stats.topSongs.map((ts, i) => (
                         <div 
                           key={ts.song._id} 
-                          className="flex items-center gap-4 p-3 hover:bg-[#1a1a1a] transition-colors group border-b border-[#1e1e1e] last:border-0"
+                          className="flex items-center gap-4 p-3 hover:bg-[#1a1a1a] transition-colors group border-b border-[#2c2828] last:border-0"
                         >
                           <div className="w-8 text-center font-bold text-gray-600 text-sm">#{i + 1}</div>
                           <div className="w-10 h-10 rounded overflow-hidden relative flex-shrink-0">
@@ -256,7 +256,7 @@ export default function StatsPage() {
                 <div>
                   <h2 className="text-xl font-bold text-white mb-6">Did you know?</h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-gradient-to-br from-[#c87941]/10 to-transparent border border-[#c87941]/20 rounded-[12px] p-5">
+                    <div className="bg-gradient-to-br from-[#c4a090]/10 to-transparent border border-[#c4a090]/20 rounded-[12px] p-5">
                       <div className="text-3xl mb-3">✈️</div>
                       <p className="text-sm text-gray-300 leading-relaxed">
                         {stats.topArtists.length > 0 ? (
@@ -287,12 +287,12 @@ export default function StatsPage() {
                 <div>
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-white">When you listen</h2>
-                    <div className="text-sm text-[#c87941] font-medium bg-[#c87941]/10 px-3 py-1 rounded-full border border-[#c87941]/20">
+                    <div className="text-sm text-[#c4a090] font-medium bg-[#c4a090]/10 px-3 py-1 rounded-full border border-[#c4a090]/20">
                       Peak hour: {stats.peakHour}
                     </div>
                   </div>
                   
-                  <div className="bg-[#111111] rounded-[12px] border border-[#1e1e1e] p-6 overflow-x-auto no-scrollbar">
+                  <div className="bg-[#181616] rounded-[12px] border border-[#2c2828] p-6 overflow-x-auto no-scrollbar">
                     <div className="min-w-[800px]">
                       <div className="flex ml-10 mb-2">
                         {Array.from({length: 24}).map((_, i) => (
@@ -311,10 +311,10 @@ export default function StatsPage() {
                                 const entry = stats.heatmap.find(h => h.day === dIdx && h.hour === hIdx);
                                 const count = entry ? entry.count : 0;
                                 let bg = "bg-[#1a1a1a]";
-                                if (count > 0) bg = "bg-[#c87941]/20";
-                                if (count > 2) bg = "bg-[#c87941]/40";
-                                if (count > 5) bg = "bg-[#c87941]/70";
-                                if (count > 10) bg = "bg-[#c87941]";
+                                if (count > 0) bg = "bg-[#c4a090]/20";
+                                if (count > 2) bg = "bg-[#c4a090]/40";
+                                if (count > 5) bg = "bg-[#c4a090]/70";
+                                if (count > 10) bg = "bg-[#c4a090]";
                                 
                                 return (
                                   <div 

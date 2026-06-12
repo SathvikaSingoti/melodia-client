@@ -171,7 +171,7 @@ export default function SongMenu({ song, onRemove }: { song: Song, onRemove?: ()
           <button 
             onClick={handleStartRadio} 
             disabled={isStartingRadio}
-            className="w-full text-left px-4 py-2 text-sm text-[#FFD6A5] hover:bg-bg-secondary flex justify-between items-center"
+            className="w-full text-left px-4 py-2 text-sm text-[#c4a090] hover:bg-bg-secondary flex justify-between items-center"
           >
             {isStartingRadio ? "Starting..." : "Start radio"}
             <Radio className="w-4 h-4 ml-2" />

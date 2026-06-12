@@ -157,7 +157,7 @@ export default function CommandPalette() {
         id: "cmd-play-search",
         title: `Play "${playQuery}"`,
         type: "Commands",
-        icon: <Play className="w-4 h-4 text-[#c87941]" />,
+        icon: <Play className="w-4 h-4 text-[#c4a090]" />,
         action: async () => {
           close();
           toast.loading(`Searching and playing "${playQuery}"...`, { id: "play-search" });
@@ -182,7 +182,7 @@ export default function CommandPalette() {
         id: "cmd-radio-search",
         title: `Start radio for "${radioQuery}"`,
         type: "Commands",
-        icon: <Radio className="w-4 h-4 text-[#c87941]" />,
+        icon: <Radio className="w-4 h-4 text-[#c4a090]" />,
         action: async () => {
           close();
           const loadingToast = toast.loading(`Building radio for "${radioQuery}"...`, { id: "radio-search" });
@@ -237,7 +237,7 @@ export default function CommandPalette() {
             id: `cmd-crossfade-${val}`,
             title,
             type: "Commands",
-            icon: <Settings2 className="w-4 h-4 text-[#c87941]" />,
+            icon: <Settings2 className="w-4 h-4 text-[#c4a090]" />,
             action
           });
         }
@@ -265,7 +265,7 @@ export default function CommandPalette() {
           id: `cmd-${key}`,
           title: val.title,
           type: "Commands",
-          icon: <Play className="w-4 h-4 text-[#c87941]" />,
+          icon: <Play className="w-4 h-4 text-[#c4a090]" />,
           action: val.action
         });
       }
@@ -340,9 +340,9 @@ export default function CommandPalette() {
       
       {/* Modal */}
       <div 
-        className="relative w-full max-w-[560px] bg-[#111111] rounded-[14px] border border-[#2a2a2a] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="relative w-full max-w-[560px] bg-[#181616] rounded-[14px] border border-[#2c2828] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
       >
-        <div className="flex items-center px-4 py-4 border-b border-[#2a2a2a]">
+        <div className="flex items-center px-4 py-4 border-b border-[#2c2828]">
           <input
             ref={inputRef}
             type="text"
@@ -381,7 +381,7 @@ export default function CommandPalette() {
                         if (idx !== -1) setSelectedIndex(idx);
                       }}
                       className={`flex items-center justify-between px-4 py-3 cursor-pointer transition-colors border-l-[3px] ${
-                        isSelected ? "bg-[#1e1e1e] border-[#c87941]" : "border-transparent hover:bg-white/5"
+                        isSelected ? "bg-[#2c2828] border-[#c4a090]" : "border-transparent hover:bg-white/5"
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -405,7 +405,7 @@ export default function CommandPalette() {
                       {result.shortcut && (
                         <div className="flex-shrink-0 flex items-center gap-1">
                           {result.shortcut.split(" ").map(k => (
-                            <kbd key={k} className="px-1.5 py-0.5 rounded bg-[#2a2a2a] text-gray-400 text-[10px] font-mono">
+                            <kbd key={k} className="px-1.5 py-0.5 rounded bg-[#2c2828] text-gray-400 text-[10px] font-mono">
                               {k}
                             </kbd>
                           ))}
@@ -413,7 +413,7 @@ export default function CommandPalette() {
                       )}
 
                       {type === "Songs" && (
-                        <Play className={`w-4 h-4 flex-shrink-0 ${isSelected ? "text-[#c87941] opacity-100" : "text-gray-500 opacity-0 group-hover:opacity-100"} transition-opacity`} />
+                        <Play className={`w-4 h-4 flex-shrink-0 ${isSelected ? "text-[#c4a090] opacity-100" : "text-gray-500 opacity-0 group-hover:opacity-100"} transition-opacity`} />
                       )}
                     </div>
                   );

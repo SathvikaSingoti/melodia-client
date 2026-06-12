@@ -81,7 +81,7 @@ export default function SongDetailPanel() {
               <div className="flex-1 min-w-0 pr-4">
                 <h3 className="text-2xl font-bold text-white truncate mb-1">{displaySong.title}</h3>
                 {displaySong.artistId ? (
-                  <Link href={`/artist/${displaySong.artistId}`} className="text-[#A8CFFF] hover:underline truncate block">
+                  <Link href={`/artist/${displaySong.artistId}`} className="text-[#c4a090] hover:underline truncate block">
                     {displaySong.artist}
                   </Link>
                 ) : (
@@ -89,7 +89,7 @@ export default function SongDetailPanel() {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <button className="text-gray-400 hover:text-[#FFD6A5] transition-colors">
+                <button className="text-gray-400 hover:text-[#c4a090] transition-colors">
                   <Heart className="w-6 h-6" />
                 </button>
                 <SongMenu song={displaySong} />
@@ -121,8 +121,8 @@ export default function SongDetailPanel() {
         {activeTab === "Queue" && (
           <div className="flex flex-col p-2">
             {radioContext && (
-              <div className="px-3 py-4 mb-2 border-b border-[#2a2a2a] flex flex-col gap-1">
-                <div className="flex items-center gap-2 text-[#FFD6A5]">
+              <div className="px-3 py-4 mb-2 border-b border-[#2c2828] flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-[#c4a090]">
                   <Radio className="w-4 h-4" />
                   <span className="text-xs font-bold uppercase tracking-widest">Radio Station</span>
                 </div>
@@ -134,7 +134,7 @@ export default function SongDetailPanel() {
                 <div 
                   key={`${song._id}-${i}`}
                   onClick={() => play(song, queue)}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors group ${currentSong?._id === song._id ? 'bg-[rgba(168,207,255,0.1)]' : 'hover:bg-bg-tertiary'}`}
+                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors group ${currentSong?._id === song._id ? 'bg-[rgba(196,160,144,0.1)]' : 'hover:bg-bg-tertiary'}`}
                 >
                   <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 relative">
                     <img src={song.coverUrl} className="w-full h-full object-cover" alt="" />

@@ -47,7 +47,9 @@ export default function TrackList({ songs, likedSongIds, onToggleLike, onRemove 
             <div 
               key={`${song._id}-${i}`}
               onClick={() => setDetailSong(song)}
-              className="group grid grid-cols-[40px_minmax(0,1fr)_80px_80px] md:grid-cols-[40px_minmax(0,2fr)_minmax(0,1fr)_100px_80px] gap-4 px-4 py-2 hover:bg-[rgba(168,207,255,0.05)] rounded-lg cursor-pointer items-center transition-colors"
+              className={`group grid grid-cols-[40px_minmax(0,1fr)_80px_80px] md:grid-cols-[40px_minmax(0,2fr)_minmax(0,1fr)_100px_80px] gap-4 px-4 py-2 hover:bg-[rgba(196,160,144,0.06)] rounded-lg cursor-pointer items-center transition-colors ${
+                isCurrent ? 'border-l-2 border-[#c4a090] bg-[rgba(196,160,144,0.02)]' : 'border-l-2 border-transparent'
+              }`}
             >
               {/* Index / Playing State */}
               <div className="text-gray-500 text-sm text-center font-medium">
@@ -80,7 +82,7 @@ export default function TrackList({ songs, likedSongIds, onToggleLike, onRemove 
                     {song.title}
                   </h4>
                   {song.artistId ? (
-                    <Link href={`/artist/${song.artistId}`} onClick={(e) => e.stopPropagation()} className="block text-xs text-gray-400 hover:text-[#A8CFFF] hover:underline truncate">
+                    <Link href={`/artist/${song.artistId}`} onClick={(e) => e.stopPropagation()} className="block text-xs text-gray-400 hover:text-[#c4a090] hover:underline truncate">
                       {song.artist}
                     </Link>
                   ) : (
@@ -92,7 +94,7 @@ export default function TrackList({ songs, likedSongIds, onToggleLike, onRemove 
               {/* Album */}
               <div className="hidden md:block min-w-0 text-sm text-gray-400 truncate">
                 {song.albumId ? (
-                  <Link href={`/album/${song.albumId}`} onClick={(e) => e.stopPropagation()} className="hover:text-[#A8CFFF] hover:underline">
+                  <Link href={`/album/${song.albumId}`} onClick={(e) => e.stopPropagation()} className="hover:text-[#c4a090] hover:underline">
                     {song.album || song.artist}
                   </Link>
                 ) : (
@@ -109,7 +111,7 @@ export default function TrackList({ songs, likedSongIds, onToggleLike, onRemove 
               <div className="flex items-center justify-end gap-3">
                 <button 
                   onClick={(e) => { e.stopPropagation(); onToggleLike(e, song._id); }}
-                  className={`p-1 hover:scale-110 transition-transform ${isLiked ? 'text-[#FFD6A5]' : 'text-gray-400 hover:text-white'}`}
+                  className={`p-1 hover:scale-110 transition-transform ${isLiked ? 'text-[#c4a090]' : 'text-gray-400 hover:text-white'}`}
                 >
                   <Heart className="w-5 h-5" fill={isLiked ? "currentColor" : "none"} />
                 </button>

@@ -155,7 +155,7 @@ export default function PlaylistPage() {
     return (
       <ProtectedRoute>
         <div className="flex justify-center items-center h-[calc(100vh-160px)]">
-          <div className="w-8 h-8 border-4 border-[#c87941] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-[#c4a090] border-t-transparent rounded-full animate-spin"></div>
         </div>
       </ProtectedRoute>
     );
@@ -174,7 +174,7 @@ export default function PlaylistPage() {
       <div className="flex h-full w-full max-w-[1400px] mx-auto overflow-hidden">
         
         {/* LEFT COLUMN - Fixed Details */}
-        <div className="w-[260px] h-full overflow-y-auto no-scrollbar flex-shrink-0 flex flex-col p-8 bg-[#111111] border-r border-[#1e1e1e]">
+        <div className="w-[260px] h-full overflow-y-auto no-scrollbar flex-shrink-0 flex flex-col p-8 bg-[#181616] border-r border-[#2c2828]">
           
           <button 
             onClick={() => router.back()}
@@ -194,7 +194,7 @@ export default function PlaylistPage() {
             )}
             
             {playlist.isAIGenerated && (
-              <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-[#c87941] border border-[#c87941]/30">
+              <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-[#c4a090] border border-[#c4a090]/30">
                 ✨ AI Mix
               </div>
             )}
@@ -210,11 +210,11 @@ export default function PlaylistPage() {
                 onBlur={savePlaylistName}
                 onKeyDown={(e) => e.key === 'Enter' && savePlaylistName()}
                 autoFocus
-                className="text-2xl font-bold text-white text-center w-full bg-transparent border-b border-[#c87941] focus:outline-none mb-2"
+                className="text-2xl font-bold text-white text-center w-full bg-transparent border-b border-[#c4a090] focus:outline-none mb-2"
               />
             ) : (
               <h1 
-                className="text-2xl font-bold text-white mb-2 tracking-tight cursor-pointer hover:text-[#c87941] transition-colors"
+                className="text-2xl font-bold text-white mb-2 tracking-tight cursor-pointer hover:text-[#c4a090] transition-colors"
                 onClick={() => { setIsEditingName(true); setEditName(playlist.name); }}
                 title="Click to edit"
               >
@@ -232,7 +232,7 @@ export default function PlaylistPage() {
             }}
             disabled={playlist.songs.length === 0}
             className="w-full py-3 rounded-full font-bold tracking-widest uppercase transition-transform flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
-            style={{ backgroundColor: '#c87941', color: 'white' }}
+            style={{ backgroundColor: '#c4a090', color: 'white' }}
           >
             <Play className="w-5 h-5 fill-current" /> Play All
           </button>
@@ -258,7 +258,7 @@ export default function PlaylistPage() {
           </div>
 
           {/* Add Songs Section */}
-          <div className="bg-[#111111] p-6 rounded-xl border border-[#1e1e1e]">
+          <div className="bg-[#181616] p-6 rounded-xl border border-[#2c2828]">
             <h3 className="text-lg font-bold text-white mb-4">Let's find something for your playlist</h3>
             <div className="relative mb-4">
               <input
@@ -266,7 +266,7 @@ export default function PlaylistPage() {
                 value={searchQuery}
                 onChange={handleSearch}
                 placeholder="Search for songs or artists"
-                className="w-full bg-black/40 text-white rounded-lg px-4 py-3 border border-border focus:border-[#c87941] focus:outline-none transition-colors"
+                className="w-full bg-black/40 text-white rounded-lg px-4 py-3 border border-border focus:border-[#c4a090] focus:outline-none transition-colors"
               />
             </div>
             
@@ -294,7 +294,7 @@ export default function PlaylistPage() {
                             className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors border ${
                               isAdded 
                                 ? "bg-transparent text-gray-500 border-gray-700 cursor-not-allowed" 
-                                : "bg-transparent text-white border-white hover:border-[#c87941] hover:text-[#c87941]"
+                                : "bg-transparent text-white border-white hover:border-[#c4a090] hover:text-[#c4a090]"
                             }`}
                           >
                             {isAdded ? "Added" : "Add"}

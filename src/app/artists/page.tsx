@@ -51,27 +51,27 @@ export default function ArtistsPage() {
               placeholder="Search artists..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-bg-secondary text-white rounded-full pl-10 pr-4 py-2 border border-border focus:border-[#c87941] focus:outline-none transition-colors"
+              className="w-full bg-bg-secondary text-white rounded-full pl-10 pr-4 py-2 border border-border focus:border-[#c4a090] focus:outline-none transition-colors"
             />
           </div>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-[#c87941] border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-[#c4a090] border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : filteredArtists.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
             {filteredArtists.map(artist => (
               <Link href={`/artist/${artist._id}`} key={artist._id} className="group flex flex-col items-center">
-                <div className="w-full aspect-square rounded-full overflow-hidden mb-4 shadow-lg border-4 border-transparent group-hover:border-[#c87941]/50 transition-all bg-bg-secondary">
+                <div className="w-full aspect-square rounded-full overflow-hidden mb-4 shadow-lg border-4 border-transparent group-hover:border-[#c4a090]/50 transition-all bg-bg-secondary">
                   <img 
                     src={artist.imageUrl} 
                     alt={artist.name} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>
-                <h3 className="font-semibold text-white text-center w-full truncate group-hover:text-[#c87941] transition-colors">
+                <h3 className="font-semibold text-white text-center w-full truncate group-hover:text-[#c4a090] transition-colors">
                   {artist.name}
                 </h3>
                 <p className="text-xs text-gray-500 text-center capitalize mt-1">Artist</p>
@@ -79,7 +79,7 @@ export default function ArtistsPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 text-gray-500 bg-[#111111] rounded-xl border border-dashed border-[#1e1e1e]">
+          <div className="text-center py-20 text-gray-500 bg-[#181616] rounded-xl border border-dashed border-[#2c2828]">
             No artists found.
           </div>
         )}

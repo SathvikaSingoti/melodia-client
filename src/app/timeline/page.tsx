@@ -186,7 +186,7 @@ export default function TimelinePage() {
           {/* Header */}
           <div className="mb-12">
             <h1 className="text-4xl font-extrabold text-white tracking-tight mb-2 flex items-center gap-3">
-              <Clock className="w-8 h-8 text-[#c87941]" />
+              <Clock className="w-8 h-8 text-[#c4a090]" />
               Your Music Timeline
             </h1>
             <p className="text-lg text-gray-400 mb-6">Every song you've played, mapped in time.</p>
@@ -202,14 +202,14 @@ export default function TimelinePage() {
           {/* TIMELINE */}
           <div className="relative pl-4">
             {/* Spine */}
-            <div className="absolute top-2 bottom-0 left-[23px] w-[2px] bg-[#2a2a2a] z-0" />
+            <div className="absolute top-2 bottom-0 left-[23px] w-[2px] bg-[#2c2828] z-0" />
 
             {timelineGroups.map((group) => (
               <div key={group.id} className="mb-10 relative z-10">
                 <div className="flex items-center gap-4 mb-6 relative">
-                  <div className="w-2 h-2 rounded-full bg-[#111111] border-2 border-[#2a2a2a] absolute left-[3px]" />
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500 bg-[#111111] px-2 ml-6 z-10">{group.label}</span>
-                  <div className="flex-1 h-[1px] bg-gradient-to-r from-[#2a2a2a] to-transparent z-0" />
+                  <div className="w-2 h-2 rounded-full bg-[#181616] border-2 border-[#2c2828] absolute left-[3px]" />
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500 bg-[#181616] px-2 ml-6 z-10">{group.label}</span>
+                  <div className="flex-1 h-[1px] bg-gradient-to-r from-[#2c2828] to-transparent z-0" />
                 </div>
 
                 <div className="flex flex-col gap-4">
@@ -217,13 +217,13 @@ export default function TimelinePage() {
                     <div key={item.id} className="flex items-center group/node">
                       {/* Node Circle */}
                       <div className="w-10 flex justify-center relative z-10">
-                        <div className={`w-2.5 h-2.5 rounded-full border-[3px] border-[#111111] transition-colors ${item.playCount > 2 ? 'bg-[#c87941]' : 'bg-[#444]'}`} />
+                        <div className={`w-2.5 h-2.5 rounded-full border-[3px] border-[#181616] transition-colors ${item.playCount > 2 ? 'bg-[#c4a090]' : 'bg-[#444]'}`} />
                         {/* Connector */}
-                        <div className="absolute top-1/2 left-full w-4 h-[1px] bg-[#2a2a2a]" />
+                        <div className="absolute top-1/2 left-full w-4 h-[1px] bg-[#2c2828]" />
                       </div>
 
                       {/* Song Card */}
-                      <div className="flex-1 ml-4 bg-white/5 border border-white/5 hover:bg-white/10 transition-colors rounded-xl p-2.5 flex items-center justify-between group-hover/node:border-[#c87941]/30 relative overflow-hidden">
+                      <div className="flex-1 ml-4 bg-white/5 border border-white/5 hover:bg-white/10 transition-colors rounded-xl p-2.5 flex items-center justify-between group-hover/node:border-[#c4a090]/30 relative overflow-hidden">
                         
                         <div className="flex items-center gap-4 min-w-0">
                           <div 
@@ -244,7 +244,7 @@ export default function TimelinePage() {
 
                         <div className="flex items-center gap-6 flex-shrink-0 ml-4">
                           {item.playCount > 1 && (
-                            <span className="text-[10px] font-bold uppercase tracking-wide bg-[#c87941]/20 text-[#c87941] px-2 py-0.5 rounded-full border border-[#c87941]/30">
+                            <span className="text-[10px] font-bold uppercase tracking-wide bg-[#c4a090]/20 text-[#c4a090] px-2 py-0.5 rounded-full border border-[#c4a090]/30">
                               Played {item.playCount} times
                             </span>
                           )}
@@ -283,10 +283,10 @@ export default function TimelinePage() {
                 <div key={dayIdx} className="flex flex-col gap-[3px] relative group/col">
                   <div className="text-[9px] text-gray-500 font-mono text-center mb-1">{daysLabels[dayIdx]}</div>
                   {dayHours.map((plays, hourIdx) => {
-                    let bg = "bg-[#1e1e1e]";
-                    if (plays >= 6) bg = "bg-[#c87941]";
-                    else if (plays >= 3) bg = "bg-[#c87941]/60";
-                    else if (plays >= 1) bg = "bg-[#c87941]/30";
+                    let bg = "bg-[#2c2828]";
+                    if (plays >= 6) bg = "bg-[#c4a090]";
+                    else if (plays >= 3) bg = "bg-[#c4a090]/60";
+                    else if (plays >= 1) bg = "bg-[#c4a090]/30";
 
                     return (
                       <div 
@@ -315,7 +315,7 @@ export default function TimelinePage() {
           {/* Top Songs This Week */}
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
             <h3 className="text-sm font-bold text-white mb-6 uppercase tracking-wider flex items-center gap-2">
-              <Medal className="w-4 h-4 text-[#c87941]" />
+              <Medal className="w-4 h-4 text-[#c4a090]" />
               Top 5 This Week
             </h3>
             

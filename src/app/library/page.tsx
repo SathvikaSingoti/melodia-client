@@ -112,11 +112,11 @@ export default function LibraryPage() {
           ) : activeCollection === "likes" ? (
             <div>
               <div className="flex items-end gap-6 mb-8">
-                <div className="w-48 h-48 rounded-xl bg-gradient-to-br from-[#c87941] to-[#5bc4e8] flex items-center justify-center shadow-2xl flex-shrink-0">
+                <div className="w-48 h-48 rounded-xl bg-gradient-to-br from-[#c4a090] to-[#5bc4e8] flex items-center justify-center shadow-2xl flex-shrink-0">
                   <Heart className="w-20 h-20 text-white" fill="currentColor" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-bold uppercase tracking-widest text-[#c87941] mb-2">Collection</h4>
+                  <h4 className="text-sm font-bold uppercase tracking-widest text-[#c4a090] mb-2">Collection</h4>
                   <h1 className="text-5xl font-[800] text-white tracking-tight mb-4">Liked Songs</h1>
                   <p className="text-gray-400 font-medium">{likedSongs.length} songs</p>
                 </div>
@@ -126,7 +126,7 @@ export default function LibraryPage() {
                 <div className="mb-6">
                   <button 
                     onClick={() => play(likedSongs[0], likedSongs)}
-                    className="w-14 h-14 bg-[#c87941] rounded-full flex items-center justify-center text-white hover:scale-105 transition-transform shadow-xl"
+                    className="w-14 h-14 bg-[#c4a090] rounded-full flex items-center justify-center text-white hover:scale-105 transition-transform shadow-xl"
                   >
                     <Play className="w-6 h-6 ml-1" fill="currentColor" />
                   </button>
@@ -146,7 +146,7 @@ export default function LibraryPage() {
           ) : activePlaylist ? (
             <div>
               <div className="flex items-end gap-6 mb-8">
-                <div className="w-48 h-48 rounded-xl bg-[#1e1e1e] overflow-hidden shadow-2xl flex-shrink-0 relative group border border-border">
+                <div className="w-48 h-48 rounded-xl bg-[#2c2828] overflow-hidden shadow-2xl flex-shrink-0 relative group border border-border">
                   {activePlaylist.songs.length > 0 ? (
                     <img src={activePlaylist.songs[0].coverUrl} className="w-full h-full object-cover" />
                   ) : (
@@ -156,7 +156,7 @@ export default function LibraryPage() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-bold uppercase tracking-widest text-[#c87941] mb-2">Playlist</h4>
+                  <h4 className="text-sm font-bold uppercase tracking-widest text-[#c4a090] mb-2">Playlist</h4>
                   <h1 className="text-5xl font-[800] text-white tracking-tight mb-4 truncate">{activePlaylist.name}</h1>
                   <p className="text-gray-400 font-medium">{activePlaylist.songs.length} songs</p>
                 </div>
@@ -166,7 +166,7 @@ export default function LibraryPage() {
                 <div className="mb-6">
                   <button 
                     onClick={() => play(activePlaylist.songs[0], activePlaylist.songs)}
-                    className="w-14 h-14 bg-[#c87941] rounded-full flex items-center justify-center text-white hover:scale-105 transition-transform shadow-xl"
+                    className="w-14 h-14 bg-[#c4a090] rounded-full flex items-center justify-center text-white hover:scale-105 transition-transform shadow-xl"
                   >
                     <Play className="w-6 h-6 ml-1" fill="currentColor" />
                   </button>
@@ -189,19 +189,19 @@ export default function LibraryPage() {
         </div>
 
         {/* RIGHT PANEL - Sidebar */}
-        <div className="w-[280px] bg-[#111111] border-l border-[#1e1e1e] flex flex-col h-full flex-shrink-0">
+        <div className="w-[280px] bg-[#181616] border-l border-[#2c2828] flex flex-col h-full flex-shrink-0">
           <div className="p-6 pb-4">
             <h2 className="text-xl font-bold text-white mb-6">Your Library</h2>
             
             <button 
               onClick={() => setActiveCollection("likes")}
-              className={`w-full flex items-center gap-4 px-3 py-2 rounded-lg transition-colors mb-2 ${activeCollection === "likes" ? "bg-[#c8794122]" : "hover:bg-white/5"}`}
+              className={`w-full flex items-center gap-4 px-3 py-2 rounded-lg transition-colors mb-2 ${activeCollection === "likes" ? "bg-[#c4a09022]" : "hover:bg-white/5"}`}
             >
-              <div className="w-10 h-10 rounded bg-gradient-to-br from-[#c87941] to-[#5bc4e8] flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded bg-gradient-to-br from-[#c4a090] to-[#5bc4e8] flex items-center justify-center flex-shrink-0">
                 <Heart className="w-5 h-5 text-white" fill="currentColor" />
               </div>
               <div className="flex-1 text-left min-w-0">
-                <h4 className={`font-semibold truncate ${activeCollection === "likes" ? "text-[#c87941]" : "text-white"}`}>Liked Songs</h4>
+                <h4 className={`font-semibold truncate ${activeCollection === "likes" ? "text-[#c4a090]" : "text-white"}`}>Liked Songs</h4>
                 <p className="text-xs text-gray-500">{likedSongs.length} songs</p>
               </div>
             </button>
@@ -222,7 +222,7 @@ export default function LibraryPage() {
               <button 
                 key={playlist._id}
                 onClick={() => setActiveCollection(playlist._id)}
-                className={`w-full flex items-center gap-4 px-3 py-2 rounded-lg transition-colors ${activeCollection === playlist._id ? "bg-[#c8794122]" : "hover:bg-white/5"}`}
+                className={`w-full flex items-center gap-4 px-3 py-2 rounded-lg transition-colors ${activeCollection === playlist._id ? "bg-[#c4a09022]" : "hover:bg-white/5"}`}
               >
                 <div className="w-10 h-10 rounded overflow-hidden bg-bg-tertiary flex items-center justify-center flex-shrink-0">
                   {playlist.songs.length > 0 ? (
@@ -232,20 +232,20 @@ export default function LibraryPage() {
                   )}
                 </div>
                 <div className="flex-1 text-left min-w-0">
-                  <h4 className={`font-semibold text-sm truncate ${activeCollection === playlist._id ? "text-[#c87941]" : "text-white"}`}>{playlist.name}</h4>
+                  <h4 className={`font-semibold text-sm truncate ${activeCollection === playlist._id ? "text-[#c4a090]" : "text-white"}`}>{playlist.name}</h4>
                   <p className="text-xs text-gray-500">{playlist.songs.length} songs</p>
                 </div>
               </button>
             ))}
           </div>
 
-          <div className="p-4 border-t border-[#1e1e1e] flex items-center justify-between bg-black/20">
+          <div className="p-4 border-t border-[#2c2828] flex items-center justify-between bg-black/20">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-gray-700">
                 {user?.avatarUrl ? (
                   <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full bg-[#c87941] flex items-center justify-center text-white font-bold text-xs">
+                  <div className="w-full h-full bg-[#c4a090] flex items-center justify-center text-white font-bold text-xs">
                     {user?.username?.[0]?.toUpperCase()}
                   </div>
                 )}
@@ -301,7 +301,7 @@ export default function LibraryPage() {
                       type="text"
                       required
                       placeholder="My awesome playlist"
-                      className="w-full bg-bg-tertiary text-white rounded-lg px-4 py-2.5 border border-border focus:border-[#c87941] focus:outline-none"
+                      className="w-full bg-bg-tertiary text-white rounded-lg px-4 py-2.5 border border-border focus:border-[#c4a090] focus:outline-none"
                       value={newPlaylistName}
                       onChange={(e) => setNewPlaylistName(e.target.value)}
                       autoFocus
@@ -318,7 +318,7 @@ export default function LibraryPage() {
                     <input
                       type="text"
                       placeholder="Search for songs, artists..."
-                      className="w-full bg-bg-tertiary text-white rounded-lg pl-10 pr-4 py-2.5 border border-border focus:border-[#c87941] focus:outline-none text-sm"
+                      className="w-full bg-bg-tertiary text-white rounded-lg pl-10 pr-4 py-2.5 border border-border focus:border-[#c4a090] focus:outline-none text-sm"
                       value={modalSearch}
                       onChange={(e) => setModalSearch(e.target.value)}
                     />
@@ -341,7 +341,7 @@ export default function LibraryPage() {
                             <button 
                               type="button"
                               onClick={() => setSelectedSongs(prev => [...prev, song])}
-                              className="w-8 h-8 flex items-center justify-center rounded-full bg-bg-tertiary hover:bg-[#c87941]/20 hover:text-[#c87941] text-gray-400 transition-colors"
+                              className="w-8 h-8 flex items-center justify-center rounded-full bg-bg-tertiary hover:bg-[#c4a090]/20 hover:text-[#c4a090] text-gray-400 transition-colors"
                             >
                               <Plus className="w-4 h-4" />
                             </button>
@@ -396,7 +396,7 @@ export default function LibraryPage() {
                   onClick={createPlaylist}
                   disabled={!newPlaylistName.trim()}
                   className="px-6 py-2 rounded-lg text-white font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
-                  style={{ backgroundColor: '#c87941' }}
+                  style={{ backgroundColor: '#c4a090' }}
                 >
                   Create Playlist
                 </button>

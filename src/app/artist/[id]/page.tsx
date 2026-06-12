@@ -106,7 +106,7 @@ export default function ArtistPage() {
     return (
       <ProtectedRoute>
         <div className="flex justify-center items-center h-[calc(100vh-160px)]">
-          <div className="w-8 h-8 border-4 border-[#c87941] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-[#c4a090] border-t-transparent rounded-full animate-spin"></div>
         </div>
       </ProtectedRoute>
     );
@@ -125,7 +125,7 @@ export default function ArtistPage() {
       <div className="flex h-full w-full max-w-[1400px] mx-auto overflow-hidden">
         
         {/* LEFT COLUMN - Fixed Details */}
-        <div className="w-[260px] h-full overflow-y-auto no-scrollbar flex-shrink-0 flex flex-col p-8 bg-[#111111] border-r border-[#1e1e1e]">
+        <div className="w-[260px] h-full overflow-y-auto no-scrollbar flex-shrink-0 flex flex-col p-8 bg-[#181616] border-r border-[#2c2828]">
           <div className="w-[200px] h-[200px] rounded-full mx-auto overflow-hidden shadow-2xl mb-6 flex-shrink-0 group relative">
             <img 
               src={artist.imageUrl} 
@@ -149,7 +149,7 @@ export default function ArtistPage() {
               onClick={handleFollow}
               className={`w-full py-2 rounded-full border text-sm font-bold tracking-widest uppercase transition-colors ${
                 isFollowing 
-                  ? 'border-[#c87941] text-[#c87941] hover:bg-[#c8794111]' 
+                  ? 'border-[#c4a090] text-[#c4a090] hover:bg-[#c4a09011]' 
                   : 'border-white text-white hover:bg-white/10'
               }`}
             >

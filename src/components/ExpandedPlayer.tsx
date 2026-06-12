@@ -34,7 +34,7 @@ export default function ExpandedPlayer() {
     const ws = WaveSurfer.create({
       container: waveformRef.current,
       waveColor: '#333333',
-      progressColor: '#c87941',
+      progressColor: '#c4a090',
       cursorColor: 'transparent', // We'll manage cursor manually or let WaveSurfer do it via setTime
       barWidth: 2,
       barGap: 2,
@@ -130,11 +130,11 @@ export default function ExpandedPlayer() {
   const fakeBPM = currentSong ? Math.floor(128 + (currentSong.duration % 40)) : 120;
 
   return (
-    <div className="w-full h-full bg-[#080808] flex flex-col items-center justify-center relative overflow-hidden text-white font-sans animate-in fade-in duration-300">
+    <div className="w-full h-full bg-[#0a0909] flex flex-col items-center justify-center relative overflow-hidden text-white font-sans animate-in fade-in duration-300">
       <div className="w-full max-w-[800px] flex flex-col h-full max-h-[90vh] relative z-10 px-6 py-4">
         
         {/* TOP BAR */}
-        <div className="w-full flex items-center justify-between pb-4 border-b border-[#1e1e1e] flex-shrink-0">
+        <div className="w-full flex items-center justify-between pb-4 border-b border-[#2c2828] flex-shrink-0">
           <div className="flex items-center gap-4">
             <button 
               onClick={(e) => { e.stopPropagation(); togglePlayerExpanded(); }}
@@ -144,7 +144,7 @@ export default function ExpandedPlayer() {
             </button>
             {currentSong && (
               <div className="flex flex-col">
-                <span className="text-sm font-bold uppercase tracking-widest text-[#c87941]">Now Editing</span>
+                <span className="text-sm font-bold uppercase tracking-widest text-[#c4a090]">Now Editing</span>
                 <span className="text-xs text-gray-400 truncate w-64">{currentSong.title} — {currentSong.artist}</span>
               </div>
             )}
@@ -171,7 +171,7 @@ export default function ExpandedPlayer() {
               >
                 {/* Custom Progress Cursor Line */}
                 <div 
-                  className="absolute top-0 bottom-0 w-[2px] bg-[#c87941] z-20 pointer-events-none shadow-[0_0_8px_#c87941]"
+                  className="absolute top-0 bottom-0 w-[2px] bg-[#c4a090] z-20 pointer-events-none shadow-[0_0_8px_#c4a090]"
                   style={{ left: `${(progress / (duration || 1)) * 100}%` }}
                 />
                 
@@ -234,13 +234,13 @@ export default function ExpandedPlayer() {
               <div className="flex items-center gap-2 mt-2">
                 <button 
                   onClick={() => setLoopMarker('A', progress)}
-                  className={`px-3 py-1 text-xs font-bold rounded ${loopA !== null ? 'bg-[#5bc4e8]/20 text-[#5bc4e8]' : 'bg-[#1e1e1e] text-gray-400 hover:bg-[#2a2a2a]'}`}
+                  className={`px-3 py-1 text-xs font-bold rounded ${loopA !== null ? 'bg-[#5bc4e8]/20 text-[#5bc4e8]' : 'bg-[#2c2828] text-gray-400 hover:bg-[#2c2828]'}`}
                 >
                   Set A
                 </button>
                 <button 
                   onClick={() => setLoopMarker('B', progress)}
-                  className={`px-3 py-1 text-xs font-bold rounded ${loopB !== null ? 'bg-[#9060f0]/20 text-[#9060f0]' : 'bg-[#1e1e1e] text-gray-400 hover:bg-[#2a2a2a]'}`}
+                  className={`px-3 py-1 text-xs font-bold rounded ${loopB !== null ? 'bg-[#9060f0]/20 text-[#9060f0]' : 'bg-[#2c2828] text-gray-400 hover:bg-[#2c2828]'}`}
                 >
                   Set B
                 </button>
@@ -256,12 +256,12 @@ export default function ExpandedPlayer() {
             </div>
 
             {/* SONG INFO ROW */}
-            <div className="w-full bg-[#111111] border border-[#1e1e1e] rounded-xl p-4 flex items-center justify-between">
+            <div className="w-full bg-[#181616] border border-[#2c2828] rounded-xl p-4 flex items-center justify-between">
               <div className="flex items-center gap-4 min-w-0">
                 <img src={currentSong.coverUrl} className="w-[80px] h-[80px] rounded-lg object-cover shadow-md flex-shrink-0" alt="Cover" />
                 <div className="flex flex-col min-w-0">
                   <h3 className="text-[20px] font-bold text-white truncate leading-tight mb-1">{currentSong.title}</h3>
-                  <Link href={`/artist/${currentSong.artistId || ''}`} className="text-[13px] text-[#c87941] hover:underline truncate mb-1">
+                  <Link href={`/artist/${currentSong.artistId || ''}`} className="text-[13px] text-[#c4a090] hover:underline truncate mb-1">
                     {currentSong.artist}
                   </Link>
                   <span className="text-[12px] text-gray-500 truncate">{currentSong.album || 'Single'}</span>
@@ -285,7 +285,7 @@ export default function ExpandedPlayer() {
               <div className="flex items-center justify-center gap-6">
                 <button 
                   onClick={() => toggleShuffle()} 
-                  className={`p-2 transition-colors ${isShuffle ? 'text-[#c87941]' : 'text-gray-500 hover:text-gray-300'}`}
+                  className={`p-2 transition-colors ${isShuffle ? 'text-[#c4a090]' : 'text-gray-500 hover:text-gray-300'}`}
                 >
                   <Shuffle className="w-5 h-5" />
                 </button>
@@ -331,7 +331,7 @@ export default function ExpandedPlayer() {
                 
                 <button 
                   onClick={() => toggleRepeat()} 
-                  className={`p-2 relative transition-colors ${repeatMode !== 'off' ? 'text-[#c87941]' : 'text-gray-500 hover:text-gray-300'}`}
+                  className={`p-2 relative transition-colors ${repeatMode !== 'off' ? 'text-[#c4a090]' : 'text-gray-500 hover:text-gray-300'}`}
                 >
                   <Repeat className="w-5 h-5" />
                   {repeatMode === 'track' && <span className="absolute text-[8px] font-bold top-1.5 right-1.5 bg-[#080808] px-0.5 rounded">1</span>}
@@ -340,7 +340,7 @@ export default function ExpandedPlayer() {
             </div>
 
             {/* BOTTOM CONTROLS ROW */}
-            <div className="w-full flex items-center justify-between border-t border-[#1e1e1e] pt-4 mt-2">
+            <div className="w-full flex items-center justify-between border-t border-[#2c2828] pt-4 mt-2">
               
               {/* Volume */}
               <div className="flex items-center gap-3 w-1/4">
@@ -352,7 +352,7 @@ export default function ExpandedPlayer() {
                   step={0.01}
                   value={volume}
                   onChange={(e) => setVolume(Number(e.target.value))}
-                  className="w-24 h-1 bg-[#1e1e1e] rounded-lg appearance-none cursor-pointer accent-[#c87941]"
+                  className="w-24 h-1 bg-[#2c2828] rounded-lg appearance-none cursor-pointer accent-[#c4a090]"
                 />
               </div>
 
@@ -363,8 +363,8 @@ export default function ExpandedPlayer() {
                   disabled={loopA === null || loopB === null}
                   className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
                     isLoopActive 
-                      ? 'border-[#c87941] bg-[#c87941]/10 text-[#c87941]' 
-                      : 'border-[#2a2a2a] text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed'
+                      ? 'border-[#c4a090] bg-[#c4a090]/10 text-[#c4a090]' 
+                      : 'border-[#2c2828] text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed'
                   }`}
                 >
                   LOOP A→B
@@ -372,11 +372,11 @@ export default function ExpandedPlayer() {
                 
                 {/* BPM VISUALIZER */}
                 {isPlaying && (
-                  <div className="flex items-end gap-[3px] h-6 px-4 py-1 bg-[#111111] rounded-lg border border-[#1e1e1e]">
+                  <div className="flex items-end gap-[3px] h-6 px-4 py-1 bg-[#181616] rounded-lg border border-[#2c2828]">
                     {[1,2,3,4,5].map(i => (
                       <div 
                         key={i} 
-                        className="w-[3px] bg-[#c87941] rounded-t-sm" 
+                        className="w-[3px] bg-[#c4a090] rounded-t-sm" 
                         style={{ 
                           animation: `pulse ${(60 / fakeBPM) / playbackRate}s ease-in-out infinite alternate`,
                           animationDelay: `${i * 0.1}s`, 
@@ -388,21 +388,21 @@ export default function ExpandedPlayer() {
                 )}
 
                 {/* CROSSFADE */}
-                <div className="flex items-center gap-3 bg-[#111111] border border-[#1e1e1e] rounded-lg px-3 py-1">
+                <div className="flex items-center gap-3 bg-[#181616] border border-[#2c2828] rounded-lg px-3 py-1">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Crossfade</span>
                   <button 
                     onClick={() => setCrossfade(!crossfadeEnabled)}
-                    className={`w-6 h-3 rounded-full flex items-center transition-colors ${crossfadeEnabled ? 'bg-[#c87941]' : 'bg-[#2a2a2a]'}`}
+                    className={`w-6 h-3 rounded-full flex items-center transition-colors ${crossfadeEnabled ? 'bg-[#c4a090]' : 'bg-[#2c2828]'}`}
                   >
                     <div className={`w-2 h-2 bg-white rounded-full transition-transform ${crossfadeEnabled ? 'translate-x-[14px]' : 'translate-x-0.5'}`} />
                   </button>
                   {crossfadeEnabled && (
-                    <div className="flex items-center gap-2 border-l border-[#2a2a2a] pl-3 ml-1">
+                    <div className="flex items-center gap-2 border-l border-[#2c2828] pl-3 ml-1">
                       <input 
                         type="range" min="1" max="8" step="1"
                         value={crossfadeDuration}
                         onChange={(e) => setCrossfade(true, parseInt(e.target.value))}
-                        className="w-16 h-1 bg-[#1e1e1e] rounded-lg appearance-none cursor-pointer accent-[#c87941]"
+                        className="w-16 h-1 bg-[#2c2828] rounded-lg appearance-none cursor-pointer accent-[#c4a090]"
                       />
                       <span className="text-[10px] font-mono text-gray-500 w-3">{crossfadeDuration}s</span>
                     </div>
@@ -412,13 +412,13 @@ export default function ExpandedPlayer() {
 
               {/* Right: Speed & Queue */}
               <div className="flex items-center justify-end gap-6 w-1/4">
-                <div className="flex items-center bg-[#111111] border border-[#1e1e1e] rounded-full p-0.5">
+                <div className="flex items-center bg-[#181616] border border-[#2c2828] rounded-full p-0.5">
                   {[0.5, 0.75, 1, 1.25, 1.5].map(rate => (
                     <button
                       key={rate}
                       onClick={() => setPlaybackRate(rate)}
                       className={`px-2 py-1 text-[10px] font-bold rounded-full transition-colors ${
-                        playbackRate === rate ? 'bg-[#c87941] text-white' : 'text-gray-500 hover:text-gray-300'
+                        playbackRate === rate ? 'bg-[#c4a090] text-white' : 'text-gray-500 hover:text-gray-300'
                       }`}
                     >
                       {rate}x

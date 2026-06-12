@@ -54,7 +54,7 @@ export default function MiniPlayer() {
 
   return (
     <div 
-      className={`fixed bottom-[100px] right-[20px] z-[60] w-[280px] h-[72px] bg-[#111111] rounded-[14px] border border-[#2a2a2a] shadow-[0_8px_32px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden transition-all duration-250 ease-out ${
+      className={`fixed bottom-[100px] right-[20px] z-[60] w-[280px] h-[72px] bg-[#181616] rounded-[14px] border border-[#2c2828] shadow-[0_8px_32px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden transition-all duration-250 ease-out ${
         isVisible ? "translate-y-0 opacity-100" : "translate-y-[20px] opacity-0 pointer-events-none"
       }`}
     >
@@ -100,7 +100,7 @@ export default function MiniPlayer() {
       {/* Thin Seekbar */}
       <div className="w-full h-[2px] bg-[#1a1a1a]">
         <div 
-          className="h-full bg-[#c87941]" 
+          className="h-full bg-[#c4a090]" 
           style={{ width: `${(progress / (duration || 1)) * 100}%` }}
         />
       </div>

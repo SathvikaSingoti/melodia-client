@@ -159,7 +159,7 @@ export default function KeyboardShortcuts() {
   if (!isShortcutsOpen) return null;
 
   const ShortcutRow = ({ label, keys }: { label: string, keys: string[] }) => (
-    <div className="flex items-center justify-between py-2.5 border-b border-[#1e1e1e] last:border-0">
+    <div className="flex items-center justify-between py-2.5 border-b border-[#2c2828] last:border-0">
       <span className="text-[13px] text-gray-300 font-medium">{label}</span>
       <div className="flex items-center gap-1.5">
         {keys.map((k, i) => (
@@ -167,7 +167,7 @@ export default function KeyboardShortcuts() {
             {k === 'then' || k === '+' ? (
               <span className="text-[11px] text-gray-600 px-0.5">{k}</span>
             ) : (
-              <kbd className="px-2 py-1 rounded-[4px] bg-[#1e1e1e] border border-[#333] text-[11px] font-mono text-gray-400 min-w-[24px] text-center inline-block">
+              <kbd className="px-2 py-1 rounded-[4px] bg-[#2c2828] border border-[#333] text-[11px] font-mono text-gray-400 min-w-[24px] text-center inline-block">
                 {k}
               </kbd>
             )}
@@ -186,8 +186,8 @@ export default function KeyboardShortcuts() {
       />
       
       {/* Modal */}
-      <div className="relative w-full max-w-[520px] bg-[#111111] rounded-[14px] border border-[#2a2a2a] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2a2a] bg-[#151515]">
+      <div className="relative w-full max-w-[520px] bg-[#181616] rounded-[14px] border border-[#2c2828] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2c2828] bg-[#151515]">
           <h2 className="text-[16px] font-bold text-white tracking-tight">Keyboard Shortcuts</h2>
           <button 
             onClick={closeShortcuts}
@@ -201,7 +201,7 @@ export default function KeyboardShortcuts() {
           
           {/* Column 1 */}
           <div className="flex flex-col gap-1">
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#c87941] mb-3">Playback</h3>
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#c4a090] mb-3">Playback</h3>
             <ShortcutRow label="Play / Pause" keys={['Space']} />
             <ShortcutRow label="Skip forward 10s" keys={['→']} />
             <ShortcutRow label="Rewind 10s" keys={['←']} />
@@ -218,7 +218,7 @@ export default function KeyboardShortcuts() {
           {/* Column 2 */}
           <div className="flex flex-col gap-8">
             <div className="flex flex-col gap-1">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#c87941] mb-3">Navigation</h3>
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#c4a090] mb-3">Navigation</h3>
               <ShortcutRow label="Go to Discover" keys={['G', 'then', 'D']} />
               <ShortcutRow label="Go to Search" keys={['G', 'then', 'S']} />
               <ShortcutRow label="Go to Library" keys={['G', 'then', 'L']} />
@@ -228,7 +228,7 @@ export default function KeyboardShortcuts() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#c87941] mb-3">App</h3>
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#c4a090] mb-3">App</h3>
               <ShortcutRow label="Command palette" keys={['⌘', 'K']} />
               <ShortcutRow label="Show this overlay" keys={['?']} />
               <ShortcutRow label="Close overlays" keys={['Esc']} />

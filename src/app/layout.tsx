@@ -31,14 +31,20 @@ export default function RootLayout({
             position="bottom-center"
             toastOptions={{
               style: {
-                background: '#0c1220',
-                color: '#e8f0ff',
-                border: '1px solid rgba(168,207,255,0.15)',
+                background: '#181616',
+                color: '#ede8e4',
+                border: '1px solid #2c2828',
               },
               success: {
                 iconTheme: {
-                  primary: '#A8CFFF',
-                  secondary: '#0c1220',
+                  primary: '#c4a090',
+                  secondary: '#181616',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: '#e87070',
+                  secondary: '#181616',
                 },
               },
             }}

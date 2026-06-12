@@ -131,7 +131,7 @@ export default function PlayerBar() {
     <>
       <div 
         onClick={togglePlayerExpanded}
-        className="fixed bottom-0 left-0 right-0 h-24 bg-bg-secondary border-t border-border z-50 flex items-center justify-between px-6 backdrop-blur-md bg-opacity-90 cursor-pointer hover:bg-bg-tertiary transition-colors"
+        className="fixed bottom-0 left-0 right-0 h-24 bg-bg-primary border-t border-border z-50 flex items-center justify-between px-6 backdrop-blur-md bg-opacity-90 cursor-pointer hover:bg-bg-tertiary transition-colors"
       >
       {/* Song Info */}
       <div className="flex items-center gap-4 w-1/3">
@@ -144,7 +144,7 @@ export default function PlayerBar() {
         </div>
         <div className="min-w-0 pr-2">
           <h4 className="text-sm font-semibold text-white truncate" title={currentSong.title}>{currentSong.title}</h4>
-          <div className="text-xs text-gray-400 truncate" title={currentSong.artist}>
+          <div className="text-xs text-primary truncate" title={currentSong.artist}>
             {currentSong.artistId ? (
               <Link href={`/artist/${currentSong.artistId}`} onClick={(e) => e.stopPropagation()} className="hover:text-white hover:underline">{currentSong.artist}</Link>
             ) : currentSong.artist}
@@ -180,7 +180,7 @@ export default function PlayerBar() {
           
           <button 
             onClick={(e) => { e.stopPropagation(); isPlaying ? pause() : resume(); }} 
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-white hover:scale-105 transition-transform text-bg-primary"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-primary hover:scale-105 transition-transform text-[#0e0d0d]"
           >
             {isPlaying ? (
                // Pause Icon
@@ -213,7 +213,7 @@ export default function PlayerBar() {
             className="flex-1 h-1.5 bg-bg-tertiary rounded-full overflow-hidden cursor-pointer relative group"
           >
             <div 
-              className="h-full bg-secondary absolute left-0 top-0 bottom-0 pointer-events-none" 
+              className="h-full bg-gradient-to-r from-[#c4a090] to-[#d4b8ac] absolute left-0 top-0 bottom-0 pointer-events-none" 
               style={{ width: `${(localProgress / (duration || 1)) * 100}%` }}
             ></div>
           </div>
@@ -246,7 +246,7 @@ export default function PlayerBar() {
 
         <button 
           onClick={(e) => { e.stopPropagation(); toggleDetailPanel(); }}
-          className={`transition-colors ${isDetailPanelOpen ? 'text-[#c87941]' : 'text-gray-400 hover:text-white'}`}
+          className={`transition-colors ${isDetailPanelOpen ? 'text-[#c4a090]' : 'text-gray-400 hover:text-white'}`}
           title="Queue & Details"
         >
           <ListMusic className="w-5 h-5" />
@@ -254,7 +254,7 @@ export default function PlayerBar() {
 
         <button 
           onClick={(e) => { e.stopPropagation(); toggleMiniPlayer(); }}
-          className={`transition-colors ${isMiniPlayerOpen ? 'text-[#c87941]' : 'text-gray-400 hover:text-white'}`}
+          className={`transition-colors ${isMiniPlayerOpen ? 'text-[#c4a090]' : 'text-gray-400 hover:text-white'}`}
           title="Mini Player"
         >
           <PictureInPicture className="w-5 h-5" />

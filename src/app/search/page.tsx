@@ -10,12 +10,12 @@ import SongMenu from "@/components/SongMenu";
 import Link from "next/link";
 
 const GENRES = [
-  { name: "Pop", emoji: "🎤", style: "bg-[rgba(168,207,255,0.08)] border-[#A8CFFF]" },
-  { name: "Hip-Hop", emoji: "🎧", style: "bg-[rgba(255,214,165,0.08)] border-[#FFD6A5]" },
+  { name: "Pop", emoji: "🎤", style: "bg-[rgba(168,207,255,0.08)] border-[#c4a090]" },
+  { name: "Hip-Hop", emoji: "🎧", style: "bg-[rgba(255,214,165,0.08)] border-[#c4a090]" },
   { name: "R&B", emoji: "💜", style: "bg-[rgba(201,184,255,0.08)] border-[#C9B8FF]" },
   { name: "Indie", emoji: "🌿", style: "bg-[rgba(168,237,203,0.08)] border-[#A8EDCB]" },
-  { name: "Electronic", emoji: "⚡", style: "bg-[rgba(168,207,255,0.06)] border-[#A8CFFF]" },
-  { name: "Rock", emoji: "🎸", style: "bg-[rgba(255,214,165,0.08)] border-[#FFD6A5]" },
+  { name: "Electronic", emoji: "⚡", style: "bg-[rgba(168,207,255,0.06)] border-[#c4a090]" },
+  { name: "Rock", emoji: "🎸", style: "bg-[rgba(255,214,165,0.08)] border-[#c4a090]" },
   { name: "Jazz", emoji: "🎷", style: "bg-[rgba(201,184,255,0.08)] border-[#C9B8FF]" },
   { name: "Classical", emoji: "🎻", style: "bg-[rgba(168,237,203,0.08)] border-[#A8EDCB]" }
 ];

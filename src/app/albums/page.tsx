@@ -56,14 +56,14 @@ export default function AlbumsPage() {
               placeholder="Search albums..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-bg-secondary text-white rounded-full pl-10 pr-4 py-2 border border-border focus:border-[#c87941] focus:outline-none transition-colors"
+              className="w-full bg-bg-secondary text-white rounded-full pl-10 pr-4 py-2 border border-border focus:border-[#c4a090] focus:outline-none transition-colors"
             />
           </div>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-[#c87941] border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-[#c4a090] border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : filteredAlbums.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
@@ -73,19 +73,19 @@ export default function AlbumsPage() {
                 // Normally this would navigate to /album/[id]
                 alert("Album detail page coming soon!");
               }}>
-                <div className="w-full aspect-square rounded-xl overflow-hidden mb-4 shadow-lg border border-border group-hover:border-[#c87941]/50 transition-colors bg-bg-secondary relative">
+                <div className="w-full aspect-square rounded-xl overflow-hidden mb-4 shadow-lg border border-border group-hover:border-[#c4a090]/50 transition-colors bg-bg-secondary relative">
                   <img 
                     src={album.coverUrl} 
                     alt={album.title} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button className="w-12 h-12 flex items-center justify-center rounded-full bg-[#c87941] text-white hover:scale-105 transition-transform shadow-xl">
+                    <button className="w-12 h-12 flex items-center justify-center rounded-full bg-[#c4a090] text-white hover:scale-105 transition-transform shadow-xl">
                       <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     </button>
                   </div>
                 </div>
-                <h3 className="font-semibold text-white truncate group-hover:text-[#c87941] transition-colors">
+                <h3 className="font-semibold text-white truncate group-hover:text-[#c4a090] transition-colors">
                   {album.title}
                 </h3>
                 <p className="text-xs text-gray-500 truncate mt-1">
@@ -95,7 +95,7 @@ export default function AlbumsPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 text-gray-500 bg-[#111111] rounded-xl border border-dashed border-[#1e1e1e]">
+          <div className="text-center py-20 text-gray-500 bg-[#181616] rounded-xl border border-dashed border-[#2c2828]">
             No albums found.
           </div>
         )}
