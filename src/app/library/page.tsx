@@ -48,6 +48,7 @@ export default function LibraryPage() {
   const [playlistSearch, setPlaylistSearch] = useState("");
   
   const [playlistMenuOpen, setPlaylistMenuOpen] = useState<string | null>(null);
+  const [menuDirection, setMenuDirection] = useState<'down'|'up'>('down');
   const [deletingPlaylistId, setDeletingPlaylistId] = useState<string | null>(null);
   const [renamingPlaylist, setRenamingPlaylist] = useState<Playlist | null>(null);
   const [editPlaylistName, setEditPlaylistName] = useState("");
@@ -186,7 +187,7 @@ export default function LibraryPage() {
       setPlaylists(prev => prev.filter(p => p._id !== id));
       if (activeCollection === id) setActiveCollection("likes");
       setDeletingPlaylistId(null);
-      toast.success("Playlist deleted");
+      toast.success("Deleted");
     } catch (error) {
       toast.error("Failed to delete playlist");
     }
@@ -411,36 +412,61 @@ export default function LibraryPage() {
                       )}
                     </div>
                     <div className="flex-1 text-left min-w-0 flex items-center justify-between">
-                      <span className={`text-[13px] truncate pr-2 ${activeCollection === playlist._id ? "text-white font-medium" : "text-gray-300"}`}>{playlist.name}</span>
-                      <span className="text-[11px] text-gray-500">{playlist.songs.length}</span>
+                      {renamingPlaylist?._id === playlist._id ? (
+                        <input 
+                          type="text" 
+                          autoFocus
+                          value={editPlaylistName}
+                          onChange={(e) => setEditPlaylistName(e.target.value)}
+                          onClick={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleRenamePlaylist();
+                            if (e.key === 'Escape') setRenamingPlaylist(null);
+                          }}
+                          onBlur={handleRenamePlaylist}
+                          className="w-full bg-[#181616] border border-[#c4a090] rounded px-1.5 py-0.5 text-[13px] text-white focus:outline-none z-20"
+                        />
+                      ) : (
+                        <span className={`text-[13px] truncate pr-2 ${activeCollection === playlist._id ? "text-white font-medium" : "text-gray-300"}`}>{playlist.name}</span>
+                      )}
+                      {renamingPlaylist?._id !== playlist._id && (
+                        <span className="text-[11px] text-gray-500">{playlist.songs.length}</span>
+                      )}
                     </div>
                   </button>
                   
                   {/* THREE DOT MENU BUTTON */}
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center">
+                  <div className={`absolute right-2 top-1/2 -translate-y-1/2 transition-opacity flex items-center ${playlistMenuOpen === playlist._id ? 'opacity-100 z-[120]' : 'opacity-0 group-hover:opacity-100 z-10'}`}>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); setPlaylistMenuOpen(playlistMenuOpen === playlist._id ? null : playlist._id); }}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        e.nativeEvent.stopImmediatePropagation();
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const spaceBelow = window.innerHeight - rect.bottom;
+                        setMenuDirection(spaceBelow < 150 ? 'up' : 'down');
+                        setPlaylistMenuOpen(playlistMenuOpen === playlist._id ? null : playlist._id); 
+                      }}
                       className="p-1 rounded bg-[#181616] text-gray-400 hover:text-white border border-[#2c2828] shadow-sm"
                     >
                       <MoreHorizontal className="w-3.5 h-3.5" />
                     </button>
                     {playlistMenuOpen === playlist._id && (
-                      <div className="absolute right-0 top-full mt-1 w-40 bg-[#1a1818] border border-[#2c2828] rounded-md shadow-xl py-1 z-[100] animate-in fade-in zoom-in-95 duration-100">
+                      <div className={`absolute right-0 ${menuDirection === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'} w-40 bg-[#1a1614] border border-[#2c2828] rounded-md shadow-[0_8px_32px_rgba(0,0,0,0.8)] py-1 z-[150] animate-in fade-in zoom-in-95 duration-100`}>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); setActiveCollection(playlist._id); setPlaylistMenuOpen(null); if (playlist.songs.length) play(playlist.songs[0], playlist.songs); }}
-                          className="w-full text-left px-3 py-2 text-[13px] text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition-colors"
+                          onClick={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); setActiveCollection(playlist._id); setPlaylistMenuOpen(null); if (playlist.songs.length) play(playlist.songs[0], playlist.songs); }}
+                          className="w-full text-left px-3 py-2 text-[13px] text-gray-300 hover:bg-[#2c2828] hover:text-white flex items-center gap-2 transition-colors"
                         >
                           <Play className="w-3.5 h-3.5" /> Play
                         </button>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); setRenamingPlaylist(playlist); setEditPlaylistName(playlist.name); setPlaylistMenuOpen(null); }}
-                          className="w-full text-left px-3 py-2 text-[13px] text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition-colors"
+                          onClick={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); setRenamingPlaylist(playlist); setEditPlaylistName(playlist.name); setPlaylistMenuOpen(null); }}
+                          className="w-full text-left px-3 py-2 text-[13px] text-gray-300 hover:bg-[#2c2828] hover:text-white flex items-center gap-2 transition-colors"
                         >
                           <Edit2 className="w-3.5 h-3.5" /> Rename
                         </button>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); setDeletingPlaylistId(playlist._id); setPlaylistMenuOpen(null); }}
-                          className="w-full text-left px-3 py-2 text-[13px] text-[#e87070] hover:bg-red-500/10 flex items-center gap-2 transition-colors"
+                          onClick={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); setDeletingPlaylistId(playlist._id); setPlaylistMenuOpen(null); }}
+                          className="w-full text-left px-3 py-2 text-[13px] text-[#e87070] hover:bg-[#e8707020] flex items-center gap-2 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" /> Delete playlist
                         </button>
@@ -450,7 +476,7 @@ export default function LibraryPage() {
                   
                   {/* Inline Delete Confirmation */}
                   {deletingPlaylistId === playlist._id && (
-                    <div className="absolute inset-0 bg-[#181616] border border-[#2c2828] rounded-md flex items-center justify-between px-2 z-10 animate-in fade-in">
+                    <div className="absolute inset-0 bg-[#1a1614] border border-[#e87070] rounded-md flex items-center justify-between px-2 z-30 animate-in fade-in shadow-lg">
                       <span className="text-[12px] text-white truncate max-w-[120px]">Delete {playlist.name}?</span>
                       <div className="flex items-center gap-1">
                         <button 
@@ -676,41 +702,6 @@ export default function LibraryPage() {
             }
           }}
         />
-
-        {/* Rename Playlist Modal */}
-        {renamingPlaylist && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-[#181616] w-full max-w-[320px] rounded-xl border border-[#2c2828] shadow-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Rename playlist</h3>
-              <input 
-                type="text" 
-                autoFocus
-                value={editPlaylistName}
-                onChange={(e) => setEditPlaylistName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleRenamePlaylist();
-                  if (e.key === 'Escape') setRenamingPlaylist(null);
-                }}
-                className="w-full bg-[#221f1f] border border-[#2c2828] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#c4a090] mb-6"
-              />
-              <div className="flex justify-end gap-3">
-                <button 
-                  onClick={() => setRenamingPlaylist(null)}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-400 hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleRenamePlaylist}
-                  disabled={!editPlaylistName.trim()}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-[#c4a090] text-white hover:bg-[#a88070] disabled:opacity-50 transition-colors"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
       </div>
     </ProtectedRoute>
