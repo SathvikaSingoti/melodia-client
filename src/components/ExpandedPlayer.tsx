@@ -32,17 +32,12 @@ export default function ExpandedPlayer() {
     if (wsRef.current) {
       const oldWs = wsRef.current;
       setTimeout(() => {
-        const origWarn = console.warn;
-        console.warn = (...args: any[]) => {
-          if (args[0] === 'Progress tracking error:' && args[1]?.name === 'AbortError') return;
-          origWarn(...args);
-        };
-        try { oldWs.destroy(); } catch (e) {}
-        setTimeout(() => {
-          if (console.warn !== origWarn) {
-            console.warn = origWarn;
+        try {
+          if ((oldWs as any).abortController) {
+            (oldWs as any).abortController = null;
           }
-        }, 100);
+          oldWs.destroy(); 
+        } catch (e) {}
       }, 0);
     }
     setWsError(false);
@@ -80,26 +75,16 @@ export default function ExpandedPlayer() {
       // Delay destroy to avoid Next.js intercepting AbortError during React cleanup phase
       setTimeout(() => {
         if (ws) {
-          // Monkey-patch console.warn to swallow the specific 'Progress tracking error' 
-          // that causes Next.js to throw a dev overlay
-          const origWarn = console.warn;
-          console.warn = (...args: any[]) => {
-            if (args[0] === 'Progress tracking error:' && args[1]?.name === 'AbortError') return;
-            origWarn(...args);
-          };
-
           try {
+            // Nullify the internal abortController so that the Next.js fetch polyfill 
+            // doesn't throw a global 'signal is aborted without reason' overlay.
+            if ((ws as any).abortController) {
+              (ws as any).abortController = null;
+            }
             ws.destroy();
           } catch (err) {
-            // Ignore AbortError on destroy
+            // Ignore errors on destroy
           }
-
-          // Restore console.warn after the microtasks have cleared
-          setTimeout(() => {
-            if (console.warn !== origWarn) {
-              console.warn = origWarn;
-            }
-          }, 100);
         }
       }, 0);
     };
