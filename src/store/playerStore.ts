@@ -277,13 +277,17 @@ export const usePlayerStore = create<PlayerState>()(
     // Track play history
     try {
       const storedUser = localStorage.getItem("melodia_user");
-      if (storedUser) {
+      const storedToken = localStorage.getItem("melodia_token");
+      if (storedUser && storedToken) {
         const user = JSON.parse(storedUser);
         const userId = user._id || user.id;
         if (userId) {
+          console.log(`Logging play history for song: ${song.title} (${song._id})`);
           axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}/history`, {
             songId: song._id,
             playedAt: new Date().toISOString()
+          }, {
+            headers: { Authorization: `Bearer ${storedToken}` }
           }).catch(console.error);
         }
       }

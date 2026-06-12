@@ -145,10 +145,7 @@ export default function TopNav() {
             <Link href="/profile" className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-bg-secondary flex items-center gap-2">
               Profile
             </Link>
-            <Link href="/profile" className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-bg-secondary flex items-center gap-2">
-              Settings
-            </Link>
-            <button onClick={logout} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-bg-secondary flex items-center gap-2">
+            <button onClick={logout} className="w-full text-left px-4 py-2 text-sm hover:bg-bg-secondary flex items-center gap-2" style={{ color: '#e87070' }}>
               <LogOut className="w-4 h-4" />
               Log out
             </button>

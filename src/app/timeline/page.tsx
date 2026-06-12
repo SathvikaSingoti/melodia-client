@@ -30,7 +30,7 @@ interface CollapsedHistoryItem {
 }
 
 export default function TimelinePage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { play, currentSong, isPlaying, pause, resume } = usePlayerStore();
   const [history, setHistory] = useState<PlayHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,15 +63,64 @@ export default function TimelinePage() {
   };
 
   useEffect(() => {
-    if (user) {
-      axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/history`)
-        .then(res => {
-          setHistory(res.data);
-        })
-        .catch(console.error)
-        .finally(() => setLoading(false));
-    }
-  }, [user]);
+    if (!user || !token) return;
+
+    const fetchHistory = async () => {
+      try {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/history`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setHistory(res.data);
+      } catch (err) {
+        console.error("Failed to fetch history", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const checkAndSeedHistory = async () => {
+      if (localStorage.getItem("historySeedDone")) return;
+      
+      try {
+        const historyRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/history`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (historyRes.data.length < 10) {
+          const songsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/songs`);
+          const songs = songsRes.data;
+          
+          if (songs && songs.length > 0) {
+            const promises = [];
+            for (let i = 0; i < 100; i++) {
+              const randomSong = songs[Math.floor(Math.random() * songs.length)];
+              const randomOffset = Math.random() * 30 * 24 * 60 * 60 * 1000;
+              const date = new Date(Date.now() - randomOffset);
+              
+              promises.push(
+                axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/history`, {
+                  songId: randomSong._id,
+                  duration: randomSong.duration,
+                  playedAt: date.toISOString()
+                }, {
+                  headers: { Authorization: `Bearer ${token}` }
+                })
+              );
+            }
+            await Promise.all(promises);
+            localStorage.setItem("historySeedDone", "true");
+            fetchHistory(); // refetch after seeding
+          }
+        } else {
+          localStorage.setItem("historySeedDone", "true");
+        }
+      } catch (err) {
+        console.error("Seeding failed", err);
+      }
+    };
+
+    fetchHistory().then(() => checkAndSeedHistory());
+  }, [user, token]);
 
   // Destructure mostActive from useMemo
   const { timelineGroups, stats, moodGrid, topSongs, mostActive } = useMemo(() => {
@@ -246,9 +295,10 @@ export default function TimelinePage() {
           </div>
 
           {/* TIMELINE */}
-          <div className="relative pl-4">
-            {/* Spine */}
-            <div className="absolute top-2 bottom-0 left-[23px] w-[2px] bg-[#2c2828] z-0" />
+          {history.length > 0 ? (
+            <div className="relative pl-4">
+              {/* Spine */}
+              <div className="absolute top-2 bottom-0 left-[23px] w-[2px] bg-[#2c2828] z-0" />
 
             {timelineGroups.map((group) => {
               const isExpanded = !!expandedGroups[group.id];
@@ -317,7 +367,16 @@ export default function TimelinePage() {
                 )}
               </div>
             )})}
-          </div>
+            </div>
+          ) : (
+            <div className="text-center py-16 bg-white/5 border border-white/10 rounded-2xl">
+              <h3 className="text-xl font-bold text-white mb-2">Start listening to build your timeline</h3>
+              <p className="text-gray-400 mb-6">Your play history will appear here once you start playing music.</p>
+              <Link href="/explore" className="bg-[#c4a090] text-bg-primary px-6 py-3 rounded-full font-bold hover:opacity-90 transition-opacity">
+                Discover Music
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* RIGHT COLUMN: STATS & MOOD */}
