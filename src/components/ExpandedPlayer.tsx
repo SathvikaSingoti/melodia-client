@@ -106,8 +106,8 @@ export default function ExpandedPlayer() {
   const fakeBPM = currentSong ? Math.floor(128 + (currentSong.duration % 40)) : 120;
 
   return (
-    <div className="w-full h-full bg-[#0a0909] flex flex-col items-center justify-center relative overflow-hidden text-white font-sans animate-in fade-in duration-300">
-      <div className="w-full max-w-[800px] flex flex-col h-full max-h-[90vh] relative z-10 px-6 py-4">
+    <div className="w-full h-[100vh] bg-[#0a0909] flex flex-col items-center relative overflow-hidden text-white font-sans animate-in fade-in duration-300">
+      <div className="w-full max-w-[800px] flex flex-col h-[100vh] overflow-y-auto no-scrollbar pb-6 relative z-10 px-6 py-4">
         
         {/* TOP BAR */}
         <div className="w-full flex items-center justify-between pb-4 border-b border-[#2c2828] flex-shrink-0">
@@ -137,7 +137,7 @@ export default function ExpandedPlayer() {
             </button>
             
             {showSettings && (
-              <div className="absolute top-[48px] right-0 w-[260px] bg-[#1a1614] border border-[#2c2828] rounded-[12px] shadow-[0_8px_32px_rgba(0,0,0,0.6)] p-[20px] z-[100] flex flex-col gap-5 animate-in slide-in-from-top-2">
+              <div className="fixed top-[56px] right-[16px] w-[260px] bg-[#1a1614] border border-[#2c2828] rounded-[12px] shadow-[0_8px_32px_rgba(0,0,0,0.6)] p-[20px] z-[100] flex flex-col gap-5 animate-in slide-in-from-top-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-[600] tracking-[0.08em] text-[#786870]">PLAYBACK SPEED</span>
                   <div className="flex items-center gap-1">
@@ -286,15 +286,15 @@ export default function ExpandedPlayer() {
               <div className="flex items-center gap-2 mt-2">
                 <button 
                   onClick={() => setLoopMarker('A', progress)}
-                  className={`px-3 py-1 text-xs font-bold rounded border ${loopA !== null ? 'bg-[#c4a09022] text-[#c4a090] border-[#c4a090]' : 'bg-[#221f1f] text-[#786870] border-[#2c2828] hover:bg-[#2c2828]'}`}
+                  className={`px-[12px] py-[4px] text-[12px] rounded-[6px] border transition-colors ${loopA !== null ? 'bg-[#c4a09022] text-[#c4a090] border-[#c4a090]' : 'bg-[#221f1f] text-[#786870] border-[#2c2828] hover:bg-[#2c2828]'}`}
                 >
-                  Set A
+                  {loopA !== null ? `Set A · ${formatTime(loopA)}` : 'Set A'}
                 </button>
                 <button 
                   onClick={() => setLoopMarker('B', progress)}
-                  className={`px-3 py-1 text-xs font-bold rounded border ${loopB !== null ? 'bg-[#78607022] text-[#786870] border-[#786870]' : 'bg-[#221f1f] text-[#786870] border-[#2c2828] hover:bg-[#2c2828]'}`}
+                  className={`px-[12px] py-[4px] text-[12px] rounded-[6px] border transition-colors ${loopB !== null ? 'bg-[#a8807022] text-[#a88070] border-[#a88070]' : 'bg-[#221f1f] text-[#786870] border-[#2c2828] hover:bg-[#2c2828]'}`}
                 >
-                  Set B
+                  {loopB !== null ? `Set B · ${formatTime(loopB)}` : 'Set B'}
                 </button>
                 {(loopA !== null || loopB !== null) && (
                   <button 
