@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { usePlayerStore } from "@/store/playerStore";
-import { X, Heart, MoreHorizontal, Play, Radio } from "lucide-react";
+import { X, Heart, Play, Radio } from "lucide-react";
 import Link from "next/link";
 import SongMenu from "./SongMenu";
 
 export default function SongDetailPanel() {
-  const { isDetailPanelOpen, toggleDetailPanel, detailSong, queue, play, currentSong, isPlaying, radioContext, detailPanelTab, setDetailPanelTab } = usePlayerStore();
+  const { isDetailPanelOpen, toggleDetailPanel, detailSong, queue, play, currentSong, isPlaying, radioContext, detailPanelTab, setDetailPanelTab, removeFromQueue } = usePlayerStore();
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -154,8 +154,14 @@ export default function SongDetailPanel() {
                     </h4>
                     <p className="text-xs text-gray-400 truncate">{song.artist}</p>
                   </div>
-                  <div className="text-xs text-gray-500 tabular-nums">
-                    {formatDuration(song.duration)}
+                  <div className="flex items-center gap-1">
+                    <div className="text-xs text-gray-500 tabular-nums min-w-[36px] text-right">
+                      {formatDuration(song.duration)}
+                    </div>
+                    <SongMenu 
+                      song={song} 
+                      onRemoveQueue={() => removeFromQueue(song._id)} 
+                    />
                   </div>
                 </div>
               ))

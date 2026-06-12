@@ -127,6 +127,29 @@ export default function LibraryPage() {
     }
   };
 
+  const removeSongFromPlaylist = async (playlistId: string, songId: string) => {
+    const originalPlaylists = [...playlists];
+    // Optimistic UI update
+    setPlaylists(prev => prev.map(p => 
+      p._id === playlistId 
+        ? { ...p, songs: p.songs.filter(s => s._id !== songId) } 
+        : p
+    ));
+    toast.success("Removed from playlist");
+
+    try {
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/playlists/${playlistId}/songs/${songId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (error) {
+      console.error("Failed to remove song from playlist", error);
+      // Revert on failure
+      setPlaylists(originalPlaylists);
+      toast.error("Failed to remove song");
+    }
+  };
+
   const activePlaylist = playlists.find(p => p._id === activeCollection);
 
   return (
@@ -167,6 +190,7 @@ export default function LibraryPage() {
                   songs={likedSongs} 
                   likedSongIds={new Set(likedSongs.map(s => s._id))}
                   onToggleLike={unlikeSong}
+                  onRemoveLiked={(songId) => unlikeSong({ stopPropagation: () => {} } as any, songId)}
                 />
               ) : (
                 <div className="text-center py-20 text-gray-500">You haven't liked any songs yet.</div>
@@ -208,6 +232,7 @@ export default function LibraryPage() {
                     songs={activePlaylist.songs} 
                     likedSongIds={new Set(likedSongs.map(s => s._id))}
                     onToggleLike={unlikeSong}
+                    onRemovePlaylist={(songId) => removeSongFromPlaylist(activePlaylist._id, songId)}
                   />
                   <div className="mt-12 mb-20 max-w-2xl">
                     <h3 className="text-lg font-bold text-white mb-4">Add more songs...</h3>

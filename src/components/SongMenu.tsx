@@ -7,14 +7,24 @@ import { usePlayerStore, Song } from "@/store/playerStore";
 import toast from "react-hot-toast";
 
 import { useRouter } from "next/navigation";
-import { Radio } from "lucide-react";
+import { Radio, MinusCircle, HeartOff } from "lucide-react";
 
 interface Playlist {
   _id: string;
   name: string;
 }
 
-export default function SongMenu({ song, onRemove }: { song: Song, onRemove?: () => void }) {
+export default function SongMenu({ 
+  song, 
+  onRemovePlaylist,
+  onRemoveLiked,
+  onRemoveQueue
+}: { 
+  song: Song, 
+  onRemovePlaylist?: () => void,
+  onRemoveLiked?: () => void,
+  onRemoveQueue?: () => void
+}) {
   const { user, token } = useAuth();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -177,9 +187,22 @@ export default function SongMenu({ song, onRemove }: { song: Song, onRemove?: ()
             <Radio className="w-4 h-4 ml-2" />
           </button>
           
-          {onRemove && (
-            <button onClick={() => { onRemove(); setIsOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-bg-secondary hover:text-red-300">
+          {onRemovePlaylist && (
+            <button onClick={() => { onRemovePlaylist(); setIsOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-bg-secondary hover:text-red-300 flex items-center">
+              <MinusCircle className="w-4 h-4 mr-2" />
               Remove from playlist
+            </button>
+          )}
+          {onRemoveLiked && (
+            <button onClick={() => { onRemoveLiked(); setIsOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-bg-secondary hover:text-red-300 flex items-center">
+              <HeartOff className="w-4 h-4 mr-2" />
+              Remove from liked
+            </button>
+          )}
+          {onRemoveQueue && (
+            <button onClick={() => { onRemoveQueue(); setIsOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-bg-secondary hover:text-red-300 flex items-center">
+              <MinusCircle className="w-4 h-4 mr-2" />
+              Remove from queue
             </button>
           )}
         </div>

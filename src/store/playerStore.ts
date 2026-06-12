@@ -58,6 +58,7 @@ interface PlayerState {
   toggleLoop: () => void;
   updateProgress: () => void;
   addToQueue: (song: Song) => void;
+  removeFromQueue: (songId: string) => void;
   recentlyPlayed: Song[];
   
   isShuffle: boolean;
@@ -163,8 +164,24 @@ export const usePlayerStore = create<PlayerState>()(
     return { detailSong: song, isDetailPanelOpen: !!song, lastDetailUpdate: Date.now() };
   }),
   addToQueue: (song) => {
-    set((state) => ({ queue: [...state.queue, song] }));
-    toast.success("Added to queue");
+    set((state) => {
+      // Don't add if already in queue or currently playing
+      if (state.currentSong?._id === song._id || state.queue.some(s => s._id === song._id)) {
+        return state;
+      }
+      toast.success('Added to queue', {
+        style: { background: '#181616', color: '#fff', border: '1px solid #2c2828' },
+        iconTheme: { primary: '#c4a090', secondary: '#181616' }
+      });
+      return { queue: [...state.queue, song] };
+    });
+  },
+
+  removeFromQueue: (songId) => {
+    set((state) => {
+      return { queue: state.queue.filter(s => s._id !== songId) };
+    });
+    toast.success('Removed from queue');
   },
 
   startRadio: (seedSong: Song, radioQueue: Song[]) => {

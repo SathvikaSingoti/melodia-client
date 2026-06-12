@@ -9,10 +9,11 @@ interface TrackListProps {
   songs: Song[];
   likedSongIds: Set<string>;
   onToggleLike: (e: React.MouseEvent, songId: string) => void;
-  onRemove?: (e: React.MouseEvent, songId: string) => void;
+  onRemovePlaylist?: (songId: string) => void;
+  onRemoveLiked?: (songId: string) => void;
 }
 
-export default function TrackList({ songs, likedSongIds, onToggleLike, onRemove }: TrackListProps) {
+export default function TrackList({ songs, likedSongIds, onToggleLike, onRemovePlaylist, onRemoveLiked }: TrackListProps) {
   const play = usePlayerStore(state => state.play);
   const currentSong = usePlayerStore(state => state.currentSong);
   const isPlaying = usePlayerStore(state => state.isPlaying);
@@ -115,15 +116,11 @@ export default function TrackList({ songs, likedSongIds, onToggleLike, onRemove 
                 >
                   <Heart className="w-5 h-5" fill={isLiked ? "currentColor" : "none"} />
                 </button>
-                {onRemove ? (
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); onRemove(e, song._id); }}
-                    className="p-1 text-gray-400 hover:text-red-400 hover:scale-110 transition-transform opacity-0 group-hover:opacity-100"
-                  >
-                    <MinusCircle className="w-5 h-5" />
-                  </button>
-                ) : null}
-                <SongMenu song={song} />
+                <SongMenu 
+                  song={song} 
+                  onRemovePlaylist={onRemovePlaylist ? () => onRemovePlaylist(song._id) : undefined}
+                  onRemoveLiked={onRemoveLiked ? () => onRemoveLiked(song._id) : undefined}
+                />
               </div>
             </div>
           );
