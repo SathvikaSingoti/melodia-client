@@ -15,12 +15,11 @@ function LoginForm() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const token = searchParams.get("token");
-    if (token) {
-      localStorage.setItem("melodia_token", token);
-      router.push("/explore");
+    const err = searchParams.get("error");
+    if (err === "auth_failed") {
+      setError("Google authentication failed. Please try again.");
     }
-  }, [searchParams, router]);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
