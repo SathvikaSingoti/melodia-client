@@ -5,7 +5,8 @@ import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { usePlayerStore, Song } from "@/store/playerStore";
 import Link from "next/link";
-import { Heart, Play, Clock, Medal } from "lucide-react";
+import { Heart, Play, Clock, Medal, ChevronRight, ChevronDown } from "lucide-react";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 interface PlayHistoryEntry {
   _id: string;
@@ -33,6 +34,33 @@ export default function TimelinePage() {
   const { play, currentSong, isPlaying, pause, resume } = usePlayerStore();
   const [history, setHistory] = useState<PlayHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+    "Today": true,
+    "Yesterday": true
+  });
+
+  const toggleGroup = (id: string) => {
+    setExpandedGroups(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const fullDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  
+  const getGroupIdForDay = (dayIdx: number) => {
+    const now = new Date();
+    if (now.getDay() === dayIdx) return "Today";
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    if (yesterday.getDay() === dayIdx) return "Yesterday";
+    return fullDays[dayIdx];
+  };
+
+  const scrollToGroup = (dayIdx: number) => {
+    const groupId = getGroupIdForDay(dayIdx);
+    setExpandedGroups(prev => ({ ...prev, [groupId]: true }));
+    setTimeout(() => {
+      document.getElementById(`timeline-group-${groupId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
 
   useEffect(() => {
     if (user) {
@@ -118,26 +146,26 @@ export default function TimelinePage() {
     order.forEach(label => {
       if (groupsMap.has(label)) {
         const rawItems = groupsMap.get(label)!;
-        // Collapse consecutive
+        const dailyCounts: Record<string, number> = {};
+        rawItems.forEach(item => {
+          dailyCounts[item.song._id] = (dailyCounts[item.song._id] || 0) + 1;
+        });
+
         const collapsed: CollapsedHistoryItem[] = [];
-        let current: CollapsedHistoryItem | null = null;
+        const seenSongs = new Set<string>();
 
         rawItems.forEach(item => {
-          if (!current || current.song._id !== item.song._id) {
-            if (current) collapsed.push(current);
-            current = {
+          if (!seenSongs.has(item.song._id)) {
+            seenSongs.add(item.song._id);
+            collapsed.push({
               id: item._id,
               song: item.song,
               firstPlayedAt: new Date(item.playedAt),
               lastPlayedAt: new Date(item.playedAt),
-              playCount: 1
-            };
-          } else {
-            current.playCount++;
-            current.lastPlayedAt = new Date(item.playedAt); // Since sorted desc, older play
+              playCount: dailyCounts[item.song._id]
+            });
           }
         });
-        if (current) collapsed.push(current);
 
         timelineGroups.push({ id: label, label, items: collapsed });
       }
@@ -175,9 +203,14 @@ export default function TimelinePage() {
     return h < 12 ? `${h}am` : `${h - 12}pm`;
   };
 
-  if (loading) return <div className="p-8 text-gray-400">Loading timeline...</div>;
+  if (loading) return (
+    <ProtectedRoute>
+      <div className="p-8 text-gray-400">Loading timeline...</div>
+    </ProtectedRoute>
+  );
 
   return (
+    <ProtectedRoute>
     <div className="flex-1 overflow-y-auto w-full no-scrollbar px-8 py-8 flex justify-center fade-in">
       <div className="max-w-6xl w-full flex flex-col lg:flex-row gap-16">
         
@@ -204,61 +237,73 @@ export default function TimelinePage() {
             {/* Spine */}
             <div className="absolute top-2 bottom-0 left-[23px] w-[2px] bg-[#2c2828] z-0" />
 
-            {timelineGroups.map((group) => (
-              <div key={group.id} className="mb-10 relative z-10">
-                <div className="flex items-center gap-4 mb-6 relative">
+            {timelineGroups.map((group) => {
+              const isExpanded = !!expandedGroups[group.id];
+              return (
+              <div key={group.id} id={`timeline-group-${group.id}`} className="mb-10 relative z-10 transition-all duration-300">
+                <div 
+                  className="flex items-center gap-4 mb-6 relative cursor-pointer group"
+                  onClick={() => toggleGroup(group.id)}
+                >
                   <div className="w-2 h-2 rounded-full bg-[#181616] border-2 border-[#2c2828] absolute left-[3px]" />
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500 bg-[#181616] px-2 ml-6 z-10">{group.label}</span>
-                  <div className="flex-1 h-[1px] bg-gradient-to-r from-[#2c2828] to-transparent z-0" />
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500 bg-[#181616] px-2 ml-6 z-10 group-hover:text-white transition-colors flex items-center gap-2">
+                    {group.label} · {group.items.length} songs
+                  </span>
+                  <div className="flex-1 h-[1px] bg-gradient-to-r from-[#2c2828] to-transparent z-0 group-hover:from-white/20 transition-colors" />
+                  <span className="text-gray-500 group-hover:text-white transition-colors">
+                    {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </span>
                 </div>
 
-                <div className="flex flex-col gap-4">
-                  {group.items.map((item) => (
-                    <div key={item.id} className="flex items-center group/node">
-                      {/* Node Circle */}
-                      <div className="w-10 flex justify-center relative z-10">
-                        <div className={`w-2.5 h-2.5 rounded-full border-[3px] border-[#181616] transition-colors ${item.playCount > 2 ? 'bg-[#c4a090]' : 'bg-[#444]'}`} />
-                        {/* Connector */}
-                        <div className="absolute top-1/2 left-full w-4 h-[1px] bg-[#2c2828]" />
-                      </div>
+                {isExpanded && (
+                  <div className="flex flex-col gap-4 animate-in slide-in-from-top-2 fade-in duration-300">
+                    {group.items.map((item) => (
+                      <div key={item.id} className="flex items-center group/node">
+                        {/* Node Circle */}
+                        <div className="w-10 flex justify-center relative z-10">
+                          <div className={`w-2.5 h-2.5 rounded-full border-[3px] border-[#181616] transition-colors ${item.playCount > 2 ? 'bg-[#c4a090]' : 'bg-[#444]'}`} />
+                          {/* Connector */}
+                          <div className="absolute top-1/2 left-full w-4 h-[1px] bg-[#2c2828]" />
+                        </div>
 
-                      {/* Song Card */}
-                      <div className="flex-1 ml-4 bg-white/5 border border-white/5 hover:bg-white/10 transition-colors rounded-xl p-2.5 flex items-center justify-between group-hover/node:border-[#c4a090]/30 relative overflow-hidden">
-                        
-                        <div className="flex items-center gap-4 min-w-0">
-                          <div 
-                            className="relative w-10 h-10 rounded-md overflow-hidden flex-shrink-0 cursor-pointer group/cover"
-                            onClick={() => currentSong?._id === item.song._id ? (isPlaying ? pause() : resume()) : play(item.song)}
-                          >
-                            <img src={item.song.coverUrl} className="w-full h-full object-cover" alt="Cover" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/cover:opacity-100 flex items-center justify-center transition-opacity">
-                              <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                        {/* Song Card */}
+                        <div className="flex-1 ml-4 bg-white/5 border border-white/5 hover:bg-white/10 transition-colors rounded-xl p-2.5 flex items-center justify-between group-hover/node:border-[#c4a090]/30 relative overflow-hidden">
+                          
+                          <div className="flex items-center gap-4 min-w-0">
+                            <div 
+                              className="relative w-10 h-10 rounded-md overflow-hidden flex-shrink-0 cursor-pointer group/cover"
+                              onClick={() => currentSong?._id === item.song._id ? (isPlaying ? pause() : resume()) : play(item.song)}
+                            >
+                              <img src={item.song.coverUrl} className="w-full h-full object-cover" alt="Cover" />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/cover:opacity-100 flex items-center justify-center transition-opacity">
+                                <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col min-w-0">
+                              <h4 className="text-sm font-bold text-white truncate">{item.song.title}</h4>
+                              <span className="text-xs text-gray-400 truncate">{item.song.artist}</span>
                             </div>
                           </div>
 
-                          <div className="flex flex-col min-w-0">
-                            <h4 className="text-sm font-bold text-white truncate">{item.song.title}</h4>
-                            <span className="text-xs text-gray-400 truncate">{item.song.artist}</span>
+                          <div className="flex items-center gap-6 flex-shrink-0 ml-4">
+                            {item.playCount > 1 && (
+                              <span className="text-[10px] font-bold uppercase tracking-wide bg-[#c4a090]/20 text-[#c4a090] px-2 py-0.5 rounded-full border border-[#c4a090]/30">
+                                Played {item.playCount} times
+                              </span>
+                            )}
+                            <div className="text-xs font-mono text-gray-500 w-16 text-right">
+                              {item.firstPlayedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                            </div>
+                            <Heart className="w-4 h-4 text-gray-600 hover:text-white cursor-pointer" />
                           </div>
-                        </div>
-
-                        <div className="flex items-center gap-6 flex-shrink-0 ml-4">
-                          {item.playCount > 1 && (
-                            <span className="text-[10px] font-bold uppercase tracking-wide bg-[#c4a090]/20 text-[#c4a090] px-2 py-0.5 rounded-full border border-[#c4a090]/30">
-                              Played {item.playCount} times
-                            </span>
-                          )}
-                          <div className="text-xs font-mono text-gray-500 w-16 text-right">
-                            {item.firstPlayedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                          </div>
-                          <Heart className="w-4 h-4 text-gray-600 hover:text-white cursor-pointer" />
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            ))}
+            )})}
           </div>
         </div>
 
@@ -280,8 +325,12 @@ export default function TimelinePage() {
               
               {/* Grid */}
               {moodGrid.map((dayHours, dayIdx) => (
-                <div key={dayIdx} className="flex flex-col gap-[3px] relative group/col">
-                  <div className="text-[9px] text-gray-500 font-mono text-center mb-1">{daysLabels[dayIdx]}</div>
+                <div 
+                  key={dayIdx} 
+                  className="flex flex-col gap-[3px] relative group/col cursor-pointer"
+                  onClick={() => scrollToGroup(dayIdx)}
+                >
+                  <div className="text-[9px] text-gray-500 font-mono text-center mb-1 group-hover/col:text-white transition-colors">{daysLabels[dayIdx]}</div>
                   {dayHours.map((plays, hourIdx) => {
                     let bg = "bg-[#2c2828]";
                     if (plays >= 6) bg = "bg-[#c4a090]";
@@ -339,5 +388,6 @@ export default function TimelinePage() {
 
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

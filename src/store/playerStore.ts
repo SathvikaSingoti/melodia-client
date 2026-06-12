@@ -256,6 +256,23 @@ export const usePlayerStore = create<PlayerState>()(
     
     // Track play count
     axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/songs/${song._id}/play`).catch(console.error);
+
+    // Track play history
+    try {
+      const storedUser = localStorage.getItem("melodia_user");
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        const userId = user._id || user.id;
+        if (userId) {
+          axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}/history`, {
+            songId: song._id,
+            playedAt: new Date().toISOString()
+          }).catch(console.error);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to post history", e);
+    }
     
     const currentRecent = get().recentlyPlayed || [];
     const filteredRecent = currentRecent.filter(s => s._id !== song._id);
