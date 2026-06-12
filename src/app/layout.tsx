@@ -13,8 +13,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Melodia",
-  description: "Cloud music streaming app",
+  title: "Melodia — Music that moves with you",
+  description: "AI-powered playlists, real music, and a professional DAW player. Discover your perfect vibe with Melodia.",
 };
 
 export default function RootLayout({
