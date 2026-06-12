@@ -30,7 +30,10 @@ export default function ExpandedPlayer() {
     if (!waveformRef.current || !currentSong) return;
 
     if (wsRef.current) {
-      wsRef.current.destroy();
+      const oldWs = wsRef.current;
+      setTimeout(() => {
+        try { oldWs.destroy(); } catch (e) {}
+      }, 0);
     }
     setWsError(false);
 
@@ -64,11 +67,16 @@ export default function ExpandedPlayer() {
     wsRef.current = ws;
 
     return () => {
-      try {
-        ws.destroy();
-      } catch (err) {
-        // Ignore AbortError on destroy
-      }
+      // Delay destroy to avoid Next.js intercepting AbortError during React cleanup phase
+      setTimeout(() => {
+        if (ws) {
+          try {
+            ws.destroy();
+          } catch (err) {
+            // Ignore AbortError on destroy
+          }
+        }
+      }, 0);
     };
   }, [currentSong?.audioUrl]);
 
