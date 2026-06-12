@@ -1,7 +1,7 @@
 "use client";
 
 import { usePlayerStore } from "@/store/playerStore";
-import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, ChevronDown, ListMusic, Heart, Volume2, Settings2 } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, ChevronDown, ListMusic, Heart, Volume2, Settings2, X } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 
@@ -137,8 +137,14 @@ export default function ExpandedPlayer() {
             </button>
             
             {showSettings && (
-              <div className="fixed top-[56px] right-[16px] w-[260px] bg-[#1a1614] border border-[#2c2828] rounded-[12px] shadow-[0_8px_32px_rgba(0,0,0,0.6)] p-[20px] z-[100] flex flex-col gap-5 animate-in slide-in-from-top-2">
-                <div className="flex items-center justify-between">
+              <div className="fixed top-[80px] right-[24px] w-[260px] bg-[#1a1614] border border-[#2c2828] rounded-[12px] shadow-[0_8px_32px_rgba(0,0,0,0.6)] p-[20px] z-[150] flex flex-col gap-5 animate-in slide-in-from-top-2">
+                <button 
+                  onClick={() => setShowSettings(false)}
+                  className="absolute top-3 right-3 p-1 text-[#786870] hover:text-[#c4a090] transition-colors rounded-full hover:bg-white/5"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+                <div className="flex items-center justify-between mt-1">
                   <span className="text-[11px] font-[600] tracking-[0.08em] text-[#786870]">PLAYBACK SPEED</span>
                   <div className="flex items-center gap-1">
                     {[0.5, 0.75, 1, 1.25, 1.5].map(rate => (

@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { usePlayerStore, Song } from "@/store/playerStore";
 import TrackList from "@/components/TrackList";
-import { Search, Image as ImageIcon, X, Plus, Music, Heart, LogOut, Play, Sparkles } from "lucide-react";
+import { Search, Image as ImageIcon, X, Plus, Music, Heart, LogOut, Play, Sparkles, MoreHorizontal, Edit2, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import AIGenerateModal from "@/components/AIGenerateModal";
 
@@ -46,6 +46,17 @@ export default function LibraryPage() {
   const [coverUrl, setCoverUrl] = useState<string>("");
   
   const [playlistSearch, setPlaylistSearch] = useState("");
+  
+  const [playlistMenuOpen, setPlaylistMenuOpen] = useState<string | null>(null);
+  const [deletingPlaylistId, setDeletingPlaylistId] = useState<string | null>(null);
+  const [renamingPlaylist, setRenamingPlaylist] = useState<Playlist | null>(null);
+  const [editPlaylistName, setEditPlaylistName] = useState("");
+
+  useEffect(() => {
+    const handleDocClick = () => setPlaylistMenuOpen(null);
+    document.addEventListener("click", handleDocClick);
+    return () => document.removeEventListener("click", handleDocClick);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -147,6 +158,37 @@ export default function LibraryPage() {
       // Revert on failure
       setPlaylists(originalPlaylists);
       toast.error("Failed to remove song");
+    }
+  };
+
+  const handleRenamePlaylist = async () => {
+    if (!renamingPlaylist || !editPlaylistName.trim()) return;
+    try {
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/playlists/${renamingPlaylist._id}`,
+        { name: editPlaylistName },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setPlaylists(prev => prev.map(p => p._id === renamingPlaylist._id ? { ...p, name: editPlaylistName } : p));
+      setRenamingPlaylist(null);
+      toast.success("Playlist renamed");
+    } catch (error) {
+      toast.error("Failed to rename playlist");
+    }
+  };
+
+  const handleDeletePlaylist = async (id: string) => {
+    try {
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/playlists/${id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setPlaylists(prev => prev.filter(p => p._id !== id));
+      if (activeCollection === id) setActiveCollection("likes");
+      setDeletingPlaylistId(null);
+      toast.success("Playlist deleted");
+    } catch (error) {
+      toast.error("Failed to delete playlist");
     }
   };
 
@@ -324,110 +366,141 @@ export default function LibraryPage() {
 
         {/* RIGHT PANEL - Sidebar */}
         <div className="w-[300px] bg-[#181616] border-l border-[#2c2828] flex flex-col h-full flex-shrink-0">
-          <div className="p-6 pb-4">
-            <h2 className="text-xl font-bold text-white mb-6">Your Library</h2>
+          <div className="p-6 pb-4 flex-shrink-0">
+            <h2 className="text-[16px] font-[600] text-white pb-[12px] border-b border-[#2c2828] mb-4">Your Library</h2>
             
-            <button 
-              onClick={() => setActiveCollection("likes")}
-              className={`w-full flex items-center gap-4 px-3 py-2 rounded-lg transition-colors mb-2 ${activeCollection === "likes" ? "bg-[#c4a09022]" : "hover:bg-white/5"}`}
-            >
-              <div className="w-10 h-10 rounded bg-gradient-to-br from-[#c4a090] to-[#5bc4e8] flex items-center justify-center flex-shrink-0">
-                <Heart className="w-5 h-5 text-white" fill="currentColor" />
-              </div>
-              <div className="flex-1 text-left min-w-0">
-                <h4 className={`font-semibold truncate ${activeCollection === "likes" ? "text-[#c4a090]" : "text-white"}`}>Liked Songs</h4>
-                <p className="text-xs text-gray-500">{likedSongs.length} songs</p>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => setShowModal(true)}
-              className="w-full flex items-center gap-4 px-3 py-2 rounded-lg transition-colors hover:bg-white/5 group border border-transparent border-dashed hover:border-gray-500 mb-1"
-            >
-              <div className="w-10 h-10 rounded bg-white/5 flex items-center justify-center flex-shrink-0 group-hover:bg-white/10 transition-colors">
-                <Plus className="w-5 h-5 text-gray-400 group-hover:text-white" />
-              </div>
-              <span className="font-semibold text-gray-400 group-hover:text-white transition-colors">Create Playlist</span>
-            </button>
+            <div className="flex gap-2 mb-4">
+              <button 
+                onClick={() => setActiveCollection("likes")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-full bg-[#221f1f] border border-[#2c2828] text-[12px] transition-colors ${activeCollection === "likes" ? "text-white border-gray-500" : "text-gray-300 hover:text-white hover:bg-[#2c2828]"}`}
+              >
+                <Heart className="w-3.5 h-3.5" /> Liked <span className="bg-[#181616] text-[10px] px-1.5 rounded-full border border-[#2c2828]">{likedSongs.length}</span>
+              </button>
+              <button 
+                onClick={() => setShowModal(true)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-full bg-[#221f1f] border border-[#2c2828] text-[12px] text-gray-300 hover:text-white hover:bg-[#2c2828] transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" /> New Playlist
+              </button>
+            </div>
 
             <button 
               onClick={() => setShowAIModal(true)}
-              className="w-full flex items-center gap-4 px-3 py-2 rounded-lg transition-colors hover:bg-[#c4a09015] group border border-transparent border-dashed hover:border-[#c4a09050]"
+              className="w-full bg-[#c4a09010] border border-[#c4a09040] text-[#c4a090] rounded-[8px] py-[10px] text-center text-[13px] hover:bg-[#c4a09020] transition-colors font-medium"
             >
-              <div className="w-10 h-10 rounded bg-[#c4a09020] flex items-center justify-center flex-shrink-0 group-hover:bg-[#c4a09030] transition-colors">
-                <Sparkles className="w-5 h-5 text-[#c4a090] group-hover:text-[#e8c0b0]" />
-              </div>
-              <span className="font-semibold text-[#c4a090] group-hover:text-[#e8c0b0] transition-colors">Generate Smart Playlist</span>
+              ✦ Generate Smart Playlist
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto no-scrollbar px-3 pb-4 space-y-1">
-            {playlists.map(playlist => (
-              <button 
-                key={playlist._id}
-                onClick={() => setActiveCollection(playlist._id)}
-                className={`w-full flex items-center gap-4 px-3 py-2 rounded-lg transition-colors ${activeCollection === playlist._id ? "bg-[#c4a09022]" : "hover:bg-white/5"}`}
-              >
-                <div className="w-10 h-10 rounded overflow-hidden bg-[#2c2828] flex items-center justify-center flex-shrink-0">
-                  {playlist.songs.length > 0 ? (
-                    <img src={playlist.songs[0].coverUrl} alt={playlist.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <Music className="w-4 h-4 text-gray-500" />
-                  )}
-                </div>
-                <div className="flex-1 text-left min-w-0">
-                  <h4 className={`font-semibold text-sm truncate ${activeCollection === playlist._id ? "text-[#c4a090]" : "text-white"}`}>{playlist.name}</h4>
-                  <p className="text-xs text-gray-500">{playlist.songs.length} songs</p>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          <div className="flex-1 overflow-y-auto no-scrollbar px-3 pb-4 space-y-1 border-t border-[#2c2828] pt-4">
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-3">Following</h3>
-            {following.map(artist => (
-              <button
-                key={artist._id}
-                onClick={() => router.push(`/artist/${artist._id}`)}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors hover:bg-white/5"
-              >
-                <div className="w-7 h-7 rounded-full overflow-hidden bg-[#2c2828] flex items-center justify-center flex-shrink-0">
-                  {artist.imageUrl ? (
-                    <img src={artist.imageUrl} alt={artist.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-[10px] font-bold text-gray-500">{artist.name.charAt(0)}</span>
-                  )}
-                </div>
-                <div className="flex-1 text-left min-w-0">
-                  <h4 className="font-medium text-sm text-gray-300 truncate">{artist.name}</h4>
-                </div>
-              </button>
-            ))}
-            {following.length === 0 && (
-              <div className="px-3 text-xs text-gray-500 italic">No artists followed yet.</div>
-            )}
-          </div>
-
-          <div className="p-4 border-t border-[#2c2828] flex items-center justify-between bg-black/20">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-gray-700">
-                {user?.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-[#c4a090] flex items-center justify-center text-white font-bold text-xs">
-                    {user?.username?.[0]?.toUpperCase()}
+          <div className="flex-1 overflow-y-auto no-scrollbar px-6 flex flex-col pb-6">
+            <div className="w-full h-px bg-[#2c2828] mb-[12px] flex-shrink-0" />
+            
+            <div className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-3 flex-shrink-0">Playlists</div>
+            <div className="flex flex-col gap-1 mb-2 flex-shrink-0">
+              {playlists.map(playlist => (
+                <div key={playlist._id} className="relative group">
+                  <button 
+                    onClick={() => setActiveCollection(playlist._id)}
+                    className={`w-full flex items-center gap-3 p-1.5 rounded-md transition-colors ${activeCollection === playlist._id ? "bg-[#c4a09015] border-l-2 border-[#c4a090]" : "border-l-2 border-transparent hover:bg-white/5"}`}
+                  >
+                    <div className="w-[28px] h-[28px] rounded-[4px] overflow-hidden bg-[#2c2828] flex items-center justify-center flex-shrink-0">
+                      {playlist.songs.length > 0 ? (
+                        <img src={playlist.songs[0].coverUrl} alt={playlist.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Music className="w-3 h-3 text-gray-500" />
+                      )}
+                    </div>
+                    <div className="flex-1 text-left min-w-0 flex items-center justify-between">
+                      <span className={`text-[13px] truncate pr-2 ${activeCollection === playlist._id ? "text-white font-medium" : "text-gray-300"}`}>{playlist.name}</span>
+                      <span className="text-[11px] text-gray-500">{playlist.songs.length}</span>
+                    </div>
+                  </button>
+                  
+                  {/* THREE DOT MENU BUTTON */}
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setPlaylistMenuOpen(playlistMenuOpen === playlist._id ? null : playlist._id); }}
+                      className="p-1 rounded bg-[#181616] text-gray-400 hover:text-white border border-[#2c2828] shadow-sm"
+                    >
+                      <MoreHorizontal className="w-3.5 h-3.5" />
+                    </button>
+                    {playlistMenuOpen === playlist._id && (
+                      <div className="absolute right-0 top-full mt-1 w-40 bg-[#1a1818] border border-[#2c2828] rounded-md shadow-xl py-1 z-[100] animate-in fade-in zoom-in-95 duration-100">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setActiveCollection(playlist._id); setPlaylistMenuOpen(null); if (playlist.songs.length) play(playlist.songs[0], playlist.songs); }}
+                          className="w-full text-left px-3 py-2 text-[13px] text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition-colors"
+                        >
+                          <Play className="w-3.5 h-3.5" /> Play
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setRenamingPlaylist(playlist); setEditPlaylistName(playlist.name); setPlaylistMenuOpen(null); }}
+                          className="w-full text-left px-3 py-2 text-[13px] text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition-colors"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" /> Rename
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setDeletingPlaylistId(playlist._id); setPlaylistMenuOpen(null); }}
+                          className="w-full text-left px-3 py-2 text-[13px] text-[#e87070] hover:bg-red-500/10 flex items-center gap-2 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Delete playlist
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <span className="text-sm font-semibold text-white truncate">{user?.username}</span>
+                  
+                  {/* Inline Delete Confirmation */}
+                  {deletingPlaylistId === playlist._id && (
+                    <div className="absolute inset-0 bg-[#181616] border border-[#2c2828] rounded-md flex items-center justify-between px-2 z-10 animate-in fade-in">
+                      <span className="text-[12px] text-white truncate max-w-[120px]">Delete {playlist.name}?</span>
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={() => setDeletingPlaylistId(null)}
+                          className="px-2 py-1 text-[11px] text-gray-400 hover:text-white transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          onClick={() => handleDeletePlaylist(playlist._id)}
+                          className="px-2 py-1 text-[11px] bg-[#e87070] text-white rounded transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
-            <button 
-              onClick={logout}
-              className="p-2 text-gray-400 hover:text-red-400 transition-colors flex-shrink-0"
-              title="Log out"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+
+            <div className="w-full h-px bg-[#2c2828] my-[12px] flex-shrink-0" />
+            
+            <div className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-3 flex-shrink-0">Following</div>
+            <div className="flex flex-col gap-1 flex-shrink-0">
+              {following.slice(0, 4).map(artist => (
+                <button
+                  key={artist._id}
+                  onClick={() => router.push(`/artist/${artist._id}`)}
+                  className="w-full flex items-center gap-3 p-1.5 rounded-md transition-colors hover:bg-white/5"
+                >
+                  <div className="w-[24px] h-[24px] rounded-full overflow-hidden bg-[#2c2828] flex items-center justify-center flex-shrink-0">
+                    {artist.imageUrl ? (
+                      <img src={artist.imageUrl} alt={artist.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-[9px] font-bold text-gray-500">{artist.name.charAt(0)}</span>
+                    )}
+                  </div>
+                  <span className="text-[13px] text-gray-300 truncate">{artist.name}</span>
+                </button>
+              ))}
+              {following.length > 4 && (
+                <button className="text-[11px] text-gray-500 hover:text-white text-left pl-11 pt-1">
+                  See all
+                </button>
+              )}
+              {following.length === 0 && (
+                <div className="text-[12px] text-gray-500 italic px-2">No artists followed yet.</div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -603,6 +676,41 @@ export default function LibraryPage() {
             }
           }}
         />
+
+        {/* Rename Playlist Modal */}
+        {renamingPlaylist && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-[#181616] w-full max-w-[320px] rounded-xl border border-[#2c2828] shadow-2xl p-6">
+              <h3 className="text-lg font-bold text-white mb-4">Rename playlist</h3>
+              <input 
+                type="text" 
+                autoFocus
+                value={editPlaylistName}
+                onChange={(e) => setEditPlaylistName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleRenamePlaylist();
+                  if (e.key === 'Escape') setRenamingPlaylist(null);
+                }}
+                className="w-full bg-[#221f1f] border border-[#2c2828] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#c4a090] mb-6"
+              />
+              <div className="flex justify-end gap-3">
+                <button 
+                  onClick={() => setRenamingPlaylist(null)}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-400 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleRenamePlaylist}
+                  disabled={!editPlaylistName.trim()}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-[#c4a090] text-white hover:bg-[#a88070] disabled:opacity-50 transition-colors"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </ProtectedRoute>
