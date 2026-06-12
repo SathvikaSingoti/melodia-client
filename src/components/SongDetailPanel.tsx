@@ -7,15 +7,21 @@ import Link from "next/link";
 import SongMenu from "./SongMenu";
 
 export default function SongDetailPanel() {
-  const { isDetailPanelOpen, toggleDetailPanel, detailSong, queue, play, currentSong, isPlaying, radioContext } = usePlayerStore();
-  const [activeTab, setActiveTab] = useState<"NowPlaying" | "Queue">("NowPlaying");
+  const { isDetailPanelOpen, toggleDetailPanel, detailSong, queue, play, currentSong, isPlaying, radioContext, detailPanelTab, setDetailPanelTab } = usePlayerStore();
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       const panel = document.getElementById("song-detail-panel");
-      if (usePlayerStore.getState().isDetailPanelOpen && panel && !panel.contains(e.target as Node)) {
+      const playerBar = document.getElementById("player-bar");
+      const topNav = document.getElementById("top-nav");
+      
+      const isOutsidePanel = panel && !panel.contains(e.target as Node);
+      const isOutsidePlayer = !playerBar || !playerBar.contains(e.target as Node);
+      const isOutsideNav = !topNav || !topNav.contains(e.target as Node);
+      
+      if (usePlayerStore.getState().isDetailPanelOpen && isOutsidePanel && isOutsidePlayer && isOutsideNav) {
         if (Date.now() - usePlayerStore.getState().lastDetailUpdate > 100) {
-          usePlayerStore.getState().setDetailSong(null);
+          usePlayerStore.getState().closeDetailPanel();
         }
       }
     };
@@ -34,7 +40,7 @@ export default function SongDetailPanel() {
   };
 
   return (
-    <aside id="song-detail-panel" className="w-80 bg-bg-secondary h-[calc(100vh-6rem)] flex flex-col fixed right-0 top-0 pt-4 border-l border-border z-30 shadow-2xl transition-transform duration-300">
+    <aside id="song-detail-panel" className="w-80 bg-bg-secondary h-[calc(100vh-152px)] flex flex-col fixed right-0 top-[56px] pt-4 border-l border-border z-50 shadow-2xl transition-transform duration-300">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-bg-tertiary">
         <h2 className="text-lg font-bold text-white">Details</h2>
@@ -49,21 +55,21 @@ export default function SongDetailPanel() {
       {/* Tabs */}
       <div className="flex px-6 pt-4 gap-6 border-b border-border">
         <button 
-          onClick={() => setActiveTab("NowPlaying")}
-          className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === "NowPlaying" ? "border-primary text-primary" : "border-transparent text-gray-400 hover:text-white"}`}
+          onClick={() => setDetailPanelTab("NowPlaying")}
+          className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${detailPanelTab === "NowPlaying" ? "border-primary text-primary" : "border-transparent text-gray-400 hover:text-white"}`}
         >
           Now Playing
         </button>
         <button 
-          onClick={() => setActiveTab("Queue")}
-          className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === "Queue" ? "border-primary text-primary" : "border-transparent text-gray-400 hover:text-white"}`}
+          onClick={() => setDetailPanelTab("Queue")}
+          className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${detailPanelTab === "Queue" ? "border-primary text-primary" : "border-transparent text-gray-400 hover:text-white"}`}
         >
           Queue
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
-        {activeTab === "NowPlaying" && displaySong && (
+        {detailPanelTab === "NowPlaying" && displaySong && (
           <div className="p-6 flex flex-col items-center">
             <div className="w-[280px] h-[280px] rounded-xl overflow-hidden mb-6 shadow-2xl relative group">
               <img src={displaySong.coverUrl} className="w-full h-full object-cover" alt={displaySong.title} />
@@ -112,13 +118,13 @@ export default function SongDetailPanel() {
             </div>
           </div>
         )}
-        {activeTab === "NowPlaying" && !displaySong && (
+        {detailPanelTab === "NowPlaying" && !displaySong && (
           <div className="flex h-full items-center justify-center p-6 text-center text-gray-500">
             Select a song to see details
           </div>
         )}
 
-        {activeTab === "Queue" && (
+        {detailPanelTab === "Queue" && (
           <div className="flex flex-col p-2">
             {radioContext && (
               <div className="px-3 py-4 mb-2 border-b border-[#2c2828] flex flex-col gap-1">

@@ -15,6 +15,7 @@ export default function PlayerBar() {
     isShuffle, repeatMode, toggleShuffle, toggleRepeat,
     isPlayerExpanded, togglePlayerExpanded,
     isDetailPanelOpen, toggleDetailPanel, setDetailSong,
+    detailPanelTab, setDetailPanelTab,
     isMiniPlayerOpen, toggleMiniPlayer
   } = usePlayerStore();
 
@@ -130,6 +131,7 @@ export default function PlayerBar() {
   return (
     <>
       <div 
+        id="player-bar"
         onClick={togglePlayerExpanded}
         className="fixed bottom-0 left-0 right-0 h-24 bg-bg-primary border-t border-border z-50 flex items-center justify-between px-6 backdrop-blur-md bg-opacity-90 cursor-pointer hover:bg-bg-tertiary transition-colors"
       >
@@ -245,8 +247,16 @@ export default function PlayerBar() {
         </div>
 
         <button 
-          onClick={(e) => { e.stopPropagation(); toggleDetailPanel(); }}
-          className={`transition-colors ${isDetailPanelOpen ? 'text-[#c4a090]' : 'text-gray-400 hover:text-white'}`}
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            if (!isDetailPanelOpen || detailPanelTab !== "Queue") {
+              if (!isDetailPanelOpen) toggleDetailPanel();
+              setDetailPanelTab("Queue");
+            } else {
+              toggleDetailPanel();
+            }
+          }}
+          className={`transition-colors ${(isDetailPanelOpen && detailPanelTab === "Queue") ? 'text-[#c4a090]' : 'text-gray-400 hover:text-white'}`}
           title="Queue & Details"
         >
           <ListMusic className="w-5 h-5" />

@@ -26,7 +26,7 @@ export default function TopNav() {
   ];
 
   return (
-    <nav className="w-full h-[56px] flex items-center justify-between px-6 flex-shrink-0 z-50 relative" style={{ background: "#181616", borderBottom: "1px solid #2c2828" }}>
+    <nav id="top-nav" className="w-full h-[56px] flex items-center justify-between px-6 flex-shrink-0 z-50 relative" style={{ background: "#181616", borderBottom: "1px solid #2c2828" }}>
       {/* Left: Wordmark */}
       <div className="flex items-center">
         <Link 

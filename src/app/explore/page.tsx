@@ -7,7 +7,8 @@ import { useAuth } from "@/context/AuthContext";
 import { usePlayerStore, Song } from "@/store/playerStore";
 import SongMenu from "@/components/SongMenu";
 import Link from "next/link";
-import { Play } from "lucide-react";
+import { Play, Flame, Disc3, Clock } from "lucide-react";
+import toast from 'react-hot-toast';
 
 const MOODS = [
   { label: "Chill & Focused", mood: "Chill", emoji: "🌿" },
@@ -184,7 +185,7 @@ export default function ExplorePage() {
         )}
 
         {/* 3. AI PICK CARD */}
-        {aiPlaylist && (
+        {aiPlaylist ? (
           <div className="w-full rounded-xl overflow-hidden shadow-xl p-6 relative group" style={{ background: '#0f0d18', border: '1px solid #1e1e2e' }}>
             <h3 className="text-[11px] font-bold tracking-wider uppercase mb-4" style={{ color: '#9060f0' }}>AI pick for you</h3>
             <div className="flex items-center gap-6">
@@ -198,11 +199,56 @@ export default function ExplorePage() {
               <div className="flex-1">
                 <h4 className="text-3xl font-bold text-white mb-2">{aiPlaylist.name}</h4>
                 <p className="text-sm text-gray-400 mb-4 line-clamp-2">A personalized, AI-curated mix blending your favorite genres and recent discoveries.</p>
-                <button className="bg-white text-black font-semibold text-sm px-6 py-2 rounded-full hover:scale-105 transition-transform inline-flex items-center gap-2">
+                <button 
+                  onClick={async () => {
+                    const toastId = toast.loading(`Loading ${aiPlaylist.name}...`);
+                    try {
+                      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/playlists/${aiPlaylist._id}`);
+                      if (res.data && res.data.songs && res.data.songs.length > 0) {
+                        toast.success(`Playing ${aiPlaylist.name} ✓`, { id: toastId });
+                        play(res.data.songs[0], res.data.songs);
+                      } else {
+                        toast.error('Playlist is empty', { id: toastId });
+                      }
+                    } catch (e) {
+                      toast.error('Failed to load playlist', { id: toastId });
+                    }
+                  }}
+                  className="bg-white text-black font-semibold text-sm px-6 py-2 rounded-full hover:scale-105 transition-transform inline-flex items-center gap-2"
+                >
                   <Play className="w-4 h-4" fill="currentColor" /> Play
                 </button>
               </div>
             </div>
+          </div>
+        ) : (
+          <div className="w-full rounded-xl overflow-hidden shadow-xl p-6 relative flex items-center justify-between" style={{ background: '#0f0d18', border: '1px solid #1e1e2e' }}>
+            <div className="flex-1">
+              <h3 className="text-[11px] font-bold tracking-wider uppercase mb-2" style={{ color: '#9060f0' }}>AI pick for you</h3>
+              <h4 className="text-3xl font-bold text-white mb-2">No AI Mix Yet</h4>
+              <p className="text-sm text-gray-400 mb-0">Generate a personalized, AI-curated mix blending your favorite genres and recent discoveries.</p>
+            </div>
+            <button 
+              onClick={async () => {
+                const promptMsg = prompt("What kind of mix would you like to generate?");
+                if (promptMsg && user) {
+                  const toastId = toast.loading(`Generating playlist for: "${promptMsg}"...`);
+                  try {
+                    const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate-playlist`, {
+                      prompt: promptMsg,
+                      userId: user._id
+                    });
+                    toast.success(`Playlist generated! Refresh to see it.`, { id: toastId });
+                    // Optionally refresh userPlaylists here
+                  } catch (e) {
+                    toast.error("Failed to generate playlist", { id: toastId });
+                  }
+                }
+              }}
+              className="bg-white text-black font-semibold text-sm px-6 py-2 rounded-full hover:scale-105 transition-transform ml-6 flex-shrink-0"
+            >
+              Generate your first AI mix &rarr;
+            </button>
           </div>
         )}
 

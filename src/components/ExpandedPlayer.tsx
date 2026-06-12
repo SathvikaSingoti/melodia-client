@@ -22,6 +22,7 @@ export default function ExpandedPlayer() {
   const overlayRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WaveSurfer | null>(null);
   const [draggingMarker, setDraggingMarker] = useState<'A' | 'B' | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   // Initialize WaveSurfer
   useEffect(() => {
@@ -149,13 +150,75 @@ export default function ExpandedPlayer() {
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative">
             <button className="p-2 text-gray-400 hover:text-white transition-colors rounded">
               <Heart className="w-5 h-5" />
             </button>
-            <button className="p-2 text-gray-400 hover:text-white transition-colors rounded">
+            <button 
+              onClick={() => setShowSettings(!showSettings)}
+              className={`p-2 transition-colors rounded ${showSettings ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white'}`}
+            >
               <Settings2 className="w-5 h-5" />
             </button>
+            
+            {showSettings && (
+              <div className="absolute top-12 right-0 w-72 bg-[#181616] border border-[#2c2828] rounded-xl shadow-2xl p-4 z-50 flex flex-col gap-5 animate-in slide-in-from-top-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Playback Speed</span>
+                  <div className="flex items-center bg-[#0a0909] border border-[#2c2828] rounded-full p-0.5">
+                    {[0.5, 0.75, 1, 1.25, 1.5].map(rate => (
+                      <button
+                        key={rate}
+                        onClick={() => setPlaybackRate(rate)}
+                        className={`px-2 py-1 text-[10px] font-bold rounded-full transition-colors ${
+                          playbackRate === rate ? 'bg-[#c4a090] text-white' : 'text-gray-500 hover:text-gray-300'
+                        }`}
+                      >
+                        {rate}x
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Crossfade</span>
+                  <div className="flex items-center gap-3">
+                    {crossfadeEnabled && (
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="range" min="1" max="8" step="1"
+                          value={crossfadeDuration}
+                          onChange={(e) => setCrossfade(true, parseInt(e.target.value))}
+                          className="w-16 h-1 bg-[#2c2828] rounded-lg appearance-none cursor-pointer accent-[#c4a090]"
+                        />
+                        <span className="text-[10px] font-mono text-gray-500 w-3">{crossfadeDuration}s</span>
+                      </div>
+                    )}
+                    <button 
+                      onClick={() => setCrossfade(!crossfadeEnabled)}
+                      className={`w-8 h-4 rounded-full flex items-center transition-colors ${crossfadeEnabled ? 'bg-[#c4a090]' : 'bg-[#2c2828]'}`}
+                    >
+                      <div className={`w-3 h-3 bg-white rounded-full transition-transform ${crossfadeEnabled ? 'translate-x-[18px]' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Loop A→B</span>
+                  <button 
+                    onClick={toggleLoop}
+                    disabled={loopA === null || loopB === null}
+                    className={`px-4 py-1 rounded-full text-xs font-bold border transition-all ${
+                      isLoopActive 
+                        ? 'border-[#c4a090] bg-[#c4a090]/10 text-[#c4a090]' 
+                        : 'border-[#2c2828] text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed'
+                    }`}
+                  >
+                    {isLoopActive ? 'ACTIVE' : 'INACTIVE'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -356,21 +419,8 @@ export default function ExpandedPlayer() {
                 />
               </div>
 
-              {/* Loop Toggle */}
+              {/* BPM VISUALIZER */}
               <div className="flex-1 flex justify-center items-center gap-4">
-                <button 
-                  onClick={toggleLoop}
-                  disabled={loopA === null || loopB === null}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                    isLoopActive 
-                      ? 'border-[#c4a090] bg-[#c4a090]/10 text-[#c4a090]' 
-                      : 'border-[#2c2828] text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed'
-                  }`}
-                >
-                  LOOP A→B
-                </button>
-                
-                {/* BPM VISUALIZER */}
                 {isPlaying && (
                   <div className="flex items-end gap-[3px] h-6 px-4 py-1 bg-[#181616] rounded-lg border border-[#2c2828]">
                     {[1,2,3,4,5].map(i => (
@@ -386,53 +436,22 @@ export default function ExpandedPlayer() {
                     ))}
                   </div>
                 )}
-
-                {/* CROSSFADE */}
-                <div className="flex items-center gap-3 bg-[#181616] border border-[#2c2828] rounded-lg px-3 py-1">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Crossfade</span>
-                  <button 
-                    onClick={() => setCrossfade(!crossfadeEnabled)}
-                    className={`w-6 h-3 rounded-full flex items-center transition-colors ${crossfadeEnabled ? 'bg-[#c4a090]' : 'bg-[#2c2828]'}`}
-                  >
-                    <div className={`w-2 h-2 bg-white rounded-full transition-transform ${crossfadeEnabled ? 'translate-x-[14px]' : 'translate-x-0.5'}`} />
-                  </button>
-                  {crossfadeEnabled && (
-                    <div className="flex items-center gap-2 border-l border-[#2c2828] pl-3 ml-1">
-                      <input 
-                        type="range" min="1" max="8" step="1"
-                        value={crossfadeDuration}
-                        onChange={(e) => setCrossfade(true, parseInt(e.target.value))}
-                        className="w-16 h-1 bg-[#2c2828] rounded-lg appearance-none cursor-pointer accent-[#c4a090]"
-                      />
-                      <span className="text-[10px] font-mono text-gray-500 w-3">{crossfadeDuration}s</span>
-                    </div>
-                  )}
-                </div>
               </div>
 
-              {/* Right: Speed & Queue */}
+              {/* Right: Queue */}
               <div className="flex items-center justify-end gap-6 w-1/4">
-                <div className="flex items-center bg-[#181616] border border-[#2c2828] rounded-full p-0.5">
-                  {[0.5, 0.75, 1, 1.25, 1.5].map(rate => (
-                    <button
-                      key={rate}
-                      onClick={() => setPlaybackRate(rate)}
-                      className={`px-2 py-1 text-[10px] font-bold rounded-full transition-colors ${
-                        playbackRate === rate ? 'bg-[#c4a090] text-white' : 'text-gray-500 hover:text-gray-300'
-                      }`}
-                    >
-                      {rate}x
-                    </button>
-                  ))}
-                </div>
                 <button 
-                  onClick={() => toggleQueue()}
+                  onClick={() => {
+                    usePlayerStore.getState().setDetailPanelTab("Queue");
+                    if (!usePlayerStore.getState().isDetailPanelOpen) {
+                      usePlayerStore.getState().toggleDetailPanel();
+                    }
+                  }}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   <ListMusic className="w-5 h-5" />
                 </button>
               </div>
-
             </div>
           </div>
         ) : (

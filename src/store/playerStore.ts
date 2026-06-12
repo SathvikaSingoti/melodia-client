@@ -73,6 +73,9 @@ interface PlayerState {
 
   isDetailPanelOpen: boolean;
   toggleDetailPanel: () => void;
+  closeDetailPanel: () => void;
+  detailPanelTab: "NowPlaying" | "Queue";
+  setDetailPanelTab: (tab: "NowPlaying" | "Queue") => void;
   detailSong: Song | null;
   setDetailSong: (song: Song | null) => void;
   lastDetailUpdate: number;
@@ -111,6 +114,7 @@ export const usePlayerStore = create<PlayerState>()(
   isFullScreen: false,
   isQueueOpen: false,
   isDetailPanelOpen: false,
+  detailPanelTab: "NowPlaying",
   detailSong: null,
   lastDetailUpdate: 0,
   isPlayerExpanded: false,
@@ -123,6 +127,8 @@ export const usePlayerStore = create<PlayerState>()(
   toggleFullScreen: () => set(state => ({ isFullScreen: !state.isFullScreen })),
   toggleQueue: () => set(state => ({ isQueueOpen: !state.isQueueOpen })),
   toggleDetailPanel: () => set(state => ({ isDetailPanelOpen: !state.isDetailPanelOpen })),
+  closeDetailPanel: () => set({ isDetailPanelOpen: false }),
+  setDetailPanelTab: (tab) => set({ detailPanelTab: tab }),
   togglePlayerExpanded: () => set(state => ({ isPlayerExpanded: !state.isPlayerExpanded })),
   
   setMiniPlayerOpen: (isOpen: boolean) => set({ isMiniPlayerOpen: isOpen }),
