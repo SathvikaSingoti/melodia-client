@@ -10,6 +10,7 @@ import Link from "next/link";
 import { Play, Flame, Disc3, Clock } from "lucide-react";
 import toast from 'react-hot-toast';
 import AIGenerateModal from "@/components/AIGenerateModal";
+import { useLikedStore, useLikeAction } from "@/store/likedStore";
 
 const MOODS = [
   { label: "Chill & Focused", mood: "Chill", emoji: "🌿" },
@@ -31,7 +32,9 @@ export default function ExplorePage() {
   
   const [moodOfTheDay, setMoodOfTheDay] = useState<{label: string, mood: string, emoji: string} | null>(null);
   const [activeMood, setActiveMood] = useState<string | null>(null);
-  const [likedSongIds, setLikedSongIds] = useState<Set<string>>(new Set());
+  
+  const likedSongIds = useLikedStore(state => state.likedIds);
+  const toggleLikeAction = useLikeAction();
   
   const recentlyPlayed = usePlayerStore(state => state.recentlyPlayed) || [];
   const play = usePlayerStore(state => state.play);
@@ -71,9 +74,6 @@ export default function ExplorePage() {
 
   useEffect(() => {
     if (user) {
-      axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/liked`).then(res => {
-        setLikedSongIds(new Set(res.data.map((s: Song) => s._id)));
-      });
       axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/playlists`).then(res => {
         setUserPlaylists(res.data);
       });
@@ -85,34 +85,7 @@ export default function ExplorePage() {
     }
   }, [user]);
 
-  const toggleLike = async (e: React.MouseEvent, songId: string) => {
-    e.stopPropagation();
-    if (!user) return;
-    const isLiked = likedSongIds.has(songId);
-    
-    // Optimistic update
-    if (isLiked) {
-      setLikedSongIds(prev => { const next = new Set(prev); next.delete(songId); return next; });
-    } else {
-      setLikedSongIds(prev => { const next = new Set(prev); next.add(songId); return next; });
-    }
 
-    try {
-      if (isLiked) {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/liked/${songId}`);
-      } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/liked`, { songId });
-      }
-    } catch (error) {
-      console.error("Failed to toggle like", error);
-      // Revert on error
-      if (isLiked) {
-        setLikedSongIds(prev => { const next = new Set(prev); next.add(songId); return next; });
-      } else {
-        setLikedSongIds(prev => { const next = new Set(prev); next.delete(songId); return next; });
-      }
-    }
-  };
 
   const formatDuration = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -304,7 +277,7 @@ export default function ExplorePage() {
                   <div className="hidden md:block w-24 text-right text-gray-500 text-xs">{(song.plays || 0).toLocaleString()} plays</div>
                   <div className="w-12 text-right text-xs text-gray-400 mr-2">{formatDuration(song.duration)}</div>
                   <div className="flex items-center gap-2">
-                    <button onClick={(e) => toggleLike(e, song._id)} className="p-1 text-gray-400 hover:text-white transition-colors">
+                    <button onClick={(e) => toggleLikeAction(e, song._id)} className="p-1 text-gray-400 hover:text-white transition-colors">
                       <svg className={`w-4 h-4 ${likedSongIds.has(song._id) ? 'text-[#c4a090]' : ''}`} fill="currentColor" viewBox="0 0 24 24">
                         <path d={likedSongIds.has(song._id) 
                           ? "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"

@@ -5,7 +5,6 @@ import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, ChevronDown, ListM
 import Link from "next/link";
 import { useLikedStore, useLikeAction } from "@/store/likedStore";
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { createPortal } from "react-dom";
 
 export default function ExpandedPlayer() {
   const { 
@@ -138,13 +137,81 @@ export default function ExpandedPlayer() {
               <Heart className="w-5 h-5" fill={isLiked ? "currentColor" : "none"} />
             </button>
             <button 
-              onClick={() => setShowSettings(!showSettings)}
+              onClick={(e) => { e.stopPropagation(); setShowSettings(!showSettings); }}
               className={`p-2 transition-colors rounded ${showSettings ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white'}`}
             >
               <Settings2 className="w-5 h-5" />
             </button>
             
-            {/* Settings toggle button only — panel is rendered at root */}
+            {/* Settings toggle button */}
+            {showSettings && (
+              <div className="absolute top-12 right-0 z-50 w-[220px] bg-[#1a1614] border border-[#2c2828] rounded-[12px] shadow-[0_8px_32px_rgba(0,0,0,0.8)] p-[20px] flex flex-col gap-5 animate-in slide-in-from-top-2 duration-150 text-white font-sans" onClick={(e) => e.stopPropagation()}>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setShowSettings(false); }}
+                  className="absolute top-3 right-3 p-1 text-[#786870] hover:text-[#c4a090] transition-colors rounded-full hover:bg-white/5"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-[11px] font-[600] tracking-[0.08em] text-[#786870]">SPEED</span>
+                  <div className="flex items-center gap-1">
+                    {[0.5, 1, 1.5].map(rate => (
+                      <button
+                        key={rate}
+                        onClick={(e) => { e.stopPropagation(); setPlaybackRate(rate); }}
+                        className={`px-[8px] py-[2px] text-[11px] rounded-full transition-colors ${
+                          playbackRate === rate 
+                            ? 'bg-[#c4a09022] text-[#c4a090] border border-[#c4a090]' 
+                            : 'bg-[#221f1f] text-[#786870] border border-[#2c2828] hover:bg-[#2c2828]'
+                        }`}
+                      >
+                        {rate}x
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-[600] tracking-[0.08em] text-[#786870]">CROSSFADE</span>
+                  <div className="flex items-center gap-2">
+                    {crossfadeEnabled && (
+                      <div className="flex items-center gap-1">
+                        <input 
+                          type="range" min="1" max="8" step="1"
+                          value={crossfadeDuration}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => setCrossfade(true, parseInt(e.target.value))}
+                          className="w-12 h-1 bg-[#2c2828] rounded-lg appearance-none cursor-pointer accent-[#c4a090]"
+                        />
+                        <span className="text-[11px] text-[#ede8e4] w-3">{crossfadeDuration}s</span>
+                      </div>
+                    )}
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setCrossfade(!crossfadeEnabled); }}
+                      className={`w-8 h-4 rounded-full flex items-center transition-colors ${crossfadeEnabled ? 'bg-[#c4a090]' : 'bg-[#2c2828]'}`}
+                    >
+                      <div className={`w-3 h-3 bg-[#ede8e4] rounded-full transition-transform ${crossfadeEnabled ? 'translate-x-[18px]' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-[600] tracking-[0.08em] text-[#786870]">LOOP</span>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); toggleLoop(); }}
+                    disabled={loopA === null || loopB === null}
+                    className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all ${
+                      isLoopActive 
+                        ? 'border border-[#c4a090] bg-[#c4a09022] text-[#c4a090]' 
+                        : 'border border-[#2c2828] bg-[#221f1f] text-[#786870] hover:bg-[#2c2828] disabled:opacity-30 disabled:cursor-not-allowed'
+                    }`}
+                  >
+                    {isLoopActive ? 'ACTIVE' : 'INACTIVE'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -406,75 +473,6 @@ export default function ExpandedPlayer() {
         }
       `}} />
 
-      {/* SETTINGS PANEL — rendered in a portal */}
-      {showSettings && typeof document !== "undefined" && createPortal(
-        <div className="!fixed !top-[56px] !right-[16px] !z-[9999] !w-[220px] bg-[#1a1614] border border-[#2c2828] rounded-[12px] shadow-[0_8px_32px_rgba(0,0,0,0.6)] p-[20px] flex flex-col gap-5 animate-in slide-in-from-top-2 duration-150 text-white font-sans">
-          <button 
-            onClick={() => setShowSettings(false)}
-            className="absolute top-3 right-3 p-1 text-[#786870] hover:text-[#c4a090] transition-colors rounded-full hover:bg-white/5"
-          >
-            <X className="w-4 h-4" />
-          </button>
-
-          <div className="flex items-center justify-between mt-1">
-            <span className="text-[11px] font-[600] tracking-[0.08em] text-[#786870]">PLAYBACK SPEED</span>
-            <div className="flex items-center gap-1">
-              {[0.5, 0.75, 1, 1.25, 1.5].map(rate => (
-                <button
-                  key={rate}
-                  onClick={() => setPlaybackRate(rate)}
-                  className={`px-[10px] py-[4px] text-[12px] rounded-full transition-colors ${
-                    playbackRate === rate 
-                      ? 'bg-[#c4a09022] text-[#c4a090] border border-[#c4a090]' 
-                      : 'bg-[#221f1f] text-[#786870] border border-[#2c2828] hover:bg-[#2c2828]'
-                  }`}
-                >
-                  {rate}x
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-[600] tracking-[0.08em] text-[#786870]">CROSSFADE</span>
-            <div className="flex items-center gap-3">
-              {crossfadeEnabled && (
-                <div className="flex items-center gap-2">
-                  <input 
-                    type="range" min="1" max="8" step="1"
-                    value={crossfadeDuration}
-                    onChange={(e) => setCrossfade(true, parseInt(e.target.value))}
-                    className="w-16 h-1 bg-[#2c2828] rounded-lg appearance-none cursor-pointer accent-[#c4a090]"
-                  />
-                  <span className="text-[13px] text-[#ede8e4] w-3">{crossfadeDuration}s</span>
-                </div>
-              )}
-              <button 
-                onClick={() => setCrossfade(!crossfadeEnabled)}
-                className={`w-8 h-4 rounded-full flex items-center transition-colors ${crossfadeEnabled ? 'bg-[#c4a090]' : 'bg-[#2c2828]'}`}
-              >
-                <div className={`w-3 h-3 bg-[#ede8e4] rounded-full transition-transform ${crossfadeEnabled ? 'translate-x-[18px]' : 'translate-x-1'}`} />
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-[600] tracking-[0.08em] text-[#786870]">LOOP A→B</span>
-            <button 
-              onClick={toggleLoop}
-              disabled={loopA === null || loopB === null}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
-                isLoopActive 
-                  ? 'border border-[#c4a090] bg-[#c4a09022] text-[#c4a090]' 
-                  : 'border border-[#2c2828] bg-[#221f1f] text-[#786870] hover:bg-[#2c2828] disabled:opacity-30 disabled:cursor-not-allowed'
-              }`}
-            >
-              {isLoopActive ? 'ACTIVE' : 'INACTIVE'}
-            </button>
-          </div>
-        </div>,
-        document.body
-      )}
     </div>
   );
 }

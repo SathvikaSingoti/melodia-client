@@ -88,6 +88,8 @@ interface PlayerState {
   isMiniPlayerOpen: boolean;
   setMiniPlayerOpen: (isOpen: boolean) => void;
   toggleMiniPlayer: () => void;
+  
+  lastPlayedId: string | null;
 }
 
 export const usePlayerStore = create<PlayerState>()(
@@ -121,6 +123,7 @@ export const usePlayerStore = create<PlayerState>()(
   lastDetailUpdate: 0,
   isPlayerExpanded: false,
   isMiniPlayerOpen: false,
+  lastPlayedId: null,
 
   toggleShuffle: () => set(state => ({ isShuffle: !state.isShuffle })),
   toggleRepeat: () => set(state => ({ 
@@ -166,10 +169,6 @@ export const usePlayerStore = create<PlayerState>()(
   }),
   addToQueue: (song) => {
     set((state) => {
-      // Don't add if already in queue or currently playing
-      if (state.currentSong?._id === song._id || state.queue.some(s => s._id === song._id)) {
-        return state;
-      }
       toast.success('Added to queue', {
         style: { background: '#181616', color: '#fff', border: '1px solid #2c2828' },
         iconTheme: { primary: '#c4a090', secondary: '#181616' }
@@ -182,10 +181,6 @@ export const usePlayerStore = create<PlayerState>()(
 
   playNext: (song) => {
     set((state) => {
-      // Don't add if already in queue or currently playing
-      if (state.currentSong?._id === song._id || state.queue.some(s => s._id === song._id)) {
-        return state;
-      }
       toast.success('Added to play next', {
         style: { background: '#181616', color: '#fff', border: '1px solid #2c2828' },
         iconTheme: { primary: '#c4a090', secondary: '#181616' }
@@ -296,7 +291,10 @@ export const usePlayerStore = create<PlayerState>()(
     }
     
     // Track play count
-    axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/songs/${song._id}/play`).catch(console.error);
+    const currentState = get();
+    if (currentState.lastPlayedId !== song._id) {
+      axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/songs/${song._id}/play`).catch(console.error);
+    }
 
     // Track play history
     try {
@@ -332,7 +330,8 @@ export const usePlayerStore = create<PlayerState>()(
       recentlyPlayed: newRecent,
       loopA: null,
       loopB: null,
-      isLoopActive: false
+      isLoopActive: false,
+      lastPlayedId: song._id
     });
   },
 
