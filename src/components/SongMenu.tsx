@@ -36,6 +36,7 @@ export default function SongMenu({
   const submenuRef = useRef<HTMLDivElement>(null);
   
   const addToQueue = usePlayerStore(state => state.addToQueue);
+  const playNext = usePlayerStore(state => state.playNext);
   const startRadio = usePlayerStore(state => state.startRadio);
   const [isStartingRadio, setIsStartingRadio] = useState(false);
 
@@ -93,6 +94,11 @@ export default function SongMenu({
     setIsOpen(false);
   };
 
+  const handlePlayNext = () => {
+    playNext(song);
+    setIsOpen(false);
+  };
+
   const handleStartRadio = async () => {
     if (!token) {
       toast.error("Please login to use AI radio");
@@ -116,9 +122,10 @@ export default function SongMenu({
       } else {
         toast.error("Could not build radio", { id: loadingToast });
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      toast.error("Failed to build radio", { id: loadingToast });
+      const errMsg = e.response?.data?.error || e.response?.data?.message || "Failed to build radio";
+      toast.error(errMsg, { id: loadingToast });
     } finally {
       setIsStartingRadio(false);
     }
@@ -177,6 +184,9 @@ export default function SongMenu({
             </button>
           )}
           
+          <button onClick={handlePlayNext} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary">
+            Play next
+          </button>
           <button onClick={handleAddQueue} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary">
             Add to queue
           </button>

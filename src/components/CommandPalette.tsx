@@ -66,9 +66,10 @@ export default function CommandPalette() {
     try {
       await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/liked`, { songId: currentSong._id });
       toast.success(`Liked "${currentSong.title}"`);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to like song");
+    } catch (e: any) {
+      console.error(e);
+      const errMsg = e.response?.data?.error || e.response?.data?.message || "Failed to like song";
+      toast.error(errMsg);
     }
   };
 
@@ -83,8 +84,10 @@ export default function CommandPalette() {
       toast.success(`Playlist generated!`, { id: 'ai-gen' });
       // You could navigate to the playlist here
       // router.push(`/playlist/${res.data.playlistId}`);
-    } catch (err) {
-      toast.error("Failed to generate playlist", { id: 'ai-gen' });
+    } catch (e: any) {
+      console.error(e);
+      const errMsg = e.response?.data?.error || e.response?.data?.message || "Failed to generate playlist. Please try again.";
+      toast.error(errMsg, { id: 'ai-gen' });
     }
   };
 

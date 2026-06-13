@@ -696,8 +696,9 @@ export default function LibraryPage() {
               }
               
               toast.success(`Playlist generated!`, { id: toastId });
-            } catch (e) { 
-              toast.error(`Failed to generate playlist`, { id: toastId }); 
+            } catch (e: any) { 
+              const errMsg = e.response?.data?.error || e.response?.data?.message || "Failed to generate playlist";
+              toast.error(errMsg, { id: toastId }); 
               throw e; 
             }
           }}

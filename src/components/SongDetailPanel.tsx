@@ -5,9 +5,12 @@ import { usePlayerStore } from "@/store/playerStore";
 import { X, Heart, Play, Radio } from "lucide-react";
 import Link from "next/link";
 import SongMenu from "./SongMenu";
+import { useLikedStore, useLikeAction } from "@/store/likedStore";
 
 export default function SongDetailPanel() {
   const { isDetailPanelOpen, toggleDetailPanel, detailSong, queue, play, currentSong, isPlaying, radioContext, detailPanelTab, setDetailPanelTab, removeFromQueue } = usePlayerStore();
+  const likedSongIds = useLikedStore(state => state.likedIds);
+  const toggleLikeAction = useLikeAction();
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -95,8 +98,11 @@ export default function SongDetailPanel() {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <button className="text-gray-400 hover:text-[#c4a090] transition-colors">
-                  <Heart className="w-6 h-6" />
+                <button 
+                  onClick={(e) => displaySong && toggleLikeAction(e, displaySong._id)}
+                  className={`transition-colors ${likedSongIds.has(displaySong._id) ? 'text-[#c4a090]' : 'text-gray-400 hover:text-white'}`}
+                >
+                  <Heart className="w-6 h-6" fill={likedSongIds.has(displaySong._id) ? "currentColor" : "none"} />
                 </button>
                 <SongMenu song={displaySong} />
               </div>

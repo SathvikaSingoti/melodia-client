@@ -4,20 +4,24 @@ import { Song, usePlayerStore } from "@/store/playerStore";
 import { Heart, MinusCircle } from "lucide-react";
 import Link from "next/link";
 import SongMenu from "./SongMenu";
+import { useLikedStore, useLikeAction } from "@/store/likedStore";
 
 interface TrackListProps {
   songs: Song[];
-  likedSongIds: Set<string>;
-  onToggleLike: (e: React.MouseEvent, songId: string) => void;
+  likedSongIds?: Set<string>;
+  onToggleLike?: (e: React.MouseEvent, songId: string) => void;
   onRemovePlaylist?: (songId: string) => void;
   onRemoveLiked?: (songId: string) => void;
 }
 
-export default function TrackList({ songs, likedSongIds, onToggleLike, onRemovePlaylist, onRemoveLiked }: TrackListProps) {
+export default function TrackList({ songs, onRemovePlaylist, onRemoveLiked }: TrackListProps) {
   const play = usePlayerStore(state => state.play);
   const currentSong = usePlayerStore(state => state.currentSong);
   const isPlaying = usePlayerStore(state => state.isPlaying);
   const setDetailSong = usePlayerStore(state => state.setDetailSong);
+  
+  const likedSongIds = useLikedStore(state => state.likedIds);
+  const onToggleLike = useLikeAction();
 
   const formatDuration = (seconds: number) => {
     const m = Math.floor(seconds / 60);

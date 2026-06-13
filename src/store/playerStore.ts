@@ -58,6 +58,7 @@ interface PlayerState {
   toggleLoop: () => void;
   updateProgress: () => void;
   addToQueue: (song: Song) => void;
+  playNext: (song: Song) => void;
   removeFromQueue: (songId: string) => void;
   recentlyPlayed: Song[];
   
@@ -170,6 +171,22 @@ export const usePlayerStore = create<PlayerState>()(
         return state;
       }
       toast.success('Added to queue', {
+        style: { background: '#181616', color: '#fff', border: '1px solid #2c2828' },
+        iconTheme: { primary: '#c4a090', secondary: '#181616' }
+      });
+      let newQueue = [...state.queue];
+      newQueue.push(song);
+      return { queue: newQueue };
+    });
+  },
+
+  playNext: (song) => {
+    set((state) => {
+      // Don't add if already in queue or currently playing
+      if (state.currentSong?._id === song._id || state.queue.some(s => s._id === song._id)) {
+        return state;
+      }
+      toast.success('Added to play next', {
         style: { background: '#181616', color: '#fff', border: '1px solid #2c2828' },
         iconTheme: { primary: '#c4a090', secondary: '#181616' }
       });

@@ -3,7 +3,9 @@
 import { usePlayerStore } from "@/store/playerStore";
 import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, ChevronDown, ListMusic, Heart, Volume2, Settings2, X } from "lucide-react";
 import Link from "next/link";
+import { useLikedStore, useLikeAction } from "@/store/likedStore";
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 
 export default function ExpandedPlayer() {
   const { 
@@ -16,6 +18,9 @@ export default function ExpandedPlayer() {
     toggleQueue,
     crossfadeEnabled, crossfadeDuration, setCrossfade
   } = usePlayerStore();
+
+  const isLiked = useLikedStore(state => state.likedIds.has(currentSong?._id || ''));
+  const toggleLikeAction = useLikeAction();
 
   const overlayRef = useRef<HTMLDivElement>(null);
   const [draggingMarker, setDraggingMarker] = useState<'A' | 'B' | null>(null);
@@ -126,8 +131,11 @@ export default function ExpandedPlayer() {
             )}
           </div>
           <div className="flex items-center gap-2 relative">
-            <button className="p-2 text-gray-400 hover:text-white transition-colors rounded">
-              <Heart className="w-5 h-5" />
+            <button 
+              onClick={(e) => currentSong && toggleLikeAction(e, currentSong._id)}
+              className={`p-2 transition-colors ${isLiked ? 'text-secondary' : 'text-gray-400 hover:text-white'}`}
+            >
+              <Heart className="w-5 h-5" fill={isLiked ? "currentColor" : "none"} />
             </button>
             <button 
               onClick={() => setShowSettings(!showSettings)}
@@ -144,7 +152,7 @@ export default function ExpandedPlayer() {
           <div className="flex flex-col flex-1 mt-6 justify-between gap-6">
             
             {/* WAVEFORM SECTION */}
-            <div className="w-full relative flex-shrink-0">
+            <div className="w-full relative flex-shrink-0" style={{ position: 'relative', zIndex: 1 }}>
               <div 
                 ref={overlayRef}
                 className={`w-full h-[120px] bg-[#111010] relative cursor-text group rounded overflow-hidden flex items-center justify-between px-2 ${showSettings ? 'pointer-events-none' : ''}`}
@@ -398,9 +406,9 @@ export default function ExpandedPlayer() {
         }
       `}} />
 
-      {/* SETTINGS PANEL — rendered outside overflow-hidden container so fixed positioning works */}
-      {showSettings && (
-        <div className="fixed top-[70px] right-[16px] w-[240px] bg-[#1a1614] border border-[#2c2828] rounded-[12px] shadow-[0_8px_32px_rgba(0,0,0,0.6)] p-[20px] z-[9999] flex flex-col gap-5 animate-in slide-in-from-top-2 duration-150">
+      {/* SETTINGS PANEL — rendered in a portal */}
+      {showSettings && typeof document !== "undefined" && createPortal(
+        <div className="!fixed !top-[56px] !right-[16px] !z-[9999] !w-[220px] bg-[#1a1614] border border-[#2c2828] rounded-[12px] shadow-[0_8px_32px_rgba(0,0,0,0.6)] p-[20px] flex flex-col gap-5 animate-in slide-in-from-top-2 duration-150 text-white font-sans">
           <button 
             onClick={() => setShowSettings(false)}
             className="absolute top-3 right-3 p-1 text-[#786870] hover:text-[#c4a090] transition-colors rounded-full hover:bg-white/5"
@@ -464,7 +472,8 @@ export default function ExpandedPlayer() {
               {isLoopActive ? 'ACTIVE' : 'INACTIVE'}
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

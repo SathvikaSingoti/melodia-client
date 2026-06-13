@@ -242,9 +242,11 @@ export default function ExplorePage() {
                       } else {
                         toast.error('Playlist is empty', { id: toastId });
                       }
-                    } catch (e) {
-                      toast.error('Failed to load playlist', { id: toastId });
-                    }
+                    } catch (e: any) {
+                      console.error(e);
+                      const errMsg = e.response?.data?.error || e.response?.data?.message || "Failed to generate playlist. Please try again.";
+                      toast.error(errMsg, { id: 'ai-gen' });
+                    } finally { }
                   }}
                   className="bg-white text-black font-semibold text-sm px-6 py-2 rounded-full hover:scale-105 transition-transform inline-flex items-center gap-2"
                 >
@@ -407,8 +409,9 @@ export default function ExplorePage() {
             const freshRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/playlists?aiGenerated=true&limit=1&userId=${user._id}`);
             if (freshRes.data && freshRes.data.length > 0) setAiPlaylist(freshRes.data[0]);
             toast.success(`Playlist ${aiModalMode === "regenerate" ? "regenerated" : "generated"}!`, { id: toastId });
-          } catch (e) { 
-            toast.error(`Failed to ${aiModalMode} playlist`, { id: toastId }); 
+          } catch (e: any) { 
+            const errMsg = e.response?.data?.error || e.response?.data?.message || `Failed to ${aiModalMode} playlist`;
+            toast.error(errMsg, { id: toastId }); 
             throw e; 
           }
         }}

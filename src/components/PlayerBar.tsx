@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Song } from "@/store/playerStore";
 import { Shuffle, Repeat, Repeat1, ChevronDown, Heart, ListMusic, MonitorSpeaker, Maximize2, PictureInPicture } from "lucide-react";
 import Link from "next/link";
+import { useLikedStore, useLikeAction } from "@/store/likedStore";
 
 export default function PlayerBar() {
   const { 
@@ -22,28 +23,14 @@ export default function PlayerBar() {
   const { user } = useAuth();
   const [isDragging, setIsDragging] = useState(false);
   const [localProgress, setLocalProgress] = useState(0);
-  const [isLiked, setIsLiked] = useState(false);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const volumeBarRef = useRef<HTMLDivElement>(null);
   
   const fsProgressBarRef = useRef<HTMLDivElement>(null);
   const fsVolumeBarRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (user && currentSong) {
-      checkIfLiked();
-    }
-  }, [user, currentSong]);
-
-  const checkIfLiked = async () => {
-    try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user?._id}/liked`);
-      const liked = res.data.some((s: Song) => s._id === currentSong?._id);
-      setIsLiked(liked);
-    } catch (error) {
-      console.error("Failed to check liked status", error);
-    }
-  };
+  const isLiked = useLikedStore(state => state.likedIds.has(currentSong?._id || ''));
+  const toggleLikeAction = useLikeAction();
 
   // Log playback history when a new song starts
   useEffect(() => {
@@ -54,26 +41,6 @@ export default function PlayerBar() {
       }).catch(console.error);
     }
   }, [user, currentSong?._id]);
-
-  const toggleLike = async () => {
-    if (!user || !currentSong) return;
-    
-    const wasLiked = isLiked;
-    // Optimistic update
-    setIsLiked(!wasLiked);
-    
-    try {
-      if (wasLiked) {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/liked/${currentSong._id}`);
-      } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/liked`, { songId: currentSong._id });
-      }
-    } catch (error) {
-      console.error("Failed to toggle like", error);
-      // Revert
-      setIsLiked(wasLiked);
-    }
-  };
 
   // Sync local progress with store progress when not dragging
   useEffect(() => {
@@ -158,7 +125,7 @@ export default function PlayerBar() {
           </div>
         </div>
         <button 
-          onClick={(e) => { e.stopPropagation(); toggleLike(); }}
+          onClick={(e) => currentSong && toggleLikeAction(e, currentSong._id)}
           className="p-2 text-gray-400 hover:text-white transition-colors ml-2"
         >
           <svg className={`w-5 h-5 ${isLiked ? 'text-secondary' : ''}`} fill="currentColor" viewBox="0 0 24 24">

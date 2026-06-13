@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useLikedStore } from "@/store/likedStore";
 
 interface User {
   id: string;
@@ -68,6 +69,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       axios.interceptors.request.eject(requestInterceptor);
     };
   }, []);
+
+  useEffect(() => {
+    if (user && token) {
+      const userId = user._id || user.id;
+      if (userId) {
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}/liked`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).then(res => {
+          useLikedStore.getState().setLiked(res.data.map((s: any) => s._id));
+        }).catch(console.error);
+      }
+    } else {
+      useLikedStore.getState().setLiked([]);
+    }
+  }, [user, token]);
 
   const login = React.useCallback((newToken: string, newUser: User) => {
     setToken(newToken);
