@@ -148,25 +148,7 @@ export default function LandingPage() {
         />
 
         <div style={{ position: "relative", zIndex: 1, maxWidth: "720px" }}>
-          {/* Badge */}
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              background: "rgba(196,160,144,0.08)",
-              border: "1px solid rgba(196,160,144,0.2)",
-              borderRadius: "999px",
-              padding: "6px 16px",
-              fontSize: "13px",
-              color: "#c4a090",
-              marginBottom: "32px",
-              fontWeight: 500,
-              letterSpacing: "0.02em",
-            }}
-          >
-            ✨ Powered by Gemini AI
-          </div>
+
 
           <h1
             style={{
@@ -266,26 +248,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Scroll hint */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: "32px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "6px",
-            color: "rgba(120,104,112,0.5)",
-            fontSize: "11px",
-            letterSpacing: "0.1em",
-            animation: "fade-in-up 2s ease-in-out 1s both",
-          }}
-        >
-          <span>SCROLL</span>
-          <div style={{ width: "1px", height: "24px", background: "rgba(196,160,144,0.25)" }} />
-        </div>
+
       </section>
 
       {/* ─── Features ─── */}

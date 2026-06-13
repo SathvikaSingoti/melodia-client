@@ -173,7 +173,14 @@ export const usePlayerStore = create<PlayerState>()(
         style: { background: '#181616', color: '#fff', border: '1px solid #2c2828' },
         iconTheme: { primary: '#c4a090', secondary: '#181616' }
       });
-      return { queue: [...state.queue, song] };
+      let newQueue = [...state.queue];
+      const currentIndex = state.currentSong ? state.queue.findIndex(s => s._id === state.currentSong!._id) : -1;
+      if (currentIndex >= 0) {
+        newQueue.splice(currentIndex + 1, 0, song);
+      } else {
+        newQueue.push(song);
+      }
+      return { queue: newQueue };
     });
   },
 

@@ -108,6 +108,12 @@ export default function StatsPage() {
 
             {isLoading ? (
               <div className="flex items-center justify-center py-20 text-primary">Loading stats...</div>
+            ) : stats && stats.songsPlayed < 5 ? (
+              <div className="flex flex-col items-center justify-center py-32 text-center">
+                <Music className="w-16 h-16 text-gray-600 mb-6" />
+                <h2 className="text-2xl font-bold text-white mb-2">Not enough data yet</h2>
+                <p className="text-gray-400 max-w-md">Start listening to build your stats. Check back here after you've listened to a few more songs!</p>
+              </div>
             ) : stats ? (
               <div className="flex flex-col gap-12">
                 

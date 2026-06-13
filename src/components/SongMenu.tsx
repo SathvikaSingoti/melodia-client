@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { usePlayerStore, Song } from "@/store/playerStore";
 import toast from "react-hot-toast";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Radio, MinusCircle, HeartOff } from "lucide-react";
 
 interface Playlist {
@@ -27,6 +27,7 @@ export default function SongMenu({
 }) {
   const { user, token } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [showPlaylists, setShowPlaylists] = useState(false);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
@@ -163,16 +164,18 @@ export default function SongMenu({
             </div>
           </div>
           
-          <button 
-            onClick={() => {
-              const url = song.artistId ? `/artist/${song.artistId}` : `/search?q=${encodeURIComponent(song.artist)}`;
-              router.push(url);
-              setIsOpen(false);
-            }} 
-            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary"
-          >
-            Go to artist
-          </button>
+          {!pathname.includes(`/artist/`) && (
+            <button 
+              onClick={() => {
+                const url = song.artistId ? `/artist/${song.artistId}` : `/search?q=${encodeURIComponent(song.artist)}`;
+                router.push(url);
+                setIsOpen(false);
+              }} 
+              className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary"
+            >
+              Go to artist
+            </button>
+          )}
           
           <button onClick={handleAddQueue} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary">
             Add to queue

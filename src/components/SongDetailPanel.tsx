@@ -135,39 +135,43 @@ export default function SongDetailPanel() {
                 <div className="text-sm text-gray-400">Based on <span className="text-white">"{radioContext.title}"</span></div>
               </div>
             )}
-            {queue.length > 0 ? (
-              queue.map((song, i) => (
-                <div 
-                  key={`${song._id}-${i}`}
-                  onClick={() => play(song, queue)}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors group ${currentSong?._id === song._id ? 'bg-[rgba(196,160,144,0.1)]' : 'hover:bg-bg-tertiary'}`}
-                >
-                  <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 relative">
-                    <img src={song.coverUrl} className="w-full h-full object-cover" alt="" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center">
-                      <Play className="w-4 h-4 text-white" fill="currentColor" />
+            {(() => {
+              const currentIndex = currentSong ? queue.findIndex(s => s._id === currentSong._id) : -1;
+              const visibleQueue = currentIndex >= 0 ? queue.slice(currentIndex) : queue;
+              return visibleQueue.length > 0 ? (
+                visibleQueue.map((song, i) => (
+                  <div 
+                    key={`${song._id}-${i}`}
+                    onClick={() => play(song, queue)}
+                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors group ${currentSong?._id === song._id ? 'bg-[rgba(196,160,144,0.1)] border border-[#c4a090]/30 shadow-md' : 'hover:bg-bg-tertiary'}`}
+                  >
+                    <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 relative">
+                      <img src={song.coverUrl} className="w-full h-full object-cover" alt="" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center">
+                        <Play className="w-4 h-4 text-white" fill="currentColor" />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className={`text-sm font-medium truncate ${currentSong?._id === song._id ? 'text-primary' : 'text-white'}`}>
+                        {song.title}
+                      </h4>
+                      <p className="text-xs text-gray-400 truncate">{song.artist}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="text-xs text-gray-500 tabular-nums min-w-[36px] text-right">
+                        {formatDuration(song.duration)}
+                      </div>
+                      <SongMenu 
+                        song={song} 
+                        onRemoveQueue={() => removeFromQueue(song._id)} 
+                      />
                     </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className={`text-sm font-medium truncate ${currentSong?._id === song._id ? 'text-primary' : 'text-white'}`}>
-                      {song.title}
-                    </h4>
-                    <p className="text-xs text-gray-400 truncate">{song.artist}</p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="text-xs text-gray-500 tabular-nums min-w-[36px] text-right">
-                      {formatDuration(song.duration)}
-                    </div>
-                    <SongMenu 
-                      song={song} 
-                      onRemoveQueue={() => removeFromQueue(song._id)} 
-                    />
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-10 text-gray-500">Queue is empty</div>
-            )}
+                ))
+              ) : (
+                <div className="text-center py-10 text-gray-500">Queue is empty</div>
+              );
+            })()}
           </div>
         )}
       </div>

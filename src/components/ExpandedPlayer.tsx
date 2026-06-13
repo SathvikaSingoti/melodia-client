@@ -147,7 +147,7 @@ export default function ExpandedPlayer() {
             <div className="w-full relative flex-shrink-0">
               <div 
                 ref={overlayRef}
-                className="w-full h-[120px] bg-[#111010] relative cursor-text group rounded overflow-hidden flex items-center justify-between px-2"
+                className={`w-full h-[120px] bg-[#111010] relative cursor-text group rounded overflow-hidden flex items-center justify-between px-2 ${showSettings ? 'pointer-events-none' : ''}`}
                 onPointerDown={handleWaveformClick}
               >
                 {/* CSS Waveform Visualization */}
@@ -400,7 +400,7 @@ export default function ExpandedPlayer() {
 
       {/* SETTINGS PANEL — rendered outside overflow-hidden container so fixed positioning works */}
       {showSettings && (
-        <div className="fixed top-[80px] right-[24px] w-[260px] bg-[#1a1614] border border-[#2c2828] rounded-[12px] shadow-[0_8px_32px_rgba(0,0,0,0.6)] p-[20px] z-[9999] flex flex-col gap-5 animate-in slide-in-from-top-2 duration-150">
+        <div className="fixed top-[70px] right-[16px] w-[240px] bg-[#1a1614] border border-[#2c2828] rounded-[12px] shadow-[0_8px_32px_rgba(0,0,0,0.6)] p-[20px] z-[9999] flex flex-col gap-5 animate-in slide-in-from-top-2 duration-150">
           <button 
             onClick={() => setShowSettings(false)}
             className="absolute top-3 right-3 p-1 text-[#786870] hover:text-[#c4a090] transition-colors rounded-full hover:bg-white/5"

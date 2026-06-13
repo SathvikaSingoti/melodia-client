@@ -57,16 +57,21 @@ export default function PlayerBar() {
 
   const toggleLike = async () => {
     if (!user || !currentSong) return;
+    
+    const wasLiked = isLiked;
+    // Optimistic update
+    setIsLiked(!wasLiked);
+    
     try {
-      if (isLiked) {
+      if (wasLiked) {
         await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/liked/${currentSong._id}`);
-        setIsLiked(false);
       } else {
         await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/liked`, { songId: currentSong._id });
-        setIsLiked(true);
       }
     } catch (error) {
       console.error("Failed to toggle like", error);
+      // Revert
+      setIsLiked(wasLiked);
     }
   };
 

@@ -89,16 +89,28 @@ export default function ExplorePage() {
     e.stopPropagation();
     if (!user) return;
     const isLiked = likedSongIds.has(songId);
+    
+    // Optimistic update
+    if (isLiked) {
+      setLikedSongIds(prev => { const next = new Set(prev); next.delete(songId); return next; });
+    } else {
+      setLikedSongIds(prev => { const next = new Set(prev); next.add(songId); return next; });
+    }
+
     try {
       if (isLiked) {
         await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/liked/${songId}`);
-        setLikedSongIds(prev => { const next = new Set(prev); next.delete(songId); return next; });
       } else {
         await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/liked`, { songId });
-        setLikedSongIds(prev => { const next = new Set(prev); next.add(songId); return next; });
       }
     } catch (error) {
       console.error("Failed to toggle like", error);
+      // Revert on error
+      if (isLiked) {
+        setLikedSongIds(prev => { const next = new Set(prev); next.add(songId); return next; });
+      } else {
+        setLikedSongIds(prev => { const next = new Set(prev); next.delete(songId); return next; });
+      }
     }
   };
 
