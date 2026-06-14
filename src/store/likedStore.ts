@@ -23,6 +23,7 @@ export const useLikedStore = create<LikedState>((set) => ({
 import axios from 'axios';
 import { useAuth } from '@/context/AuthContext';
 import React from 'react';
+import { globalEvents } from '@/lib/events';
 
 export const useLikeAction = () => {
   const { token, user } = useAuth();
@@ -40,6 +41,7 @@ export const useLikeAction = () => {
       } else {
         await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id || user.id}/liked`, { songId });
       }
+      globalEvents.emit('likedSongsUpdated');
     } catch (e) {
       // rollback
       toggleLikeStore(songId, isLiked);

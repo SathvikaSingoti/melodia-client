@@ -69,9 +69,7 @@ export default function AlbumsPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
             {filteredAlbums.map(album => (
               <div key={album._id} className="group flex flex-col cursor-pointer" onClick={() => {
-                // Since we don't have a dedicated album detail page yet, just show an alert or navigate somewhere sensible.
-                // Normally this would navigate to /album/[id]
-                alert("Album detail page coming soon!");
+                window.location.href = `/album/${album._id}`;
               }}>
                 <div className="w-full aspect-square rounded-xl overflow-hidden mb-4 shadow-lg border border-border group-hover:border-[#c4a090]/50 transition-colors bg-bg-secondary relative">
                   <img 

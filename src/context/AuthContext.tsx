@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useLikedStore } from "@/store/likedStore";
+import { startKeepAlive } from "@/lib/keepAlive";
 
 interface User {
   id: string;
@@ -64,6 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     setIsLoading(false);
+    startKeepAlive();
 
     return () => {
       axios.interceptors.request.eject(requestInterceptor);

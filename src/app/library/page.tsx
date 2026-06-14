@@ -10,6 +10,7 @@ import TrackList from "@/components/TrackList";
 import { Search, Image as ImageIcon, X, Plus, Music, Heart, LogOut, Play, Sparkles, MoreHorizontal, Edit2, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import AIGenerateModal from "@/components/AIGenerateModal";
+import { globalEvents } from "@/lib/events";
 
 interface Playlist {
   _id: string;
@@ -63,6 +64,19 @@ export default function LibraryPage() {
     if (user) {
       fetchData();
     }
+    
+    const unsubscribeLiked = globalEvents.on('likedSongsUpdated', () => {
+      if (user) fetchData();
+    });
+    
+    const unsubscribePlaylist = globalEvents.on('playlistUpdated', () => {
+      if (user) fetchData();
+    });
+    
+    return () => {
+      unsubscribeLiked();
+      unsubscribePlaylist();
+    };
   }, [user]);
 
   const fetchData = async () => {

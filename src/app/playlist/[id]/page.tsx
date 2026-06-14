@@ -10,10 +10,13 @@ import SongMenu from "@/components/SongMenu";
 import TrackList from "@/components/TrackList";
 import { Music, Play, Link2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { globalEvents } from "@/lib/events";
 
 interface Playlist {
   _id: string;
   name: string;
+  description?: string;
+  coverUrl?: string;
   songs: Song[];
   isAIGenerated?: boolean;
 }
@@ -32,6 +35,9 @@ export default function PlaylistPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState("");
+  const [isEditingDesc, setIsEditingDesc] = useState(false);
+  const [editDesc, setEditDesc] = useState("");
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [likedSongIds, setLikedSongIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -95,16 +101,31 @@ export default function PlaylistPage() {
     }
   };
 
-  const savePlaylistName = async () => {
-    setIsEditingName(false);
-    if (editName.trim() && playlist && editName !== playlist.name) {
-      try {
-        const res = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/playlists/${id}`, { name: editName }, getHeaders());
-        setPlaylist(res.data);
-      } catch (error) {
-        console.error("Failed to update playlist name", error);
-      }
+  const savePlaylistDetails = async (updates: Partial<Playlist>) => {
+    if (!playlist) return;
+    try {
+      const res = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/playlists/${id}`, updates, getHeaders());
+      setPlaylist(res.data);
+      globalEvents.emit('playlistUpdated');
+      if (updates.name !== undefined) setIsEditingName(false);
+      if (updates.description !== undefined) setIsEditingDesc(false);
+    } catch (error) {
+      console.error("Failed to update playlist", error);
+      toast.error("Failed to update");
     }
+  };
+
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsUploadingCover(true);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      await savePlaylistDetails({ coverUrl: reader.result as string });
+      setIsUploadingCover(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,8 +151,7 @@ export default function PlaylistPage() {
     try {
       const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/playlists/${id}/songs`, { songId: song._id }, getHeaders());
       setPlaylist(res.data);
-      setSearchQuery("");
-      setSearchResults([]);
+      globalEvents.emit('playlistUpdated');
     } catch (error) {
       console.error("Failed to add song", error);
     }
@@ -141,6 +161,7 @@ export default function PlaylistPage() {
     try {
       const res = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/playlists/${id}/songs/${songId}`, getHeaders());
       setPlaylist(res.data);
+      globalEvents.emit('playlistUpdated');
     } catch (error) {
       console.error("Failed to remove song", error);
     }
@@ -188,8 +209,14 @@ export default function PlaylistPage() {
             Back
           </button>
 
-          <div className="w-[200px] h-[200px] rounded-xl mx-auto overflow-hidden shadow-2xl mb-6 flex-shrink-0 relative border border-border group">
-            {playlist.songs.length > 0 ? (
+          <div 
+            className="w-[200px] h-[200px] rounded-xl mx-auto overflow-hidden shadow-2xl mb-6 flex-shrink-0 relative border border-border group cursor-pointer"
+            onClick={() => document.getElementById('playlist-cover-upload')?.click()}
+            title="Click to change cover"
+          >
+            {playlist.coverUrl ? (
+              <img src={playlist.coverUrl} alt="Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+            ) : playlist.songs.length > 0 ? (
               <img src={playlist.songs[0].coverUrl} alt="Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-500 bg-bg-tertiary">
@@ -197,35 +224,86 @@ export default function PlaylistPage() {
               </div>
             )}
             
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+              <span className="text-white text-xs font-bold uppercase tracking-widest">{isUploadingCover ? "Uploading..." : "Change Cover"}</span>
+            </div>
+
+            <input 
+              id="playlist-cover-upload" 
+              type="file" 
+              accept="image/*" 
+              className="hidden" 
+              onChange={handleCoverUpload}
+            />
+            
             {playlist.isAIGenerated && (
-              <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-[#c4a090] border border-[#c4a090]/30">
+              <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-[#c4a090] border border-[#c4a090]/30 z-10">
                 ✨ AI Mix
               </div>
             )}
           </div>
           
-          <div className="text-center mb-6">
+          <div className="text-center mb-6 w-full px-2">
             <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Playlist</span>
             {isEditingName ? (
               <input 
                 type="text" 
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                onBlur={savePlaylistName}
-                onKeyDown={(e) => e.key === 'Enter' && savePlaylistName()}
+                onBlur={() => {
+                  if (editName.trim() !== playlist.name) savePlaylistDetails({ name: editName });
+                  else setIsEditingName(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    if (editName.trim() !== playlist.name) savePlaylistDetails({ name: editName });
+                    else setIsEditingName(false);
+                  }
+                }}
                 autoFocus
                 className="text-2xl font-bold text-white text-center w-full bg-transparent border-b border-[#c4a090] focus:outline-none mb-2"
               />
             ) : (
               <h1 
-                className="text-2xl font-bold text-white mb-2 tracking-tight cursor-pointer hover:text-[#c4a090] transition-colors"
+                className="text-2xl font-bold text-white mb-2 tracking-tight cursor-pointer hover:text-[#c4a090] transition-colors truncate"
                 onClick={() => { setIsEditingName(true); setEditName(playlist.name); }}
-                title="Click to edit"
+                title="Click to edit name"
               >
                 {playlist.name}
               </h1>
             )}
-            <p className="text-gray-400 text-sm">{playlist.songs.length} songs • {formatDuration(totalDuration)}</p>
+
+            {isEditingDesc ? (
+              <textarea 
+                value={editDesc}
+                onChange={(e) => setEditDesc(e.target.value)}
+                onBlur={() => {
+                  if (editDesc.trim() !== (playlist.description || "")) savePlaylistDetails({ description: editDesc });
+                  else setIsEditingDesc(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (editDesc.trim() !== (playlist.description || "")) savePlaylistDetails({ description: editDesc });
+                    else setIsEditingDesc(false);
+                  }
+                }}
+                autoFocus
+                placeholder="Add an optional description"
+                className="text-sm text-gray-400 text-center w-full bg-transparent border-b border-[#c4a090] focus:outline-none mb-4 resize-none"
+                rows={2}
+              />
+            ) : (
+              <p 
+                className="text-sm text-gray-400 mb-4 cursor-pointer hover:text-white transition-colors"
+                onClick={() => { setIsEditingDesc(true); setEditDesc(playlist.description || ""); }}
+                title="Click to edit description"
+              >
+                {playlist.description || <span className="italic opacity-50 text-xs block mt-1">Add description...</span>}
+              </p>
+            )}
+
+            <p className="text-gray-500 text-xs uppercase tracking-widest font-semibold">{playlist.songs.length} songs • {formatDuration(totalDuration)}</p>
           </div>
 
           <button 
@@ -307,11 +385,11 @@ export default function PlaylistPage() {
                             disabled={isAdded}
                             className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors border ${
                               isAdded 
-                                ? "bg-transparent text-gray-500 border-gray-700 cursor-not-allowed" 
+                                ? "bg-transparent text-[#c4a090] border-[#c4a090] cursor-not-allowed" 
                                 : "bg-transparent text-white border-white hover:border-[#c4a090] hover:text-[#c4a090]"
                             }`}
                           >
-                            {isAdded ? "Added" : "Add"}
+                            {isAdded ? "✓" : "Add"}
                           </button>
                         </div>
                       </div>
