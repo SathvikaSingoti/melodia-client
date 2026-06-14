@@ -248,26 +248,22 @@ export default function LibraryPage() {
     if (!file || !activePlaylist) return;
 
     const toastId = toast.loading("Uploading cover...");
-    const formData = new FormData();
-    formData.append("cover", file);
-
-    try {
-      const res = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/playlists/${activePlaylist._id}/cover`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
-      setPlaylists(prev => prev.map(p => p._id === activePlaylist._id ? res.data : p));
-      toast.success("Cover updated", { id: toastId });
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to update cover", { id: toastId });
-    }
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      try {
+        const res = await axios.put(
+          `${process.env.NEXT_PUBLIC_API_URL}/playlists/${activePlaylist._id}`,
+          { coverUrl: reader.result },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setPlaylists(prev => prev.map(p => p._id === activePlaylist._id ? res.data : p));
+        toast.success("Cover updated", { id: toastId });
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to update cover", { id: toastId });
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDeletePlaylist = async (id: string) => {
