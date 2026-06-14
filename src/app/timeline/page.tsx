@@ -120,7 +120,23 @@ export default function TimelinePage() {
 
     const groupsMap = new Map<string, PlayHistoryEntry[]>();
 
-    history.forEach(entry => {
+    // Artificially stagger timestamps for songs played consecutively within 10 seconds of each other
+    // This makes the timeline look organic even if the user skips rapidly
+    const staggeredHistory = [...history];
+    for (let i = 1; i < staggeredHistory.length; i++) {
+      const newer = staggeredHistory[i - 1];
+      const older = staggeredHistory[i];
+      const newerTime = new Date(newer.playedAt).getTime();
+      const olderTime = new Date(older.playedAt).getTime();
+      
+      // If the newer song was played less than 10 seconds after the older song (or if overlapping due to previous staggering)
+      if (newerTime - olderTime < 10000) {
+        const pushBack = (older.duration || older.song?.duration || 180) * 1000;
+        older.playedAt = new Date(newerTime - pushBack).toISOString();
+      }
+    }
+
+    staggeredHistory.forEach(entry => {
       if (!entry.song) return; // safety
       const date = new Date(entry.playedAt);
       const dateStr = date.toDateString();
