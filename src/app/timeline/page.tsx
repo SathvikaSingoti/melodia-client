@@ -88,13 +88,17 @@ export default function TimelinePage() {
 
   // Destructure mostActive from useMemo
   const { timelineGroups, stats, moodGrid, topSongs, mostActive } = useMemo(() => {
-    if (!history.length) return { timelineGroups: [], stats: { plays: 0, hours: 0, artists: 0 }, moodGrid: [], topSongs: [], mostActive: { day: 0, hour: 0 } };
+    if (!history.length) return { timelineGroups: [], stats: { plays: 0, hours: '0.0', artists: 0, uniqueSongs: 0, favoriteGenre: "None" }, moodGrid: [], topSongs: [], mostActive: { day: 0, hour: 0 } };
 
     // Stats calculation
     const plays = history.length;
-    const totalSeconds = history.reduce((acc, curr) => acc + (curr.duration || curr.song?.duration || 0), 0);
+    const totalSeconds = history.reduce((acc, curr) => {
+      const actualDuration = typeof curr.duration === 'number' ? curr.duration : (curr.song?.duration || 0);
+      return acc + actualDuration;
+    }, 0);
     const hours = (totalSeconds / 3600).toFixed(1);
     const uniqueArtists = new Set(history.map(h => h.song?.artistId || h.song?.artist)).size;
+    const uniqueSongs = new Set(history.map(h => h.song?._id)).size;
 
     // Mood Grid calculation (7 days x 24 hours)
     // grid[dayOfWeek][hour] (dayOfWeek: 0 = Sun, 1 = Mon ... 6 = Sat)
@@ -215,7 +219,7 @@ export default function TimelinePage() {
 
     return {
       timelineGroups,
-      stats: { plays, hours, artists: uniqueArtists, favoriteGenre },
+      stats: { plays, hours, artists: uniqueArtists, uniqueSongs, favoriteGenre },
       moodGrid: grid,
       topSongs: topList,
       mostActive: { day: mostActiveDay, hour: mostActiveHour }
@@ -249,8 +253,10 @@ export default function TimelinePage() {
               Your Music Timeline
             </h1>
             <p className="text-lg text-gray-400 mb-6">Every song you've played, mapped in time.</p>
-            <div className="flex items-center gap-6 text-sm text-gray-300 bg-white/5 inline-flex px-4 py-2 rounded-lg border border-white/10">
-              <span><strong className="text-white">{stats.plays}</strong> songs played</span>
+            <div className="flex items-center gap-4 text-sm text-gray-300 bg-white/5 inline-flex px-4 py-2 rounded-lg border border-white/10 flex-wrap">
+              <span><strong className="text-white">{stats.uniqueSongs}</strong> unique tracks</span>
+              <span className="w-1 h-1 rounded-full bg-gray-600" />
+              <span><strong className="text-white">{stats.plays}</strong> total plays</span>
               <span className="w-1 h-1 rounded-full bg-gray-600" />
               <span><strong className="text-white">{stats.hours}</strong> hours of music</span>
               <span className="w-1 h-1 rounded-full bg-gray-600" />
