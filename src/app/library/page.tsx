@@ -609,9 +609,11 @@ export default function LibraryPage() {
                   {modalSearch.trim() && (
                     <div className="flex flex-col gap-1 mb-6 border border-border rounded-lg p-2 bg-bg-primary/50 max-h-48 overflow-y-auto no-scrollbar">
                       {allSongs
-                        .filter(s => !selectedSongs.find(sel => sel._id === s._id) && (s.title.toLowerCase().includes(modalSearch.toLowerCase()) || s.artist.toLowerCase().includes(modalSearch.toLowerCase())))
+                        .filter(s => (s.title.toLowerCase().includes(modalSearch.toLowerCase()) || s.artist.toLowerCase().includes(modalSearch.toLowerCase())))
                         .slice(0, 5)
-                        .map(song => (
+                        .map(song => {
+                          const isAdded = !!selectedSongs.find(sel => sel._id === song._id);
+                          return (
                           <div key={song._id} className="flex items-center justify-between p-2 hover:bg-bg-tertiary rounded-md group">
                             <div className="flex items-center gap-3 min-w-0">
                               <img src={song.coverUrl} className="w-8 h-8 rounded object-cover" />
@@ -622,13 +624,18 @@ export default function LibraryPage() {
                             </div>
                             <button 
                               type="button"
+                              disabled={isAdded}
                               onClick={() => setSelectedSongs(prev => [...prev, song])}
-                              className="w-8 h-8 flex items-center justify-center rounded-full bg-bg-tertiary hover:bg-[#c4a090]/20 hover:text-[#c4a090] text-gray-400 transition-colors"
+                              className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                                isAdded 
+                                  ? "bg-transparent text-[#c4a090] cursor-not-allowed" 
+                                  : "bg-bg-tertiary hover:bg-[#c4a090]/20 hover:text-[#c4a090] text-gray-400"
+                              }`}
                             >
-                              <Plus className="w-4 h-4" />
+                              {isAdded ? <span className="font-bold text-sm">✓</span> : <Plus className="w-4 h-4" />}
                             </button>
                           </div>
-                      ))}
+                        )})}
                     </div>
                   )}
                 </div>

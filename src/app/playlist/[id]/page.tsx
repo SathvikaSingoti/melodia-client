@@ -8,7 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { usePlayerStore, Song } from "@/store/playerStore";
 import SongMenu from "@/components/SongMenu";
 import TrackList from "@/components/TrackList";
-import { Music, Play, Link2 } from "lucide-react";
+import { Music, Play, Link2, Edit2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { globalEvents } from "@/lib/events";
 
@@ -243,7 +243,7 @@ export default function PlaylistPage() {
             )}
           </div>
           
-          <div className="text-center mb-6 w-full px-2">
+          <div className="text-center mb-6 w-full px-2 group">
             <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">Playlist</span>
             {isEditingName ? (
               <input 
@@ -265,11 +265,12 @@ export default function PlaylistPage() {
               />
             ) : (
               <h1 
-                className="text-2xl font-bold text-white mb-2 tracking-tight cursor-pointer hover:text-[#c4a090] transition-colors truncate"
+                className="text-2xl font-bold text-white mb-2 tracking-tight cursor-pointer hover:text-[#c4a090] transition-colors truncate flex items-center justify-center gap-2"
                 onClick={() => { setIsEditingName(true); setEditName(playlist.name); }}
                 title="Click to edit name"
               >
                 {playlist.name}
+                <Edit2 className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400" />
               </h1>
             )}
 
@@ -295,11 +296,12 @@ export default function PlaylistPage() {
               />
             ) : (
               <p 
-                className="text-sm text-gray-400 mb-4 cursor-pointer hover:text-white transition-colors"
+                className="text-sm text-gray-400 mb-4 cursor-pointer hover:text-white transition-colors flex items-center justify-center gap-2 group/desc"
                 onClick={() => { setIsEditingDesc(true); setEditDesc(playlist.description || ""); }}
                 title="Click to edit description"
               >
                 {playlist.description || <span className="italic opacity-50 text-xs block mt-1">Add description...</span>}
+                <Edit2 className="w-3 h-3 opacity-0 group-hover/desc:opacity-100 transition-opacity" />
               </p>
             )}
 
