@@ -256,25 +256,29 @@ export default function StatsPage() {
                     <div className="bg-gradient-to-br from-[#c4a090]/10 to-transparent border border-[#c4a090]/20 rounded-[12px] p-5">
                       <div className="text-3xl mb-3">✈️</div>
                       <p className="text-sm text-gray-300 leading-relaxed">
-                        {stats.topArtists.length > 0 ? (
-                          `You've listened to ${stats.topArtists[0].artist} enough to fly from Mumbai to ${stats.topArtists[0].minutes > 600 ? "New York" : stats.topArtists[0].minutes > 180 ? "Dubai" : "Goa"}!`
-                        ) : "You haven't listened to enough music to fly anywhere yet!"}
+                        {stats.topArtists.length > 0 && stats.topArtists[0].minutes > 30 ? (
+                          `You've listened to ${stats.topArtists[0].artist} enough to ${stats.topArtists[0].minutes > 600 ? "fly from Mumbai to New York" : stats.topArtists[0].minutes > 180 ? "fly to Dubai" : "fly to Goa"}!`
+                        ) : "You haven't accumulated enough listening minutes to travel anywhere yet! Keep exploring."}
                       </p>
                     </div>
                     
                     <div className="bg-gradient-to-br from-[#9060f0]/10 to-transparent border border-[#9060f0]/20 rounded-[12px] p-5">
                       <div className="text-3xl mb-3">🧬</div>
                       <p className="text-sm text-gray-300 leading-relaxed">
-                        Your top genre is <span className="font-bold text-white">{stats.topGenre}</span> — you share that with {Math.floor(Math.random() * 40 + 10)}% of Melodia listeners.
+                        {stats.topGenre && stats.topGenre !== "None" ? (
+                          <>Your top genre is <span className="font-bold text-white">{stats.topGenre}</span> — you share that with {Math.floor(Math.random() * 40 + 10)}% of Melodia listeners.</>
+                        ) : (
+                          "Your musical DNA is still forming. Listen to more tracks to discover your top genre!"
+                        )}
                       </p>
                     </div>
 
                     <div className="bg-gradient-to-br from-[#5bc4e8]/10 to-transparent border border-[#5bc4e8]/20 rounded-[12px] p-5">
                       <div className="text-3xl mb-3">🔁</div>
                       <p className="text-sm text-gray-300 leading-relaxed">
-                        {stats.topSongs.length > 0 ? (
-                          `If your top song played on repeat, it would loop ${Math.floor((24 * 60) / (stats.topSongs[0].song.duration / 60))} times today.`
-                        ) : "You need a top song before we can loop it!"}
+                        {stats.topSongs.length > 0 && stats.topSongs[0].song.duration > 0 ? (
+                          `If your top song played on repeat, it would loop ${Math.floor((24 * 60 * 60) / stats.topSongs[0].song.duration)} times in a single day.`
+                        ) : "You need to find a favorite track before we can calculate its infinite loop!"}
                       </p>
                     </div>
                   </div>
