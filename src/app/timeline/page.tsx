@@ -92,10 +92,7 @@ export default function TimelinePage() {
 
     // Stats calculation
     const plays = history.length;
-    const totalSeconds = history.reduce((acc, curr) => {
-      const actualDuration = typeof curr.duration === 'number' ? curr.duration : (curr.song?.duration || 0);
-      return acc + actualDuration;
-    }, 0);
+    const totalSeconds = history.reduce((acc, curr) => acc + (curr.duration || curr.song?.duration || 0), 0);
     const hours = (totalSeconds / 3600).toFixed(1);
     const uniqueArtists = new Set(history.map(h => h.song?.artistId || h.song?.artist)).size;
     const uniqueSongs = new Set(history.map(h => h.song?._id)).size;
