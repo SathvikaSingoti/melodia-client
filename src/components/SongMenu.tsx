@@ -7,7 +7,7 @@ import { usePlayerStore, Song } from "@/store/playerStore";
 import toast from "react-hot-toast";
 
 import { useRouter, usePathname } from "next/navigation";
-import { Radio, MinusCircle, HeartOff } from "lucide-react";
+import { Radio, MinusCircle, HeartOff, Link2 } from "lucide-react";
 
 interface Playlist {
   _id: string;
@@ -189,6 +189,17 @@ export default function SongMenu({
           </button>
           <button onClick={handleAddQueue} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary">
             Add to queue
+          </button>
+          <button 
+            onClick={() => {
+              navigator.clipboard.writeText(`${window.location.origin}/song/${song._id}`);
+              toast.success("Link copied to clipboard ✓");
+              setIsOpen(false);
+            }} 
+            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-bg-secondary flex justify-between items-center"
+          >
+            Share song
+            <Link2 className="w-4 h-4 ml-2" />
           </button>
 
           <button 

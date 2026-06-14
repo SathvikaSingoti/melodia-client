@@ -8,7 +8,8 @@ import { useAuth } from "@/context/AuthContext";
 import { usePlayerStore, Song } from "@/store/playerStore";
 import SongMenu from "@/components/SongMenu";
 import TrackList from "@/components/TrackList";
-import { Music, Play } from "lucide-react";
+import { Music, Play, Link2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface Playlist {
   _id: string;
@@ -234,10 +235,20 @@ export default function PlaylistPage() {
               }
             }}
             disabled={playlist.songs.length === 0}
-            className="w-full py-3 rounded-full font-bold tracking-widest uppercase transition-transform flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
+            className="w-full py-3 rounded-full font-bold tracking-widest uppercase transition-transform flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 mb-3"
             style={{ backgroundColor: '#c4a090', color: 'white' }}
           >
             <Play className="w-5 h-5 fill-current" /> Play All
+          </button>
+
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(`${window.location.origin}/playlist/${id}`);
+              toast.success("Link copied to clipboard ✓");
+            }}
+            className="w-full py-3 rounded-full font-bold tracking-widest uppercase transition-transform flex items-center justify-center gap-2 hover:bg-white/10 text-white border border-border hover:border-white transition-colors"
+          >
+            <Link2 className="w-5 h-5" /> Share
           </button>
         </div>
 
