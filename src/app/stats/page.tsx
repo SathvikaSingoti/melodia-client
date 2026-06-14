@@ -13,7 +13,8 @@ type Period = "week" | "month" | "all";
 
 interface StatsData {
   totalMinutes: number;
-  songsPlayed: number;
+  totalPlays: number;
+  uniqueTracks: number;
   topGenre: string;
   streak: number;
   genreBreakdown: { genre: string; count: number; minutes: number }[];
@@ -40,68 +41,6 @@ export default function StatsPage() {
   const [period, setPeriod] = useState<Period>("month");
   const [stats, setStats] = useState<StatsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const STATIC_STATS: StatsData = {
-    totalMinutes: 14250,
-    songsPlayed: 1248,
-    topGenre: "Pop",
-    streak: 14,
-    genreBreakdown: [
-      { genre: "Pop", count: 450, minutes: 1250 },
-      { genre: "Hip-Hop", count: 320, minutes: 890 },
-      { genre: "R&B", count: 210, minutes: 640 },
-      { genre: "Indie", count: 150, minutes: 420 },
-      { genre: "Electronic", count: 118, minutes: 350 }
-    ],
-    topArtists: [
-      { artist: "The Weeknd", count: 145, minutes: 420 },
-      { artist: "Taylor Swift", count: 132, minutes: 380 },
-      { artist: "Drake", count: 110, minutes: 310 },
-      { artist: "Arctic Monkeys", count: 85, minutes: 240 },
-      { artist: "Dua Lipa", count: 76, minutes: 210 }
-    ],
-    topSongs: [
-      { 
-        song: { _id: "1", title: "Blinding Lights", artist: "The Weeknd", coverUrl: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&q=80&w=100&h=100", duration: 200 }, 
-        playCount: 45, 
-        totalMinutes: 150 
-      },
-      { 
-        song: { _id: "2", title: "Cruel Summer", artist: "Taylor Swift", coverUrl: "https://images.unsplash.com/photo-1493225457124-a1a2a5956093?auto=format&fit=crop&q=80&w=100&h=100", duration: 178 }, 
-        playCount: 38, 
-        totalMinutes: 112 
-      },
-      { 
-        song: { _id: "3", title: "One Dance", artist: "Drake", coverUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=100&h=100", duration: 160 }, 
-        playCount: 34, 
-        totalMinutes: 90 
-      },
-      { 
-        song: { _id: "4", title: "Do I Wanna Know?", artist: "Arctic Monkeys", coverUrl: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&q=80&w=100&h=100", duration: 272 }, 
-        playCount: 28, 
-        totalMinutes: 126 
-      },
-      { 
-        song: { _id: "5", title: "Levitating", artist: "Dua Lipa", coverUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=100&h=100", duration: 203 }, 
-        playCount: 25, 
-        totalMinutes: 84 
-      }
-    ],
-    heatmap: Array.from({ length: 7 * 24 }, (_, i) => {
-      const d = Math.floor(i / 24);
-      const h = i % 24;
-      // create realistic heatmap curve: active evening/night
-      let prob = 0.1;
-      if (h >= 17 && h <= 23) prob = 0.8;
-      if (h >= 9 && h <= 12) prob = 0.4;
-      return {
-        day: d,
-        hour: h,
-        count: Math.random() < prob ? Math.floor(Math.random() * 10) + 1 : 0
-      };
-    }).filter(h => h.count > 0),
-    peakHour: "Friday 8pm"
-  };
   
   const play = usePlayerStore(state => state.play);
 
@@ -110,11 +49,17 @@ export default function StatsPage() {
     
     const fetchStats = async () => {
       setIsLoading(true);
-      // Simulate network request then provide static data
-      setTimeout(() => {
-        setStats(STATIC_STATS);
+      try {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/stats?period=${period}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setStats(res.data);
+      } catch (err) {
+        console.error("Failed to fetch stats", err);
+        toast.error("Failed to load stats");
+      } finally {
         setIsLoading(false);
-      }, 400);
+      }
     };
     
     fetchStats();
@@ -164,7 +109,7 @@ export default function StatsPage() {
 
             {isLoading ? (
               <div className="flex items-center justify-center py-20 text-primary">Loading stats...</div>
-            ) : stats && stats.songsPlayed < 5 ? (
+            ) : stats && (stats.totalPlays < 5 || stats.totalMinutes < 5) ? (
               <div className="flex flex-col items-center justify-center py-32 text-center">
                 <Music className="w-16 h-16 text-gray-600 mb-6" />
                 <h2 className="text-2xl font-bold text-white mb-2">Not enough data yet</h2>
@@ -185,8 +130,8 @@ export default function StatsPage() {
                   <div className="bg-[#181616] rounded-[12px] border border-[#2c2828] p-5 flex flex-col gap-4">
                     <div className="text-gray-400"><Music className="w-5 h-5" /></div>
                     <div>
-                      <div className="text-2xl font-bold text-white mb-1">{stats.songsPlayed} songs</div>
-                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Unique tracks</div>
+                      <div className="text-2xl font-bold text-white mb-1">{stats.totalPlays} plays</div>
+                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">{stats.uniqueTracks} unique tracks</div>
                     </div>
                   </div>
                   <div className="bg-[#181616] rounded-[12px] border border-[#2c2828] p-5 flex flex-col gap-4">
