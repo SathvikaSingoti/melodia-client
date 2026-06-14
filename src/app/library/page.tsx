@@ -44,6 +44,8 @@ export default function LibraryPage() {
   
   const [editingDescId, setEditingDescId] = useState<string | null>(null);
   const [editDescText, setEditDescText] = useState("");
+  const [editingHeaderNameId, setEditingHeaderNameId] = useState<string | null>(null);
+  const [editHeaderNameText, setEditHeaderNameText] = useState("");
   
   const [allSongs, setAllSongs] = useState<Song[]>([]);
   const [modalSearch, setModalSearch] = useState("");
@@ -220,6 +222,27 @@ export default function LibraryPage() {
     }
   };
 
+  const handleUpdateHeaderName = async (playlistId: string) => {
+    const playlist = playlists.find(p => p._id === playlistId);
+    if (!playlist) return;
+    if (playlist.name === editHeaderNameText.trim() || !editHeaderNameText.trim()) {
+      setEditingHeaderNameId(null);
+      return;
+    }
+    try {
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/playlists/${playlistId}`,
+        { name: editHeaderNameText },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setPlaylists(prev => prev.map(p => p._id === playlistId ? { ...p, name: editHeaderNameText } : p));
+      setEditingHeaderNameId(null);
+      toast.success("Playlist renamed");
+    } catch (error) {
+      toast.error("Failed to rename playlist");
+    }
+  };
+
   const handleActiveCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !activePlaylist) return;
@@ -348,23 +371,23 @@ export default function LibraryPage() {
                 <div className="flex-1 min-w-0 flex flex-col items-start group/header">
                   <h4 className="text-sm font-bold uppercase tracking-widest text-[#c4a090] mb-2">Playlist</h4>
                   
-                  {renamingPlaylist?._id === activePlaylist._id ? (
+                  {editingHeaderNameId === activePlaylist._id ? (
                     <input 
                       type="text" 
                       autoFocus
-                      value={editPlaylistName}
-                      onChange={(e) => setEditPlaylistName(e.target.value)}
+                      value={editHeaderNameText}
+                      onChange={(e) => setEditHeaderNameText(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleRenamePlaylist();
-                        if (e.key === 'Escape') setRenamingPlaylist(null);
+                        if (e.key === 'Enter') handleUpdateHeaderName(activePlaylist._id);
+                        if (e.key === 'Escape') setEditingHeaderNameId(null);
                       }}
-                      onBlur={handleRenamePlaylist}
+                      onBlur={() => handleUpdateHeaderName(activePlaylist._id)}
                       className="text-5xl font-[800] text-white tracking-tight mb-2 w-full bg-transparent border-b border-[#c4a090] focus:outline-none"
                     />
                   ) : (
                     <h1 
                       className="text-5xl font-[800] text-white tracking-tight mb-2 truncate cursor-pointer hover:text-[#c4a090] transition-colors flex items-center gap-3 w-full"
-                      onClick={() => { setRenamingPlaylist(activePlaylist); setEditPlaylistName(activePlaylist.name); }}
+                      onClick={() => { setEditingHeaderNameId(activePlaylist._id); setEditHeaderNameText(activePlaylist.name); }}
                       title="Click to edit name"
                     >
                       {activePlaylist.name}
