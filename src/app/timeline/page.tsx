@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { usePlayerStore, Song } from "@/store/playerStore";
+import { useLikedStore, useLikeAction } from "@/store/likedStore";
 import Link from "next/link";
 import { Heart, Play, Clock, Medal, ChevronRight, ChevronDown } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -34,6 +35,10 @@ export default function TimelinePage() {
   const { play, currentSong, isPlaying, pause, resume } = usePlayerStore();
   const [history, setHistory] = useState<PlayHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const likedSongIds = useLikedStore(state => state.likedIds);
+  const toggleLikeAction = useLikeAction();
+
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     "Today": true,
     "Yesterday": true
@@ -317,7 +322,9 @@ export default function TimelinePage() {
                             <div className="text-xs font-mono text-gray-500 w-16 text-right">
                               {item.firstPlayedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                             </div>
-                            <Heart className="w-4 h-4 text-gray-600 hover:text-white cursor-pointer" />
+                            <button onClick={(e) => toggleLikeAction(e, item.song._id)}>
+                              <Heart className={`w-4 h-4 cursor-pointer transition-colors ${likedSongIds.has(item.song._id) ? 'text-[#c4a090]' : 'text-gray-600 hover:text-white'}`} fill={likedSongIds.has(item.song._id) ? "currentColor" : "none"} />
+                            </button>
                           </div>
                         </div>
                       </div>
