@@ -15,6 +15,7 @@ import { globalEvents } from "@/lib/events";
 interface Playlist {
   _id: string;
   name: string;
+  description?: string;
   coverUrl: string;
   songs: Song[];
   isAIGenerated?: boolean;
@@ -40,6 +41,9 @@ export default function LibraryPage() {
   const [showModal, setShowModal] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
+  
+  const [editingDescId, setEditingDescId] = useState<string | null>(null);
+  const [editDescText, setEditDescText] = useState("");
   
   const [allSongs, setAllSongs] = useState<Song[]>([]);
   const [modalSearch, setModalSearch] = useState("");
@@ -146,7 +150,6 @@ export default function LibraryPage() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPlaylists(prev => prev.map(p => p._id === activeCollection ? res.data : p));
-      setPlaylistSearch("");
       toast.success("Added to playlist");
     } catch (error) {
       console.error("Failed to add song to playlist", error);
@@ -178,6 +181,10 @@ export default function LibraryPage() {
 
   const handleRenamePlaylist = async () => {
     if (!renamingPlaylist || !editPlaylistName.trim()) return;
+    if (renamingPlaylist.name === editPlaylistName.trim()) {
+      setRenamingPlaylist(null);
+      return;
+    }
     try {
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/playlists/${renamingPlaylist._id}`,
@@ -189,6 +196,54 @@ export default function LibraryPage() {
       toast.success("Playlist renamed");
     } catch (error) {
       toast.error("Failed to rename playlist");
+    }
+  };
+
+  const handleUpdatePlaylistDesc = async (playlistId: string) => {
+    const playlist = playlists.find(p => p._id === playlistId);
+    if (!playlist) return;
+    if (playlist.description === editDescText.trim() || (!playlist.description && !editDescText.trim())) {
+      setEditingDescId(null);
+      return;
+    }
+    try {
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/playlists/${playlistId}`,
+        { description: editDescText },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setPlaylists(prev => prev.map(p => p._id === playlistId ? { ...p, description: editDescText } : p));
+      setEditingDescId(null);
+      toast.success("Description updated");
+    } catch (error) {
+      toast.error("Failed to update description");
+    }
+  };
+
+  const handleActiveCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activePlaylist) return;
+
+    const toastId = toast.loading("Uploading cover...");
+    const formData = new FormData();
+    formData.append("cover", file);
+
+    try {
+      const res = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/playlists/${activePlaylist._id}/cover`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      setPlaylists(prev => prev.map(p => p._id === activePlaylist._id ? res.data : p));
+      toast.success("Cover updated", { id: toastId });
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update cover", { id: toastId });
     }
   };
 
@@ -256,8 +311,33 @@ export default function LibraryPage() {
           ) : activePlaylist ? (
             <div>
               <div className="flex items-end gap-6 mb-8">
-                <div className="w-48 h-48 rounded-xl bg-[#2c2828] overflow-hidden shadow-2xl flex-shrink-0 relative group border border-border">
-                  {activePlaylist.songs.length > 0 ? (
+                <div 
+                  className="w-48 h-48 rounded-xl bg-[#2c2828] overflow-hidden shadow-2xl flex-shrink-0 relative group/cover border border-border cursor-pointer"
+                  onClick={() => document.getElementById('playlist-active-cover-upload')?.click()}
+                >
+                  <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-opacity z-10">
+                    <Edit2 className="w-8 h-8 text-white mb-2" />
+                    <span className="text-white text-xs font-bold uppercase tracking-widest">Change Cover</span>
+                  </div>
+
+                  <input 
+                    id="playlist-active-cover-upload" 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={handleActiveCoverUpload}
+                  />
+
+                  {activePlaylist.coverUrl ? (
+                    <img src={activePlaylist.coverUrl} className="w-full h-full object-cover" />
+                  ) : activePlaylist.songs.length >= 4 ? (
+                    <div className="w-full h-full grid grid-cols-2 grid-rows-2">
+                      <img src={activePlaylist.songs[0].coverUrl} className="w-full h-full object-cover" />
+                      <img src={activePlaylist.songs[1].coverUrl} className="w-full h-full object-cover" />
+                      <img src={activePlaylist.songs[2].coverUrl} className="w-full h-full object-cover" />
+                      <img src={activePlaylist.songs[3].coverUrl} className="w-full h-full object-cover" />
+                    </div>
+                  ) : activePlaylist.songs.length > 0 ? (
                     <img src={activePlaylist.songs[0].coverUrl} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-500">
@@ -265,9 +345,58 @@ export default function LibraryPage() {
                     </div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 flex flex-col items-start group/header">
                   <h4 className="text-sm font-bold uppercase tracking-widest text-[#c4a090] mb-2">Playlist</h4>
-                  <h1 className="text-5xl font-[800] text-white tracking-tight mb-4 truncate">{activePlaylist.name}</h1>
+                  
+                  {renamingPlaylist?._id === activePlaylist._id ? (
+                    <input 
+                      type="text" 
+                      autoFocus
+                      value={editPlaylistName}
+                      onChange={(e) => setEditPlaylistName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleRenamePlaylist();
+                        if (e.key === 'Escape') setRenamingPlaylist(null);
+                      }}
+                      onBlur={handleRenamePlaylist}
+                      className="text-5xl font-[800] text-white tracking-tight mb-2 w-full bg-transparent border-b border-[#c4a090] focus:outline-none"
+                    />
+                  ) : (
+                    <h1 
+                      className="text-5xl font-[800] text-white tracking-tight mb-2 truncate cursor-pointer hover:text-[#c4a090] transition-colors flex items-center gap-3 w-full"
+                      onClick={() => { setRenamingPlaylist(activePlaylist); setEditPlaylistName(activePlaylist.name); }}
+                      title="Click to edit name"
+                    >
+                      {activePlaylist.name}
+                      <Edit2 className="w-6 h-6 opacity-0 group-hover/header:opacity-100 transition-opacity text-gray-400" />
+                    </h1>
+                  )}
+
+                  {editingDescId === activePlaylist._id ? (
+                    <textarea 
+                      autoFocus
+                      value={editDescText}
+                      onChange={(e) => setEditDescText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleUpdatePlaylistDesc(activePlaylist._id); }
+                        if (e.key === 'Escape') setEditingDescId(null);
+                      }}
+                      onBlur={() => handleUpdatePlaylistDesc(activePlaylist._id)}
+                      className="text-gray-400 text-sm mb-4 w-full bg-transparent border-b border-[#c4a090] focus:outline-none resize-none"
+                      rows={2}
+                      placeholder="Add an optional description"
+                    />
+                  ) : (
+                    <p 
+                      className="text-sm text-gray-400 mb-4 cursor-pointer hover:text-white transition-colors flex items-center gap-2 group/desc"
+                      onClick={() => { setEditingDescId(activePlaylist._id); setEditDescText(activePlaylist.description || ""); }}
+                      title="Click to edit description"
+                    >
+                      {activePlaylist.description || <span className="italic opacity-50 block mt-1">Add description...</span>}
+                      <Edit2 className="w-3 h-3 opacity-0 group-hover/desc:opacity-100 transition-opacity" />
+                    </p>
+                  )}
+
                   <p className="text-gray-400 font-medium">{activePlaylist.songs.length} songs</p>
                 </div>
               </div>
@@ -308,7 +437,9 @@ export default function LibraryPage() {
                         {allSongs
                           .filter(s => !activePlaylist.songs.find(ps => ps._id === s._id) && (s.title.toLowerCase().includes(playlistSearch.toLowerCase()) || s.artist.toLowerCase().includes(playlistSearch.toLowerCase())))
                           .slice(0, 5)
-                          .map(song => (
+                          .map(song => {
+                            const isAdded = false; // it's never added because of the filter
+                            return (
                             <div key={song._id} className="flex items-center justify-between p-3 hover:bg-[#181616] rounded-xl border border-transparent hover:border-[#2c2828] transition-colors group">
                               <div className="flex items-center gap-4 min-w-0">
                                 <img src={song.coverUrl} className="w-10 h-10 rounded object-cover" />
@@ -318,13 +449,18 @@ export default function LibraryPage() {
                                 </div>
                               </div>
                               <button 
+                                disabled={isAdded}
                                 onClick={() => addSongToPlaylist(song)}
-                                className="w-8 h-8 flex items-center justify-center rounded-full bg-[#181616] border border-[#2c2828] hover:bg-[#c4a090] hover:text-white hover:border-[#c4a090] text-gray-400 transition-colors"
+                                className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                                  isAdded 
+                                    ? "bg-transparent text-[#c4a090] cursor-not-allowed" 
+                                    : "bg-[#181616] border border-[#2c2828] hover:bg-[#c4a090] hover:text-white hover:border-[#c4a090] text-gray-400"
+                                }`}
                               >
-                                <Plus className="w-4 h-4" />
+                                {isAdded ? <span className="font-bold text-sm">✓</span> : <Plus className="w-4 h-4" />}
                               </button>
                             </div>
-                        ))}
+                        )})}
                       </div>
                     )}
                   </div>
@@ -350,9 +486,11 @@ export default function LibraryPage() {
                   {playlistSearch.trim() && (
                     <div className="w-full flex flex-col gap-2">
                       {allSongs
-                        .filter(s => s.title.toLowerCase().includes(playlistSearch.toLowerCase()) || s.artist.toLowerCase().includes(playlistSearch.toLowerCase()))
+                        .filter(s => !activePlaylist.songs.find(ps => ps._id === s._id) && (s.title.toLowerCase().includes(playlistSearch.toLowerCase()) || s.artist.toLowerCase().includes(playlistSearch.toLowerCase())))
                         .slice(0, 5)
-                        .map(song => (
+                        .map(song => {
+                          const isAdded = false; // it's never added because of the filter
+                          return (
                           <div key={song._id} className="flex items-center justify-between p-3 bg-[#181616] rounded-xl border border-[#2c2828] group">
                             <div className="flex items-center gap-4 min-w-0">
                               <img src={song.coverUrl} className="w-10 h-10 rounded object-cover" />
@@ -362,13 +500,18 @@ export default function LibraryPage() {
                               </div>
                             </div>
                             <button 
+                              disabled={isAdded}
                               onClick={() => addSongToPlaylist(song)}
-                              className="w-8 h-8 flex items-center justify-center rounded-full bg-[#2c2828] hover:bg-[#c4a090] hover:text-white text-gray-300 transition-colors"
+                              className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                                isAdded 
+                                  ? "bg-transparent text-[#c4a090] cursor-not-allowed" 
+                                  : "bg-[#2c2828] hover:bg-[#c4a090] hover:text-white text-gray-300"
+                              }`}
                             >
-                              <Plus className="w-4 h-4" />
+                              {isAdded ? <span className="font-bold text-sm">✓</span> : <Plus className="w-4 h-4" />}
                             </button>
                           </div>
-                      ))}
+                      )})}
                     </div>
                   )}
                 </div>
@@ -419,7 +562,16 @@ export default function LibraryPage() {
                     className={`w-full flex items-center gap-3 p-1.5 rounded-md transition-colors ${activeCollection === playlist._id ? "bg-[#c4a09015] border-l-2 border-[#c4a090]" : "border-l-2 border-transparent hover:bg-white/5"}`}
                   >
                     <div className="w-[28px] h-[28px] rounded-[4px] overflow-hidden bg-[#2c2828] flex items-center justify-center flex-shrink-0">
-                      {playlist.songs.length > 0 ? (
+                      {playlist.coverUrl ? (
+                        <img src={playlist.coverUrl} alt={playlist.name} className="w-full h-full object-cover" />
+                      ) : playlist.songs.length >= 4 ? (
+                        <div className="w-full h-full grid grid-cols-2 grid-rows-2">
+                          <img src={playlist.songs[0].coverUrl} className="w-full h-full object-cover" />
+                          <img src={playlist.songs[1].coverUrl} className="w-full h-full object-cover" />
+                          <img src={playlist.songs[2].coverUrl} className="w-full h-full object-cover" />
+                          <img src={playlist.songs[3].coverUrl} className="w-full h-full object-cover" />
+                        </div>
+                      ) : playlist.songs.length > 0 ? (
                         <img src={playlist.songs[0].coverUrl} alt={playlist.name} className="w-full h-full object-cover" />
                       ) : (
                         <Music className="w-3 h-3 text-gray-500" />
