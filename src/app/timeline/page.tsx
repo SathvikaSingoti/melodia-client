@@ -239,8 +239,8 @@ export default function TimelinePage() {
 
   return (
     <ProtectedRoute>
-    <div className="flex-1 w-full px-8 py-8 flex justify-center fade-in overflow-x-hidden overflow-y-auto">
-      <div className="max-w-6xl w-full flex flex-col lg:flex-row gap-16 min-h-max">
+    <div className="flex-1 overflow-y-auto w-full no-scrollbar px-8 py-8 flex justify-center fade-in">
+      <div className="max-w-6xl w-full flex flex-col lg:flex-row gap-16 pb-24">
         
         {/* LEFT COLUMN: TIMELINE */}
         <div className="flex-1">
@@ -350,7 +350,7 @@ export default function TimelinePage() {
         </div>
 
         {/* RIGHT COLUMN: STATS & MOOD */}
-        <div className="w-full lg:w-[340px] flex flex-col gap-8 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto no-scrollbar pb-32">
+        <div className="w-full lg:w-[340px] flex flex-col gap-8 flex-shrink-0">
           
           {/* Mood Pattern Section */}
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
