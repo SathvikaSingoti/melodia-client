@@ -90,6 +90,8 @@ interface PlayerState {
   toggleMiniPlayer: () => void;
   
   lastPlayedId: string | null;
+  currentSongStartTime: number | null;
+  recordListeningSession: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>()(
@@ -124,6 +126,39 @@ export const usePlayerStore = create<PlayerState>()(
   isPlayerExpanded: false,
   isMiniPlayerOpen: false,
   lastPlayedId: null,
+  currentSongStartTime: null,
+
+  recordListeningSession: () => {
+    const { currentSong, currentSongStartTime } = get();
+    if (!currentSong || !currentSongStartTime) return;
+    
+    const listenedSeconds = (Date.now() - currentSongStartTime) / 1000;
+    if (listenedSeconds >= 3) {
+      try {
+        const storedUser = localStorage.getItem("melodia_user");
+        const storedToken = localStorage.getItem("melodia_token");
+        if (storedUser && storedToken) {
+          const user = JSON.parse(storedUser);
+          const userId = user._id || user.id;
+          if (userId) {
+            const completed = listenedSeconds >= currentSong.duration * 0.9;
+            const actualListened = Math.min(listenedSeconds, currentSong.duration);
+            axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}/history`, {
+              songId: currentSong._id,
+              listenedSeconds: actualListened,
+              completed,
+              playedAt: new Date(currentSongStartTime).toISOString()
+            }, {
+              headers: { Authorization: `Bearer ${storedToken}` }
+            }).catch(console.error);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to post history", e);
+      }
+    }
+    set({ currentSongStartTime: null });
+  },
 
   toggleShuffle: () => set(state => ({ isShuffle: !state.isShuffle })),
   toggleRepeat: () => set(state => ({ 
@@ -218,8 +253,11 @@ export const usePlayerStore = create<PlayerState>()(
         html5: true,
         volume: get().volume,
         rate: get().playbackRate,
-        onplay: () => set({ isPlaying: true }),
-        onpause: () => set({ isPlaying: false }),
+        onplay: () => set({ isPlaying: true, currentSongStartTime: Date.now() }),
+        onpause: () => {
+          get().recordListeningSession();
+          set({ isPlaying: false });
+        },
         onend: () => get().next(false),
         onload: () => set({ duration: firstSong.duration }),
       });
@@ -240,6 +278,7 @@ export const usePlayerStore = create<PlayerState>()(
   },
 
   play: (song: Song, newQueue?: Song[], isCrossfadeTrigger: boolean = false) => {
+    get().recordListeningSession();
     const { howl, queue, radioContext, volume, crossfadeDuration, isCrossfading } = get();
 
     // Clear radioContext if this play action is for a different song 
@@ -274,8 +313,11 @@ export const usePlayerStore = create<PlayerState>()(
       html5: true,
       volume: isCrossfadeTrigger ? 0 : volume,
       rate: get().playbackRate,
-      onplay: () => set({ isPlaying: true }),
-      onpause: () => set({ isPlaying: false }),
+      onplay: () => set({ isPlaying: true, currentSongStartTime: Date.now() }),
+      onpause: () => {
+        get().recordListeningSession();
+        set({ isPlaying: false });
+      },
       onend: () => {
         // Only trigger next if we aren't currently crossfading away from this song
         if (!get().isCrossfading) {
@@ -294,27 +336,6 @@ export const usePlayerStore = create<PlayerState>()(
     const currentState = get();
     if (currentState.lastPlayedId !== song._id) {
       axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/songs/${song._id}/play`).catch(console.error);
-    }
-
-    // Track play history
-    try {
-      const storedUser = localStorage.getItem("melodia_user");
-      const storedToken = localStorage.getItem("melodia_token");
-      if (storedUser && storedToken) {
-        const user = JSON.parse(storedUser);
-        const userId = user._id || user.id;
-        if (userId) {
-          console.log(`Logging play history for song: ${song.title} (${song._id})`);
-          axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}/history`, {
-            songId: song._id,
-            playedAt: new Date().toISOString()
-          }, {
-            headers: { Authorization: `Bearer ${storedToken}` }
-          }).catch(console.error);
-        }
-      }
-    } catch (e) {
-      console.error("Failed to post history", e);
     }
     
     const currentRecent = get().recentlyPlayed || [];

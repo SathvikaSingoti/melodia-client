@@ -13,7 +13,8 @@ interface PlayHistoryEntry {
   _id: string;
   song: Song;
   playedAt: string;
-  duration: number;
+  duration?: number;
+  listenedSeconds?: number;
 }
 
 interface GroupedHistory {
@@ -92,7 +93,7 @@ export default function TimelinePage() {
 
     // Stats calculation
     const plays = history.length;
-    const totalSeconds = history.reduce((acc, curr) => acc + (curr.duration || curr.song?.duration || 0), 0);
+    const totalSeconds = history.reduce((acc, curr) => acc + (curr.listenedSeconds ?? curr.duration ?? curr.song?.duration ?? 0), 0);
     const hours = (totalSeconds / 3600).toFixed(1);
     const uniqueArtists = new Set(history.map(h => h.song?.artistId || h.song?.artist)).size;
     const uniqueSongs = new Set(history.map(h => h.song?._id)).size;
@@ -120,23 +121,7 @@ export default function TimelinePage() {
 
     const groupsMap = new Map<string, PlayHistoryEntry[]>();
 
-    // Artificially stagger timestamps for songs played consecutively within 10 seconds of each other
-    // This makes the timeline look organic even if the user skips rapidly
-    const staggeredHistory = [...history];
-    for (let i = 1; i < staggeredHistory.length; i++) {
-      const newer = staggeredHistory[i - 1];
-      const older = staggeredHistory[i];
-      const newerTime = new Date(newer.playedAt).getTime();
-      const olderTime = new Date(older.playedAt).getTime();
-      
-      // If the newer song was played less than 10 seconds after the older song (or if overlapping due to previous staggering)
-      if (newerTime - olderTime < 10000) {
-        const pushBack = (older.duration || older.song?.duration || 180) * 1000;
-        older.playedAt = new Date(newerTime - pushBack).toISOString();
-      }
-    }
-
-    staggeredHistory.forEach(entry => {
+    history.forEach(entry => {
       if (!entry.song) return; // safety
       const date = new Date(entry.playedAt);
       const dateStr = date.toDateString();

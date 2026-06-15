@@ -78,6 +78,7 @@ export default function StatsPage() {
   };
 
   const formatHours = (mins: number) => {
+    if (mins < 1 && mins > 0) return "< 1 min";
     const h = Math.floor(mins / 60);
     const m = Math.floor(mins % 60);
     if (h > 0) return `${h} hrs ${m} mins`;
@@ -109,11 +110,11 @@ export default function StatsPage() {
 
             {isLoading ? (
               <div className="flex items-center justify-center py-20 text-primary">Loading stats...</div>
-            ) : stats && (stats.totalPlays < 5 || stats.totalMinutes < 5) ? (
+            ) : stats && stats.totalPlays === 0 ? (
               <div className="flex flex-col items-center justify-center py-32 text-center">
                 <Music className="w-16 h-16 text-gray-600 mb-6" />
                 <h2 className="text-2xl font-bold text-white mb-2">Not enough data yet</h2>
-                <p className="text-gray-400 max-w-md">Start listening to build your stats. Check back here after you've listened to a few more songs!</p>
+                <p className="text-gray-400 max-w-md">Start listening to see your stats</p>
               </div>
             ) : stats ? (
               <div className="flex flex-col gap-12">
@@ -254,34 +255,60 @@ export default function StatsPage() {
                 <div>
                   <h2 className="text-xl font-bold text-white mb-6">Did you know?</h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-gradient-to-br from-[#c4a090]/10 to-transparent border border-[#c4a090]/20 rounded-[12px] p-5">
-                      <div className="text-3xl mb-3">✈️</div>
-                      <p className="text-sm text-gray-300 leading-relaxed">
-                        {stats.topArtists.length > 0 && stats.topArtists[0].minutes > 30 ? (
-                          `You've listened to ${stats.topArtists[0].artist} enough to ${stats.topArtists[0].minutes > 600 ? "fly from Mumbai to New York" : stats.topArtists[0].minutes > 180 ? "fly to Dubai" : "fly to Goa"}!`
-                        ) : "You haven't accumulated enough listening minutes to travel anywhere yet! Keep exploring."}
-                      </p>
-                    </div>
-                    
-                    <div className="bg-gradient-to-br from-[#9060f0]/10 to-transparent border border-[#9060f0]/20 rounded-[12px] p-5">
-                      <div className="text-3xl mb-3">🧬</div>
-                      <p className="text-sm text-gray-300 leading-relaxed">
-                        {stats.topGenre && stats.topGenre !== "None" ? (
-                          <>Your top genre is <span className="font-bold text-white">{stats.topGenre}</span> — you share that with {Math.floor(Math.random() * 40 + 10)}% of Melodia listeners.</>
-                        ) : (
-                          "Your musical DNA is still forming. Listen to more tracks to discover your top genre!"
-                        )}
-                      </p>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-[#5bc4e8]/10 to-transparent border border-[#5bc4e8]/20 rounded-[12px] p-5">
-                      <div className="text-3xl mb-3">🔁</div>
-                      <p className="text-sm text-gray-300 leading-relaxed">
-                        {stats.topSongs.length > 0 && stats.topSongs[0].song.duration > 0 ? (
-                          `If your top song played on repeat, it would loop ${Math.floor((24 * 60 * 60) / stats.topSongs[0].song.duration)} times in a single day.`
-                        ) : "You need to find a favorite track before we can calculate its infinite loop!"}
-                      </p>
-                    </div>
+                    {(() => {
+                      const facts = [];
+                      if (stats.totalMinutes >= 5) {
+                        facts.push(
+                          <div key="fact-a" className="bg-gradient-to-br from-[#c4a090]/10 to-transparent border border-[#c4a090]/20 rounded-[12px] p-5">
+                            <div className="text-3xl mb-3">🎙️</div>
+                            <p className="text-sm text-gray-300 leading-relaxed">
+                              You've spent <span className="font-bold text-white">{Math.round(stats.totalMinutes)}</span> minutes listening to music — that's about <span className="font-bold text-white">{Math.floor(stats.totalMinutes / 5)}</span> episodes of a podcast.
+                            </p>
+                          </div>
+                        );
+                      }
+                      if (stats.topSongs.length > 0) {
+                        facts.push(
+                          <div key="fact-b" className="bg-gradient-to-br from-[#9060f0]/10 to-transparent border border-[#9060f0]/20 rounded-[12px] p-5">
+                            <div className="text-3xl mb-3">🔁</div>
+                            <p className="text-sm text-gray-300 leading-relaxed">
+                              Your most played song is <span className="font-bold text-white">'{stats.topSongs[0].song.title}'</span> — you've played it <span className="font-bold text-white">{stats.topSongs[0].playCount}</span> times.
+                            </p>
+                          </div>
+                        );
+                      }
+                      if (stats.genreBreakdown.length > 0) {
+                        facts.push(
+                          <div key="fact-c" className="bg-gradient-to-br from-[#5bc4e8]/10 to-transparent border border-[#5bc4e8]/20 rounded-[12px] p-5">
+                            <div className="text-3xl mb-3">🧬</div>
+                            <p className="text-sm text-gray-300 leading-relaxed">
+                              You've explored <span className="font-bold text-white">{stats.genreBreakdown.length}</span> different genres.
+                            </p>
+                          </div>
+                        );
+                      }
+                      if (stats.peakHour) {
+                        facts.push(
+                          <div key="fact-d" className="bg-gradient-to-br from-[#7ec88a]/10 to-transparent border border-[#7ec88a]/20 rounded-[12px] p-5">
+                            <div className="text-3xl mb-3">🕒</div>
+                            <p className="text-sm text-gray-300 leading-relaxed">
+                              You tend to listen most around <span className="font-bold text-white">{stats.peakHour}</span> — <span className="font-bold text-white">{stats.peakHour.includes("AM") ? "morning" : "afternoon/evening"}</span> person confirmed.
+                            </p>
+                          </div>
+                        );
+                      }
+                      if (stats.topArtists.length > 0 && stats.totalMinutes > 0) {
+                        facts.push(
+                          <div key="fact-e" className="bg-gradient-to-br from-[#d4704a]/10 to-transparent border border-[#d4704a]/20 rounded-[12px] p-5">
+                            <div className="text-3xl mb-3">❤️</div>
+                            <p className="text-sm text-gray-300 leading-relaxed">
+                              <span className="font-bold text-white">{Math.round((stats.topArtists[0].minutes / stats.totalMinutes) * 100)}%</span> of your listening is <span className="font-bold text-white">{stats.topArtists[0].artist}</span>.
+                            </p>
+                          </div>
+                        );
+                      }
+                      return facts.slice(0, 3);
+                    })()}
                   </div>
                 </div>
 
@@ -289,48 +316,56 @@ export default function StatsPage() {
                 <div>
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-white">When you listen</h2>
-                    <div className="text-sm text-[#c4a090] font-medium bg-[#c4a090]/10 px-3 py-1 rounded-full border border-[#c4a090]/20">
-                      Peak hour: {stats.peakHour}
-                    </div>
+                    {stats.totalPlays >= 3 && (
+                      <div className="text-sm text-[#c4a090] font-medium bg-[#c4a090]/10 px-3 py-1 rounded-full border border-[#c4a090]/20">
+                        Peak hour: {stats.peakHour}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="bg-[#181616] rounded-[12px] border border-[#2c2828] p-6 overflow-x-auto no-scrollbar">
-                    <div className="min-w-[800px]">
-                      <div className="flex ml-10 mb-2">
-                        {Array.from({length: 24}).map((_, i) => (
-                          <div key={i} className="flex-1 text-center text-[10px] text-gray-500">
-                            {i % 4 === 0 ? (i === 0 ? '12A' : i < 12 ? `${i}A` : i === 12 ? '12P' : `${i-12}P`) : ''}
-                          </div>
-                        ))}
+                    {stats.totalPlays < 3 ? (
+                      <div className="text-center py-10">
+                        <div className="text-gray-400">Keep listening to unlock your patterns</div>
                       </div>
-                      
-                      <div className="flex flex-col gap-1.5">
-                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, dIdx) => (
-                          <div key={day} className="flex items-center">
-                            <div className="w-10 text-[10px] text-gray-400 font-medium">{day}</div>
-                            <div className="flex flex-1 gap-1.5">
-                              {Array.from({length: 24}).map((_, hIdx) => {
-                                const entry = stats.heatmap.find(h => h.day === dIdx && h.hour === hIdx);
-                                const count = entry ? entry.count : 0;
-                                let bg = "bg-[#1a1a1a]";
-                                if (count > 0) bg = "bg-[#c4a090]/20";
-                                if (count > 2) bg = "bg-[#c4a090]/40";
-                                if (count > 5) bg = "bg-[#c4a090]/70";
-                                if (count > 10) bg = "bg-[#c4a090]";
-                                
-                                return (
-                                  <div 
-                                    key={hIdx} 
-                                    className={`flex-1 aspect-square rounded-[3px] ${bg} transition-colors hover:border hover:border-white/30 cursor-crosshair`}
-                                    title={`${count} plays at ${day} ${hIdx}:00`}
-                                  />
-                                );
-                              })}
+                    ) : (
+                      <div className="min-w-[800px]">
+                        <div className="flex ml-10 mb-2">
+                          {Array.from({length: 24}).map((_, i) => (
+                            <div key={i} className="flex-1 text-center text-[10px] text-gray-500">
+                              {i % 4 === 0 ? (i === 0 ? '12A' : i < 12 ? `${i}A` : i === 12 ? '12P' : `${i-12}P`) : ''}
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
+                        
+                        <div className="flex flex-col gap-1.5">
+                          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, dIdx) => (
+                            <div key={day} className="flex items-center">
+                              <div className="w-10 text-[10px] text-gray-400 font-medium">{day}</div>
+                              <div className="flex flex-1 gap-1.5">
+                                {Array.from({length: 24}).map((_, hIdx) => {
+                                  const entry = stats.heatmap.find(h => h.day === dIdx && h.hour === hIdx);
+                                  const count = entry ? entry.count : 0;
+                                  let bg = "bg-[#1a1a1a]";
+                                  if (count > 0) bg = "bg-[#c4a090]/20";
+                                  if (count > 60) bg = "bg-[#c4a090]/40";
+                                  if (count > 300) bg = "bg-[#c4a090]/70";
+                                  if (count > 600) bg = "bg-[#c4a090]";
+                                  
+                                  return (
+                                    <div 
+                                      key={hIdx} 
+                                      className={`flex-1 aspect-square rounded-[3px] ${bg} transition-colors hover:border hover:border-white/30 cursor-crosshair`}
+                                      title={`${Math.round(count / 60)} mins at ${day} ${hIdx}:00`}
+                                    />
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 
