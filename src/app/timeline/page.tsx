@@ -239,8 +239,8 @@ export default function TimelinePage() {
 
   return (
     <ProtectedRoute>
-    <div className="flex-1 overflow-y-auto w-full no-scrollbar px-8 py-8 flex justify-center fade-in">
-      <div className="max-w-6xl w-full flex flex-col lg:flex-row gap-16 pb-24">
+    <div className="w-full px-8 py-8 flex justify-center fade-in pb-32">
+      <div className="max-w-6xl w-full flex flex-col lg:flex-row gap-16">
         
         {/* LEFT COLUMN: TIMELINE */}
         <div className="flex-1">
