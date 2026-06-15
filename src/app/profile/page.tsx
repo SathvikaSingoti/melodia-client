@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import { Song, usePlayerStore } from "@/store/playerStore";
 import toast from "react-hot-toast";
+import { Eye, Upload, Trash2 } from "lucide-react";
 
 export default function ProfilePage() {
   const { user, token, login, logout } = useAuth();
@@ -25,6 +26,21 @@ export default function ProfilePage() {
   const [deleteInput, setDeleteInput] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+
+  const [showPhotoDropdown, setShowPhotoDropdown] = useState(false);
+  const [showPhotoLightbox, setShowPhotoLightbox] = useState(false);
+  const [showRemovePhotoConfirm, setShowRemovePhotoConfirm] = useState(false);
+  const avatarDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (avatarDropdownRef.current && !avatarDropdownRef.current.contains(event.target as Node)) {
+        setShowPhotoDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (user && token) {
@@ -116,6 +132,16 @@ export default function ProfilePage() {
     }
   };
 
+  const handleRemovePhoto = async () => {
+    try {
+      await handleUpdateProfile({ avatarUrl: null });
+      setShowRemovePhotoConfirm(false);
+      toast.success("Profile photo removed");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   if (!user) return null;
 
   const joinDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "Recently";
@@ -131,30 +157,59 @@ export default function ProfilePage() {
         <div className="max-w-6xl mx-auto px-8 relative -mt-10">
           {/* Avatar & Info */}
           <div className="flex flex-col sm:flex-row items-start sm:items-end gap-6 mb-12">
-            <div 
-              className="w-32 h-32 rounded-full border-4 border-bg-primary bg-bg-secondary flex items-center justify-center text-4xl font-bold text-primary relative overflow-hidden group cursor-pointer shadow-xl flex-shrink-0"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                user.username[0].toUpperCase()
-              )}
-              
-              <div className={`absolute inset-0 bg-black/60 flex items-center justify-center transition-opacity ${isUploading ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                {isUploading ? (
-                  <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+            <div className="relative" ref={avatarDropdownRef}>
+              <div 
+                className="w-32 h-32 rounded-full border-4 border-bg-primary bg-bg-secondary flex items-center justify-center text-4xl font-bold text-primary relative overflow-hidden group cursor-pointer shadow-xl flex-shrink-0"
+                onClick={() => setShowPhotoDropdown(!showPhotoDropdown)}
+              >
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
-                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  user.username[0].toUpperCase()
                 )}
+                
+                <div className={`absolute inset-0 bg-black/60 flex items-center justify-center transition-opacity ${isUploading ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                  {isUploading ? (
+                    <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  )}
+                </div>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleImageUpload} 
+                  accept="image/*" 
+                  className="hidden" 
+                />
               </div>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleImageUpload} 
-                accept="image/*" 
-                className="hidden" 
-              />
+
+              {showPhotoDropdown && (
+                <div className="absolute top-full left-0 mt-2 w-48 bg-[#181616] border border-[#2c2828] rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                  {user.avatarUrl && (
+                    <button 
+                      onClick={() => { setShowPhotoLightbox(true); setShowPhotoDropdown(false); }}
+                      className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-[#2c2828]"
+                    >
+                      <Eye className="w-4 h-4" /> View photo
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => { fileInputRef.current?.click(); setShowPhotoDropdown(false); }}
+                    className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-[#2c2828]"
+                  >
+                    <Upload className="w-4 h-4" /> Change photo
+                  </button>
+                  {user.avatarUrl && (
+                    <button 
+                      onClick={() => { setShowRemovePhotoConfirm(true); setShowPhotoDropdown(false); }}
+                      className="w-full text-left px-4 py-3 text-sm text-[#e87070] hover:bg-[#e87070]/10 transition-colors flex items-center gap-3"
+                    >
+                      <Trash2 className="w-4 h-4" /> Remove photo
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
             
             <div className="flex-1 pb-2">
@@ -274,6 +329,47 @@ export default function ProfilePage() {
           </div>
 
         </div>
+
+        {/* Lightbox Modal */}
+        {showPhotoLightbox && user.avatarUrl && (
+          <div 
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in cursor-zoom-out"
+            onClick={() => setShowPhotoLightbox(false)}
+          >
+            <img 
+              src={user.avatarUrl} 
+              className="max-w-full max-h-full rounded-2xl shadow-2xl object-contain" 
+              alt="Profile" 
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        )}
+
+        {/* Remove Photo Confirm Modal */}
+        {showRemovePhotoConfirm && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-[#181616] w-full max-w-[320px] rounded-[14px] border border-[#2c2828] shadow-2xl p-[24px]">
+              <h3 className="text-[18px] font-[600] text-white text-center mb-2">Remove profile photo?</h3>
+              <p className="text-[13px] text-gray-400 text-center mb-6">
+                This will revert your avatar to the default letter.
+              </p>
+              <div className="flex flex-col gap-2">
+                <button 
+                  onClick={handleRemovePhoto}
+                  className="w-full px-4 py-3 rounded-lg text-sm font-semibold bg-[#e87070] text-white hover:bg-[#e87070]/90 transition-colors"
+                >
+                  Remove
+                </button>
+                <button 
+                  onClick={() => setShowRemovePhotoConfirm(false)}
+                  className="w-full px-4 py-3 rounded-lg text-sm font-semibold text-gray-400 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Delete Account Modal */}
         {showDeleteModal && (

@@ -41,6 +41,11 @@ export default function StatsPage() {
   const [period, setPeriod] = useState<Period>("month");
   const [stats, setStats] = useState<StatsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [factVariant, setFactVariant] = useState(0);
+  
+  useEffect(() => {
+    setFactVariant(Math.floor(Math.random() * 4));
+  }, []);
   
   const play = usePlayerStore(state => state.play);
 
@@ -258,14 +263,59 @@ export default function StatsPage() {
                     {(() => {
                       const facts = [];
                       if (stats.totalMinutes >= 5) {
-                        facts.push(
-                          <div key="fact-a" className="bg-gradient-to-br from-[#c4a090]/10 to-transparent border border-[#c4a090]/20 rounded-[12px] p-5">
-                            <div className="text-3xl mb-3">🎙️</div>
-                            <p className="text-sm text-gray-300 leading-relaxed">
-                              You've spent <span className="font-bold text-white">{Math.round(stats.totalMinutes)}</span> minutes listening to music — that's about <span className="font-bold text-white">{Math.floor(stats.totalMinutes / 5)}</span> episodes of a podcast.
-                            </p>
-                          </div>
-                        );
+                        const totalSongsInDB = 200;
+                        const avgSongDuration = 3.5;
+                        const totalMinutesPerDay = stats.totalMinutes / 7;
+
+                        if (factVariant === 0) {
+                          facts.push(
+                            <div key="fact-v1" className="bg-gradient-to-br from-[#c4a090]/10 to-transparent border border-[#c4a090]/20 rounded-[12px] p-5">
+                              <div className="text-3xl mb-3">🎙️</div>
+                              <p className="text-sm text-gray-300 leading-relaxed">
+                                You've spent <span className="font-bold text-white">{Math.round(stats.totalMinutes)}</span> minutes listening to music — that's about <span className="font-bold text-white">{Math.round(stats.totalMinutes / 45)}</span> episodes of a podcast.
+                              </p>
+                            </div>
+                          );
+                        } else if (factVariant === 1) {
+                          facts.push(
+                            <div key="fact-v2" className="bg-gradient-to-br from-[#c4a090]/10 to-transparent border border-[#c4a090]/20 rounded-[12px] p-5">
+                              <div className="text-3xl mb-3">🎬</div>
+                              <p className="text-sm text-gray-300 leading-relaxed">
+                                You've listened to music for <span className="font-bold text-white">{Math.round(stats.totalMinutes / 60)}</span> hours — that's longer than <span className="font-bold text-white">{Math.round(stats.totalMinutes / 120)}</span> feature films.
+                              </p>
+                            </div>
+                          );
+                        } else if (factVariant === 2) {
+                          const daysToFinish = Math.round((totalSongsInDB * avgSongDuration) / (totalMinutesPerDay || 1));
+                          facts.push(
+                            <div key="fact-v3" className="bg-gradient-to-br from-[#c4a090]/10 to-transparent border border-[#c4a090]/20 rounded-[12px] p-5">
+                              <div className="text-3xl mb-3">🎵</div>
+                              <p className="text-sm text-gray-300 leading-relaxed">
+                                At your listening pace, you'd finish your entire Melodia library in <span className="font-bold text-white">{daysToFinish}</span> days.
+                              </p>
+                            </div>
+                          );
+                        } else if (factVariant === 3 && stats.topArtists.length > 0) {
+                          const topArtist = stats.topArtists[0];
+                          const percent = Math.round((topArtist.count / stats.totalPlays) * 100);
+                          facts.push(
+                            <div key="fact-v4" className="bg-gradient-to-br from-[#c4a090]/10 to-transparent border border-[#c4a090]/20 rounded-[12px] p-5">
+                              <div className="text-3xl mb-3">🎨</div>
+                              <p className="text-sm text-gray-300 leading-relaxed">
+                                Your top artist <span className="font-bold text-white">{topArtist.artist}</span> has soundtracked <span className="font-bold text-white">{percent}%</span> of your listening time this week.
+                              </p>
+                            </div>
+                          );
+                        } else {
+                          facts.push(
+                            <div key="fact-v1-fb" className="bg-gradient-to-br from-[#c4a090]/10 to-transparent border border-[#c4a090]/20 rounded-[12px] p-5">
+                              <div className="text-3xl mb-3">🎙️</div>
+                              <p className="text-sm text-gray-300 leading-relaxed">
+                                You've spent <span className="font-bold text-white">{Math.round(stats.totalMinutes)}</span> minutes listening to music — that's about <span className="font-bold text-white">{Math.round(stats.totalMinutes / 45)}</span> episodes of a podcast.
+                              </p>
+                            </div>
+                          );
+                        }
                       }
                       if (stats.topSongs.length > 0) {
                         facts.push(
