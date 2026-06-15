@@ -239,11 +239,11 @@ export default function TimelinePage() {
 
   return (
     <ProtectedRoute>
-    <div className="w-full px-8 py-8 flex justify-center fade-in pb-32">
-      <div className="max-w-6xl w-full flex flex-col lg:flex-row gap-16">
+    <div className="w-full px-8 py-8 flex justify-center fade-in pb-32 overflow-x-hidden">
+      <div className="max-w-6xl w-full flex flex-col lg:flex-row gap-16 min-w-0">
         
         {/* LEFT COLUMN: TIMELINE */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {/* Header */}
           <div className="mb-12">
             <h1 className="text-4xl font-extrabold text-white tracking-tight mb-2 flex items-center gap-3">
@@ -298,9 +298,9 @@ export default function TimelinePage() {
                         </div>
 
                         {/* Song Card */}
-                        <div className="flex-1 ml-4 bg-white/5 border border-white/5 hover:bg-white/10 transition-colors rounded-xl p-2.5 flex items-center justify-between group-hover/node:border-[#c4a090]/30 relative overflow-hidden">
+                        <div className="flex-1 min-w-0 ml-4 bg-white/5 border border-white/5 hover:bg-white/10 transition-colors rounded-xl p-2.5 flex items-center justify-between group-hover/node:border-[#c4a090]/30 relative overflow-hidden">
                           
-                          <div className="flex items-center gap-4 min-w-0">
+                          <div className="flex items-center gap-4 min-w-0 flex-1">
                             <div 
                               className="relative w-10 h-10 rounded-md overflow-hidden flex-shrink-0 cursor-pointer group/cover"
                               onClick={() => currentSong?._id === item.song._id ? (isPlaying ? pause() : resume()) : play(item.song)}
@@ -311,7 +311,7 @@ export default function TimelinePage() {
                               </div>
                             </div>
 
-                            <div className="flex flex-col min-w-0">
+                            <div className="flex flex-col min-w-0 flex-1">
                               <h4 className="text-sm font-bold text-white truncate">{item.song.title}</h4>
                               <span className="text-xs text-gray-400 truncate">{item.song.artist}</span>
                             </div>
