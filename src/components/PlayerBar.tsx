@@ -32,16 +32,6 @@ export default function PlayerBar() {
   const isLiked = useLikedStore(state => state.likedIds.has(currentSong?._id || ''));
   const toggleLikeAction = useLikeAction();
 
-  // Log playback history when a new song starts
-  useEffect(() => {
-    if (user && currentSong) {
-      axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/${user._id}/history`, {
-        songId: currentSong._id,
-        duration: currentSong.duration
-      }).catch(console.error);
-    }
-  }, [user, currentSong?._id]);
-
   // Sync local progress with store progress when not dragging
   useEffect(() => {
     if (!isDragging) {
