@@ -127,6 +127,7 @@ export const usePlayerStore = create<PlayerState>()(
   detailSong: null,
   lastDetailUpdate: 0,
   isPlayerExpanded: false,
+  isMiniPlayerOpen: false,
   lastPlayedId: null,
   currentSessionSongId: null,
   currentSessionStart: null,
