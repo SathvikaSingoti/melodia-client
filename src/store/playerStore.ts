@@ -90,8 +90,11 @@ interface PlayerState {
   toggleMiniPlayer: () => void;
   
   lastPlayedId: string | null;
-  currentSongStartTime: number | null;
-  recordListeningSession: () => void;
+  currentSessionSongId: string | null;
+  currentSessionStart: number | null;
+  currentSessionListened: number;
+  lastPauseTime: number | null;
+  flushSession: (completed?: boolean) => void;
 }
 
 export const usePlayerStore = create<PlayerState>()(
@@ -124,16 +127,22 @@ export const usePlayerStore = create<PlayerState>()(
   detailSong: null,
   lastDetailUpdate: 0,
   isPlayerExpanded: false,
-  isMiniPlayerOpen: false,
   lastPlayedId: null,
-  currentSongStartTime: null,
+  currentSessionSongId: null,
+  currentSessionStart: null,
+  currentSessionListened: 0,
+  lastPauseTime: null,
 
-  recordListeningSession: () => {
-    const { currentSong, currentSongStartTime } = get();
-    if (!currentSong || !currentSongStartTime) return;
-    
-    const listenedSeconds = (Date.now() - currentSongStartTime) / 1000;
-    if (listenedSeconds >= 3) {
+  flushSession: (completed = false) => {
+    const state = get();
+    if (!state.currentSessionSongId) return;
+
+    let finalListened = state.currentSessionListened;
+    if (state.currentSessionStart && !state.lastPauseTime) {
+      finalListened += (Date.now() - state.currentSessionStart) / 1000;
+    }
+
+    if (finalListened >= 3 || completed) {
       try {
         const storedUser = localStorage.getItem("melodia_user");
         const storedToken = localStorage.getItem("melodia_token");
@@ -141,13 +150,10 @@ export const usePlayerStore = create<PlayerState>()(
           const user = JSON.parse(storedUser);
           const userId = user._id || user.id;
           if (userId) {
-            const completed = listenedSeconds >= currentSong.duration * 0.9;
-            const actualListened = Math.min(listenedSeconds, currentSong.duration);
             axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}/history`, {
-              songId: currentSong._id,
-              listenedSeconds: actualListened,
-              completed,
-              playedAt: new Date(currentSongStartTime).toISOString()
+              songId: state.currentSessionSongId,
+              listenedSeconds: finalListened,
+              completed
             }, {
               headers: { Authorization: `Bearer ${storedToken}` }
             }).catch(console.error);
@@ -157,7 +163,13 @@ export const usePlayerStore = create<PlayerState>()(
         console.error("Failed to post history", e);
       }
     }
-    set({ currentSongStartTime: null });
+
+    set({
+      currentSessionSongId: null,
+      currentSessionStart: null,
+      currentSessionListened: 0,
+      lastPauseTime: null
+    });
   },
 
   toggleShuffle: () => set(state => ({ isShuffle: !state.isShuffle })),
@@ -253,12 +265,14 @@ export const usePlayerStore = create<PlayerState>()(
         html5: true,
         volume: get().volume,
         rate: get().playbackRate,
-        onplay: () => set({ isPlaying: true, currentSongStartTime: Date.now() }),
+        onplay: () => set({ isPlaying: true }),
         onpause: () => {
-          get().recordListeningSession();
           set({ isPlaying: false });
         },
-        onend: () => get().next(false),
+        onend: () => {
+          get().flushSession(true);
+          get().next(false);
+        },
         onload: () => set({ duration: firstSong.duration }),
       });
       newHowl.play();
@@ -278,7 +292,20 @@ export const usePlayerStore = create<PlayerState>()(
   },
 
   play: (song: Song, newQueue?: Song[], isCrossfadeTrigger: boolean = false) => {
-    get().recordListeningSession();
+    const state = get();
+    
+    if (state.currentSessionSongId === song._id) {
+      set({ lastPauseTime: null, currentSessionStart: Date.now() });
+    } else {
+      get().flushSession();
+      set({
+        currentSessionSongId: song._id,
+        currentSessionStart: Date.now(),
+        currentSessionListened: 0,
+        lastPauseTime: null
+      });
+    }
+
     const { howl, queue, radioContext, volume, crossfadeDuration, isCrossfading } = get();
 
     // Clear radioContext if this play action is for a different song 
@@ -313,12 +340,12 @@ export const usePlayerStore = create<PlayerState>()(
       html5: true,
       volume: isCrossfadeTrigger ? 0 : volume,
       rate: get().playbackRate,
-      onplay: () => set({ isPlaying: true, currentSongStartTime: Date.now() }),
+      onplay: () => set({ isPlaying: true }),
       onpause: () => {
-        get().recordListeningSession();
         set({ isPlaying: false });
       },
       onend: () => {
+        get().flushSession(true);
         // Only trigger next if we aren't currently crossfading away from this song
         if (!get().isCrossfading) {
           get().next(false);
@@ -357,9 +384,16 @@ export const usePlayerStore = create<PlayerState>()(
   },
 
   pause: () => {
-    const { howl } = get();
+    const { howl, currentSessionStart, lastPauseTime, currentSessionListened } = get();
     if (howl && howl.playing()) {
       howl.pause();
+      if (currentSessionStart && !lastPauseTime) {
+        const added = (Date.now() - currentSessionStart) / 1000;
+        set({ 
+          currentSessionListened: currentSessionListened + added,
+          lastPauseTime: Date.now() 
+        });
+      }
     }
   },
 
@@ -367,6 +401,7 @@ export const usePlayerStore = create<PlayerState>()(
     const { howl } = get();
     if (howl) {
       howl.play();
+      set({ currentSessionStart: Date.now(), lastPauseTime: null });
     }
   },
 
